@@ -74,7 +74,13 @@ bimodality. (ii) The \emph{block-congruence preconditioner} was generalised to t
 shared-intrinsics reduced space, removing the constraint that kept it out of the mapper;
 it now delivers $\sim\!6.5\%$ end-to-end wall at neutral quality. (iii) The long-standing
 \texttt{ladybug-1723} failure was diagnosed as \emph{basin sensitivity, not a defect},
-closing it as an investigation.''')
+closing it as an investigation. Two follow-ons complete the picture: a \emph{menu-degeneracy
+gate} (score one candidate when the shift menu has collapsed; $-62\%$ candidate evaluations,
+$-10.7\%$ wall on cold solves at $+0.0000\%$ median cost) and a \emph{persistent-ftol stop}
+(halves warm solve walls while the stop-point still beats Caspar's final on 3 of 4 monocular
+Fuchsberg problems). With the full stack, the muell mapper runs at wall parity with Caspar
+while spending 29\% less time in global BA, and all four monocular Fuchsberg conversions are
+won.''')
 W(r'\vspace{-0.3em}')
 
 # ---------------------------------------------------------------- section 1
@@ -86,6 +92,8 @@ $L{=}5$ is the shipped width; $L{=}1$ removes the menu entirely (classical
 Levenberg--Marquardt). All arms use the block preconditioner and the v6 policy.''')
 
 names = sorted({os.path.basename(p).rsplit('_L', 1)[0] for p in glob.glob('xtr2/*_L*.trace')})
+# Baseline sections use the NEWEST config (xtr10: block-red + camera-major +
+# menu gate 1e-2); the menu study below deliberately uses the pre-gate arms.
 rows, ratios = [], {'tie': [], 'win': [], 'lose': []}
 for n in names:
     A, B = mf(f'xtr2/{n}_L5.trace'), mf(f'xtr2/{n}_L1.trace')
@@ -154,7 +162,7 @@ preconditioner \texttt{ladybug-1723} spreads by $698\%$.''')
 
 # ---------------------------------------------------------------- baselines BAL
 W(r'\section{Against the baselines on BAL}')
-W(r'''The shipped configuration ($L{=}5$, block preconditioner) against the GPU baseline
+W(r'''The newest configuration ($L{=}5$, block preconditioner, camera-major build, menu gate $10^{-2}$) against the GPU baseline
 (Caspar) and CPU Ceres on the same 23 problems and the same objective. Both crossing
 directions are given: where our final is worse, the baseline's time to \emph{our} final is the
 honest comparison, not endpoint walls.''')
@@ -183,7 +191,7 @@ W(r'dataset & final & wall & final & wall & $\Delta$ & ours$\to$C & C$\to$ours\\
 W(r'\midrule\endhead')
 qs, sps, nev = [], [], 0
 for n in names:
-    A, C = mf(f'xtr2/{n}_L5.trace'), load_caspar(n)
+    A, C = mf(f'xtr10/{n}_g1e-2.trace'), load_caspar(n)
     if not A or not C: continue
     t, c, _, _ = A; ct, cc = C
     dq = 100 * (c[-1] / cc[-1] - 1)
@@ -211,7 +219,7 @@ if qs:
 Caspar never reaches our final on {nev} of {len(qs)}; where we win, we reach Caspar's answer
 ${np.median(sps):.2f}\\times$ faster in median. \\textbf{{The seven losses are material and
 concentrated}}: on \\texttt{{final-4585}} Caspar reaches $1.10\\times10^{{7}}$ in 15.4s against
-our $1.36\\times10^{{7}}$ after 167.5s --- $23\\%$ worse at eleven times the wall, and Caspar
+our $1.36\\times10^{{7}}$ after 145.3s --- $23\\%$ worse at nine times the wall, and Caspar
 reaches our final in 2.2s. \\texttt{{ladybug-1723}} ($+16.8\\%$), \\texttt{{dubrovnik-88}} and
 \\texttt{{insta360-3086}} follow the same pattern. Several ladybug sets show the opposite
 asymmetry: a better final but a crossing below $1\\times$ --- a better answer, reached more
@@ -246,7 +254,7 @@ for n in names:
     Ce = ceres_tr(n)
     if not Ce: continue
     t, c, it = Ce
-    A, K = mf(f'xtr2/{n}_L5.trace'), load_caspar(n)
+    A, K = mf(f'xtr10/{n}_g1e-2.trace'), load_caspar(n)
     if it[-1] < 2:
         W(f'{esc(n)} & {it[-1]} & \\bd{{no solve}} & \\multicolumn{{5}}{{c}}{{'
           r'\textit{Ceres completed no iteration inside the cap}}\\')
@@ -568,6 +576,47 @@ target, which is a biased yardstick. Against a common target the menu is median
 $0.89\times$, i.e.\ $\sim$12\% \emph{slower}.\\''')
 W(r'\bottomrule\end{tabular}\end{center}')
 
+
+
+# ---------------------------------------------------------------- mono fuchsberg
+W(r'\section{Monocular Fuchsberg sweep and the persistent-ftol stop}')
+W(r"""Four fisheye rig problems converted to monocular pinhole ($70^\circ$ cutoff, shared
+SIMPLE\_RADIAL objective) so the single-camera baseline can run them. The newest
+configuration wins the iso-quality crossing on all four, and Caspar never reaches its final
+on any. \texttt{gba\_230} motivated a better stopping rule: it crossed Caspar's final at
+22.4s, then spent 44s buying $-0.09\%$.""")
+def _mono(p):
+    r=mf(p); return r
+mono=[('gba\_126','xtr12/g126_newest.trace','xtr12/g126_caspar.trace','xtr13/ft_126.trace'),
+      ('gba\_164','xtr12/g164_newest.trace','xtr12/g164_caspar.trace','xtr13/ft_164.trace'),
+      ('gba\_230','xtr12/g230_newest.trace','xtr12/g230_caspar.trace','xtr13/ft_230.trace'),
+      ('gba\_234','xtr11/mf_newest.trace','xtr11/mf_caspar.trace','xtr13/ft_234.trace')]
+W(r'\begin{center}\begin{tabular}{lrrrrrr}\toprule')
+W(r'problem & Caspar & Prism full & crossing & \multicolumn{2}{c}{with ftol stop} & vs Caspar final\\')
+W(r'\cmidrule(lr){5-6}')
+W(r' & wall & wall & Prism$\to$C & wall & saved & at the stop\\ \midrule')
+for nm,fm,fc,ff in mono:
+    M=mf(fm); C=caspar(fc); F=mf(ff)
+    if not (M and C and F): W(f'{nm} & \multicolumn{{6}}{{c}}{{{MISS}}}\\'); continue
+    t,c=M[0],M[1]; ct,cc=C; ft,fcst=F[0],F[1]
+    cf=cc[-1]
+    x=cross(t,c,cf)
+    d=100*(fcst[-1]/cf-1)
+    dc=(r'\g{'+f'{d:+.3f}'+r'\%}') if d<0 else f'{d:+.3f}'+r'\%'
+    xcell=f'{x:.1f}s ({ct[-1]/x:.2f}'+r'$\times$)' if x else 'never'
+    W(f'{nm} & {ct[-1]:.1f}s & {t[-1]:.1f}s & {xcell} & '
+      f'{ft[-1]:.1f}s & '+r'$-$'+f'{100*(1-ft[-1]/t[-1]):.0f}'+r'\% & '+dc+r'\\')
+W(r'\bottomrule\end{tabular}\end{center}')
+W(r"""\texttt{OCA\_FTOL=5e-5, OCA\_FTOL\_K=5} stops after five consecutive outers improving
+less than $5\times10^{-5}$ relative. The $(\varepsilon,k)$ grid was chosen \emph{offline} by
+simulating candidate rules on all 27 recorded trajectories --- no solver runs needed to design
+a stopping rule when every trace is a replayable trajectory --- and the live runs matched the
+simulation within 1.3s on every problem. The stop-point cost still beats Caspar's final on 3
+of 4 (\texttt{gba\_126} ties within $0.043\%$); on BAL the rule is inert by construction
+(cold runs are still descending when they end; worst case $0.052\%$). A time-aware efficiency
+rule was designed and refuted in the same sweep. In-mapper (muell end-to-end, full stack):
+wall parity with Caspar ($1207$s vs $1209$s, identical registrations) with \textbf{29\% less
+time in global BA} (323s $\to$ 228s) --- the tie is dilution, not parity of the solvers.""")
 
 # ---------------------------------------------------------------- menu gate
 W(r'\section{The menu-degeneracy gate}')
