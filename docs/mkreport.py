@@ -674,14 +674,17 @@ W(r'\subsection*{Cumulative verdict versus Caspar}')
 W(r'\begin{center}\begin{tabular}{lccccc}\toprule')
 W(r'policy & better/tied/worse & median q & worst loss & median crossing & C never reaches\\ \midrule')
 W(r'block & 15 / 1 / 7 & $-0.60\%$ & \bd{$+23.2\%$} & \g{$5.00\times$} & 15/23\\')
-W(r'diag & \g{18 / 2 / 3} & \g{$-1.28\%$} & \g{$+0.8\%$} & $2.14\times$ & \g{18/23}\\')
-W(r'best-of-both & 18 / 2 / 3 & $-1.45\%$ & $+0.8\%$ & $3.68\times$ & 18/23\\')
+W(r'diag & \g{18 / 2 / 3} & $-1.28\%$ & \g{$+0.8\%$} & $2.14\times$ & \g{18/23}\\')
+W(r'scheduler & 17 / 2 / 4 & \g{$-1.62\%$} & $+1.0\%$ & $2.37\times$ & 17/23\\')
+W(r'best-of-pure & 18 / 2 / 3 & $-1.45\%$ & $+0.8\%$ & $3.68\times$ & 18/23\\')
 W(r'\bottomrule\end{tabular}\end{center}')
 W(r"""Diag alone nearly matches the per-dataset oracle --- the oracle adds crossing speed, not
 wins. The cumulative statement: \textbf{the solver beats Caspar under either preconditioner;
 block converts the margin into speed ($5\times$ crossings, worst-case quality $+23\%$), diag
 converts it into quality (18/23 wins, worst case $+0.8\%$, and still $2.14\times$ faster to
-Caspar's own quality).}""")
+Caspar's own quality). The scheduler, measured on all 23 after this table was first drawn,
+lands diag-class quality (median $-1.62\%$, worst $+1.0\%$) at 339s total wall --- 63\% of
+diag's 541s and only 21\% above block's 280s.}""")
 
 
 W(r'\subsection*{A preconditioner scheduler: diag opening, block grind}')
