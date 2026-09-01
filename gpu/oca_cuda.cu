@@ -8269,10 +8269,16 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   int n=n_cf+n_p;
   bool prof = (getenv("OCA_PROFILE")!=nullptr);
   auto now = [](){ return std::chrono::steady_clock::now(); };
-  Scalar *Hcc,*Cdiag,*Gp,*Gc,*Bo,*bc,*bp,*Rf,*tacc,*uu,*w,*bprime,*corr,*E,*dk;
+  // REVIEW 2026-09-01: every pointer nullptr-initialised so the cleanup block
+  // can free unconditionally (cudaFree(nullptr) is a no-op). The fp32 branch
+  // leaves the fp64 gradient arrays unallocated and vice versa.
+  Scalar *Hcc=nullptr,*Cdiag=nullptr,*Gp=nullptr,*Gc=nullptr,*Bo=nullptr,*bc=nullptr,
+         *bp=nullptr,*Rf=nullptr,*tacc=nullptr,*uu=nullptr,*w=nullptr,*bprime=nullptr,
+         *corr=nullptr,*E=nullptr,*dk=nullptr;
   Scalar *Bk=nullptr,*bscr=nullptr;   // REVIEW: block-congruence factor + scratch
   float *Gp32=nullptr,*Gc32=nullptr,*Bo32=nullptr;   // ROUND 9: --mf-fp32 storage
-  Scalar *xc_un,*xpv,*dcam,*dpt,*dfull,*d_best,*r_,*pv_,*Ap_;
+  Scalar *xc_un=nullptr,*xpv=nullptr,*dcam=nullptr,*dpt=nullptr,*dfull=nullptr,
+         *d_best=nullptr,*r_=nullptr,*pv_=nullptr,*Ap_=nullptr;
   int* okf;
   auto M=[&](void**q,size_t b){CUDA_CHECK(cudaMalloc(q,b));};
   M((void**)&Hcc,(size_t)CD*CD*ncam*sizeof(Scalar));M((void**)&Cdiag,3ul*npt*sizeof(Scalar));
@@ -8669,7 +8675,6 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     Scalar bpd_best=0.0;   // b'^T x of the winning candidate (scaled space)
 
     CUDA_CHECK(cudaMemset(d_best,0,(size_t)n*sizeof(Scalar)));
-    Scalar last_cand_cost = std::numeric_limits<Scalar>::quiet_NaN();
     auto Score=[&](const Scalar* x_scaled,int sh,int ck){
       std::chrono::steady_clock::time_point q0; if(prof){cudaDeviceSynchronize();q0=now();}
       // Undo the equilibration in the space the CG worked in, then lift to the
@@ -8705,7 +8710,6 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         std::printf("      [dbg] shift=%d ckpt=%d  |x_c|=%.6e |x_p|=%.6e  cand_cost=%.10e  (cur=%.10e)%s\n",
                     sh,ck,(double)nx,(double)np2,(double)c,(double)cost, std::isfinite((double)c)?"":"  <-- NON-FINITE"); }
       ++st.cand_evals;
-      last_cand_cost = c;   // THIS candidate's cost, not the running best
       if(prof){cudaDeviceSynchronize();t_cand+=std::chrono::duration<double>(now()-q0).count();}
       if(sh>=0 && sh<L && c<cbest_sh[sh]) cbest_sh[sh]=c;
       // ORDER-INDEPENDENT tie-break. With a strict `<` the winner of an exact
@@ -8723,19 +8727,15 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           bpd_best=bd; }
         CUDA_CHECK(cudaMemcpy(d_best,dfull,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice)); }
     };
-    // OCA_MENU_GATE=<tol>: skip scoring a DEGENERATE menu.
+    // OCA_MENU_GATE=<tol>: skip scoring a DEGENERATE menu (see ScoreAll below
+    // for the mechanism -- it gates on the zeta-recurrence PREDICTIONS, not on
+    // step norms; two earlier proxy designs are documented and refuted there).
     // Measured (venice-52, MF_DEBUG): once lambda falls far below the spectrum
-    // of S the shifted systems stop differing -- from outer 9 onward all five
-    // candidates are BIT-IDENTICAL, and ~20 of 29 outers score five copies of
-    // one step. The Krylov sweep is nearly free (zeta recurrence); the cost is
-    // the per-candidate nonlinear residual pass. So detect degeneracy from the
-    // step NORMS, which are cheap cublas reductions needing no residual pass,
-    // and score once when the menu has collapsed.
-    // Safety: when candidates coincide, argmin already returns index 0, so
-    // scoring only shift 0 selects the same winner -- and therefore the same
-    // lambda update -- as the full menu. The gate cannot alter the trajectory
-    // except through floating-point ties it would have broken the same way.
-    // 0 (default) = off, bit-compatible.
+    // of S the shifted systems stop differing -- candidate costs agree to
+    // ~1e-8 while the menu still pays five residual passes. Degeneracy is
+    // PER-CHECKPOINT: shallow checkpoints collapse while deep checkpoints in
+    // the same outer still discriminate 4x. Validated tolerance: 1e-2
+    // (1e-3 regressed ladybug-1197 +60% wall). 0 (default) = off, bit-compat.
     static const double menu_gate = [](){
       const char* e = getenv("OCA_MENU_GATE"); return e ? std::atof(e) : 0.0; }();
     auto ScoreAll=[&](int depth){
@@ -9147,8 +9147,23 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   cudaFree(Hcc);cudaFree(Cdiag);cudaFree(Gp);cudaFree(Gc);cudaFree(Bo);cudaFree(bc);cudaFree(bp);
   cudaFree(Rf);cudaFree(tacc);cudaFree(uu);cudaFree(w);cudaFree(bprime);cudaFree(corr);
   cudaFree(E);cudaFree(dk);cudaFree(xc_un);cudaFree(xpv);cudaFree(dcam);cudaFree(dpt);
+  // REVIEW 2026-09-01: this block used to free only 9 of ~39 per-call device
+  // buffers. Standalone benchmarks never noticed (one solve per process), but
+  // the MAPPER calls this function once per global BA -- ~47 times on the
+  // muell sequence -- leaking 100-300MB per call on a 16GB card. Free
+  // everything; all pointers are nullptr-initialised so unallocated branches
+  // (fp32 vs fp64, block_eq off, shared_intr off) are safe no-ops.
   cudaFree(dfull);cudaFree(d_best);cudaFree(r_);cudaFree(pv_);cudaFree(Ap_);cudaFree(okf);
   cudaFree(r2acc);cudaFree(obscnt);cudaFree(rk_sv);
+  cudaFree(Hcc);cudaFree(Cdiag);cudaFree(Gp);cudaFree(Gc);cudaFree(Bo);
+  cudaFree(Gp32);cudaFree(Gc32);cudaFree(Bo32);
+  cudaFree(bc);cudaFree(bp);cudaFree(Rf);cudaFree(tacc);cudaFree(uu);cudaFree(w);
+  cudaFree(bprime);cudaFree(corr);cudaFree(E);cudaFree(dk);
+  cudaFree(Bk);cudaFree(bscr);cudaFree(Bp);cudaFree(Bg);
+  cudaFree(xc_un);cudaFree(xpv);cudaFree(dcam);cudaFree(dpt);
+  cudaFree(bcast_in);cudaFree(bcast_out);
+  for(int l=0;l<L;++l){ cudaFree(xs[l]); cudaFree(ps[l]); }
+  cudaFree(s_new.R);cudaFree(s_new.t);cudaFree(s_new.X);cudaFree(s_new.intr);
   cublasDestroy(blas);
   CsvClose();
   return log;
