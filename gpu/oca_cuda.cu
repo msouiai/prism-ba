@@ -8283,6 +8283,35 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   auto M=[&](void**q,size_t b){CUDA_CHECK(cudaMalloc(q,b));};
   M((void**)&Hcc,(size_t)CD*CD*ncam*sizeof(Scalar));M((void**)&Cdiag,3ul*npt*sizeof(Scalar));
   static const bool block_eq = getenv("OCA_BLOCKEQ")!=nullptr;
+  // OCA_PRECOND_SWITCH=<eps> (+ OCA_PRECOND_SWITCH_K, default 3): the
+  // diag-opening -> block-grind SCHEDULER. Basin selection happens in the
+  // opening, where the block congruence can steer into catastrophically worse
+  // basins (final-4585 +78%, ladybug-1197 +26% vs diag); block's 6-9x cheaper
+  // Krylov matters in the grind, where it is quality-neutral (bit-identical on
+  // 22/22 warm replays). So: open with the DIAGONAL preconditioner, and flip
+  // to block permanently once relative progress has flattened (< eps for K
+  // consecutive outers -- the same signal family as OCA_FTOL and the menu
+  // gate). Unset = no scheduling, bit-compat.
+  static const double psw_eps = [](){
+    const char* e=getenv("OCA_PRECOND_SWITCH"); return e?std::atof(e):0.0; }();
+  static const int psw_k = [](){
+    const char* e=getenv("OCA_PRECOND_SWITCH_K"); return e?std::atoi(e):3; }();
+  // OCA_PRECOND_SWITCH_LAM=<v>: LAMBDA-triggered variant -- switch diag->block
+  // once lam_cam has decayed to <= v. lambda is the solver's own nonlinearity
+  // estimate: basin selection happens while lambda is large (damped short
+  // steps steer), and once lambda is far below the spectrum the steps are
+  // near-Newton within an already-chosen basin, where block is measured
+  // quality-neutral. Fires earlier than the flatness streak (venice-52:
+  // lambda floors by ~outer 9 while the streak fired at 43), recovering more
+  // of block's wall. Both triggers may be set; whichever fires first wins.
+  static const double psw_lam = [](){
+    const char* e=getenv("OCA_PRECOND_SWITCH_LAM"); return e?std::atof(e):0.0; }();
+  const bool psw = psw_eps>0.0 || psw_lam>0.0;
+  // block_on: the preconditioner actually used THIS outer. With the scheduler
+  // it starts false (diag opening) and flips once; otherwise it equals the
+  // static flag. Buffers are allocated if block can EVER be on.
+  bool block_on = block_eq && !psw;
+  int psw_streak=0; bool psw_switched=false;
   if(block_eq){ M((void**)&Bk,(size_t)CD*CD*ncam*sizeof(Scalar));
                 M((void**)&bscr,(size_t)n_cf*sizeof(Scalar)); }
   if(mf_fp32){ M((void**)&Gp32,(size_t)3*CD*nobs*sizeof(float));M((void**)&Gc32,(size_t)3*CD*nobs*sizeof(float));
@@ -8318,9 +8347,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
                    M((void**)&bcast_out,(size_t)n_cf*sizeof(Scalar)); }
   // Reduced-space block factors: 6x6 per camera + 3x3 per calibration group.
   Scalar *Bp=nullptr,*Bg=nullptr;
-  const bool block_red = block_eq && shared_intr && CD==9;
-  if(block_red){ M((void**)&Bp,(size_t)36*ncam*sizeof(Scalar));
+  const bool block_red_alloc = block_eq && shared_intr && CD==9;
+  if(block_red_alloc){ M((void**)&Bp,(size_t)36*ncam*sizeof(Scalar));
                  M((void**)&Bg,(size_t)9*ncalib*sizeof(Scalar)); }
+  // Evaluated per outer via block_on (scheduler-aware).
+  auto BlockRedOn=[&](){ return block_on && shared_intr && CD==9; };
   // B : reduced -> full.
   auto Broadcast=[&](const Scalar* vr,Scalar* vfull){
     MFCalibBroadcast<<<GridSize(ncam),256>>>(vr,p.calib_of_cam,ncam,ncalib,vfull); };
@@ -8520,7 +8551,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         MFMakeEquilBlocked<CD><<<GridSize(ncam),256>>>(dk,ncam,equil_floor,E);
       else
         MFMakeEquil<<<GridSize(n_c),256>>>(dk_eq,n_c,E);
-      if(block_eq && !shared_intr){
+      if(block_on && !shared_intr){
         CUDA_CHECK(cudaMemset(Bk,0,(size_t)CD*CD*ncam*sizeof(Scalar)));
         // OCA_BLOCK_CM=1: atomics-free camera-major build (deterministic).
         static const bool block_cm = [](){
@@ -8541,7 +8572,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
             std::printf("  [blockeq] cholesky fallbacks: %d of %d cameras\n",h,ncam); once=true; } }
         CUDA_CHECK(cudaMemcpy(bscr,bprime,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice));
         MFBlockSolve<CD><<<GridSize(ncam),256>>>(Bk,bscr,ncam,0,bprime);
-      } else if(block_red){
+      } else if(BlockRedOn()){
         // Same build, then split into the reduced space before factoring.
         CUDA_CHECK(cudaMemset(Bk,0,(size_t)CD*CD*ncam*sizeof(Scalar)));
         static const bool block_cm_r = [](){
@@ -8589,14 +8620,14 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     };
     auto KvS=[&](const Scalar* vin,Scalar* vout){
       if(!use_equil){ Kv(vin,vout); return; }
-      if(block_eq && !shared_intr){
+      if(block_on && !shared_intr){
         MFBlockSolve<CD><<<GridSize(ncam),256>>>(Bk,vin,ncam,1,w);   // L^-T
         Kv(w,vout);
         CUDA_CHECK(cudaMemcpy(bscr,vout,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice));
         MFBlockSolve<CD><<<GridSize(ncam),256>>>(Bk,bscr,ncam,0,vout); // L^-1
         return;
       }
-      if(block_red){
+      if(BlockRedOn()){
         BlockSolveRed(vin,1,w);                                        // L^-T
         Kv(w,vout);
         CUDA_CHECK(cudaMemcpy(bscr,vout,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice));
@@ -8691,7 +8722,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       // full 9-per-camera layout the retraction and MFPass1 expect. Poses in a
       // calibration group therefore receive the SAME intrinsics delta.
       if(shared_intr){
-        if(block_red && use_equil){
+        if(BlockRedOn() && use_equil){
           BlockSolveRed(x_scaled,1,bcast_out);        // L^-T, in reduced space
         } else {
           CUDA_CHECK(cudaMemcpy(bcast_out,x_scaled,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice));
@@ -8699,7 +8730,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         }
         Broadcast(bcast_out,xc_un);
       } else {
-        if(block_eq && !shared_intr && use_equil){
+        if(block_on && !shared_intr && use_equil){
           MFBlockSolve<CD><<<GridSize(ncam),256>>>(Bk,x_scaled,ncam,1,xc_un);
         } else {
           CUDA_CHECK(cudaMemcpy(xc_un,x_scaled,(size_t)n_cf*sizeof(Scalar),cudaMemcpyDeviceToDevice));
@@ -9070,6 +9101,22 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         if(verbose) std::printf("  MFCG: converged (relative cost decrease < %.2e)\n",
                                 (double)func_tolerance);
       }
+      // Preconditioner scheduler trigger: same flatness signal as OCA_FTOL,
+      // but flips the preconditioner instead of stopping. Fires once; the
+      // factor for the next outer is built under the new metric.
+      if(psw_lam>0.0 && !psw_switched && block_eq && lam_cam<=psw_lam){
+        block_on=true; psw_switched=true;
+        if(verbose) std::printf("  MFCG: PRECOND SWITCH diag->block at outer %d (lam %.2e <= %.1e)\n",
+                                k+1,(double)lam_cam,psw_lam);
+      }
+      if(psw_eps>0.0 && !psw_switched && block_eq && prev_cost>0){
+        psw_streak = ((prev_cost-cost) < psw_eps*prev_cost) ? psw_streak+1 : 0;
+        if(psw_streak>=psw_k){
+          block_on=true; psw_switched=true;
+          if(verbose) std::printf("  MFCG: PRECOND SWITCH diag->block at outer %d (cost %.6e)\n",
+                                  k+1,(double)cost);
+        }
+      }
       // OCA_FTOL=<eps> / OCA_FTOL_K=<k>: PERSISTENT relative-decrease stop.
       // Fires after k consecutive outers (accepted or not) whose best-so-far
       // relative improvement is below eps. Chosen offline against 27 recorded
@@ -9089,6 +9136,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         }
       }
       prev_cost=cost;
+    } else if(psw_eps>0.0 && !psw_switched && block_eq && ++psw_streak>=psw_k){
+      block_on=true; psw_switched=true;
+      if(verbose) std::printf("  MFCG: PRECOND SWITCH diag->block at outer %d (reject-flat)\n",k+1);
+      if(ftol_env>0) ++ftol_streak;   // keep the stop rule's view of flatness
     } else if(ftol_env>0 && ++ftol_streak>=ftol_k_env && prev_cost>0){
       // Rejected outers improve nothing by definition; they count toward the
       // streak, matching the offline simulation (which saw only best-so-far).

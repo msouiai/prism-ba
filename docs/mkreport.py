@@ -683,6 +683,22 @@ block converts the margin into speed ($5\times$ crossings, worst-case quality $+
 converts it into quality (18/23 wins, worst case $+0.8\%$, and still $2.14\times$ faster to
 Caspar's own quality).}""")
 
+
+W(r'\subsection*{A preconditioner scheduler: diag opening, block grind}')
+W(r"""The basin finding suggests its own remedy: open with the diagonal preconditioner (safe
+basin selection), then flip permanently to block once the opening is over (its cheap Krylov is
+quality-neutral in the grind). Two switch triggers are implemented and composable:
+\texttt{OCA\_PRECOND\_SWITCH} (a flatness streak, quality-lean) and
+\texttt{OCA\_PRECOND\_SWITCH\_LAM} ($\lambda$ falling below a threshold --- $\lambda$ is the
+solver's own nonlinearity estimate; speed-lean). On a six-dataset panel (single runs,
+directional): the streak variant holds diag's quality everywhere and reaches
+$7.61\times10^{6}$ on \texttt{final-4585} in 185s versus diag's 329s --- below both pure
+arms; the $\lambda$ variant recovers near-block wall (\texttt{venice-52}: block-level quality
+at 3.1s versus the streak's 5.7s) at a small quality give-back where it fires before the
+basin settles (\texttt{final-4585} $+4.4\%$ versus the streak). Neither variant can rescue
+block-favoured basins (\texttt{final-3068} $+8\%$, structural). Thresholds are untuned;
+single-run panel.""")
+
 # ---------------------------------------------------------------- mono fuchsberg
 W(r'\section{Monocular Fuchsberg sweep and the persistent-ftol stop}')
 W(r"""Four fisheye rig problems converted to monocular pinhole ($70^\circ$ cutoff, shared
