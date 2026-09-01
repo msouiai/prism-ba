@@ -1,7 +1,11 @@
-# MFREE — matrix-free multi-shift bundle adjustment
+# Prism — one Krylov sweep, a spectrum of damped solutions
+
+*(working name during development: MFREE)*
 
 GPU (CUDA) and CPU implementations of a matrix-free Levenberg–Marquardt bundle
-adjuster built around one structural idea: **multi-shift CG with a ζ-recurrence
+adjuster. The name is the mechanism — like a prism splitting one beam into a
+spectrum, the solver splits a single Krylov sweep into solutions for an entire
+spectrum of damping values: **multi-shift CG with a ζ-recurrence
 prices a whole menu of damping values from a single Krylov sweep**, and the
 candidate steps are scored by true nonlinear cost.
 
