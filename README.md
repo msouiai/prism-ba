@@ -5,9 +5,8 @@
 GPU (CUDA) and CPU implementations of a matrix-free Levenberg–Marquardt bundle
 adjuster. The name is the mechanism — like a prism splitting one beam into a
 spectrum, the solver splits a single Krylov sweep into solutions for an entire
-spectrum of damping values: **multi-shift CG with a ζ-recurrence
-prices a whole menu of damping values from a single Krylov sweep**, and the
-candidate steps are scored by true nonlinear cost.
+spectrum of damping values — **multi-shift CG with a ζ-recurrence**, the
+candidate steps scored by true nonlinear cost.
 
 ## Layout
 
