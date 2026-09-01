@@ -8378,6 +8378,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // Default 8 reproduces the historical lam0*1e-8 exactly (bit-compat).
   static const double lam_floor_dec = [](){
     const char* e = getenv("OCA_LAM_FLOOR"); return e ? std::atof(e) : 8.0; }();
+  // OCA_LAM0=<v>: override the caller's initial lambda (research knob for the
+  // final-4585 opening-policy investigation). Unset = caller's value, bit-compat.
+  static const double lam0_env = [](){
+    const char* e = getenv("OCA_LAM0"); return e ? std::atof(e) : 0.0; }();
+  if(lam0_env>0.0) lam0=(Scalar)lam0_env;
   Scalar lam_cam=lam0, lam_floor=lam0*std::pow((Scalar)10.0,(Scalar)(-lam_floor_dec));
   MFStats st; Scalar prev_bnorm=-1.0;
   int n_accept=0,n_reject=0,rej_streak=0;
@@ -8415,6 +8420,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // on the first rejection the ladder jumps straight to the last tau that won
   // a contested accept (tau_win, decayed x0.5 per clean accept so stale
   // memory fades) instead of climbing from base by decades.
+  // OCA_TAU_PT=<v>: override the caller's point-damping tau (research knob for
+  // the final-4585 opening ablation). Unset = caller's value, bit-compat.
+  static const double tau_pt_env = [](){
+    const char* e = getenv("OCA_TAU_PT"); return e ? std::atof(e) : 0.0; }();
+  if(tau_pt_env>0.0) tau_pt=(Scalar)tau_pt_env;
   Scalar tau_base=tau_pt, tau_used=tau_pt, tau_win=0.0;
   double t_asm=0,t_fac=0,t_mv=0,t_cand=0;
   std::vector<std::string> jrows;
