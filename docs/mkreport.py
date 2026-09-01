@@ -636,6 +636,53 @@ wall (its cold-solve speedups stand) at a fat-tailed basin risk; diag buys quali
 adoption of block is unaffected: warm problems do no basin selection, and quality there was
 bit-identical on 22/22 replays.""")
 
+
+W(r'\subsection*{Block versus diagonal on all 23 problems}')
+W(r"""The seven-loss table above only shows datasets where block trailed Caspar; the full
+comparison also catches block-induced losses that Caspar could not expose (block still beat
+Caspar on \texttt{ladybug-1197} while trailing diag by $26\%$).""")
+_names=sorted({os.path.basename(p).rsplit('_g',1)[0] for p in glob.glob('xtr10/*_g0.trace')})
+W(r'\begin{longtable}{l r rr rr r l}')
+W(r'\toprule')
+W(r'dataset & Caspar & block & wall & diag & wall & blk vs diag & better\\')
+W(r'\midrule\endhead')
+_q=[];_wb=0.0;_wd=0.0;_dw=0;_bw=0;_ti=0
+for n in _names:
+    B=mf(f'xtr10/{n}_g1e-2.trace'); Dg=mf(f'xtr17/{n}_diag.trace'); C=load_caspar(n)
+    if not (B and Dg and C):
+        W(f'{esc(n)} & \\multicolumn{{7}}{{c}}{{{MISS}}}'+r'\\'); continue
+    cf=C[1][-1]
+    d=100*(B[1][-1]/Dg[1][-1]-1); _q.append(d); _wb+=B[0][-1]; _wd+=Dg[0][-1]
+    v='diag' if d>0.05 else ('block' if d<-0.05 else 'tie')
+    _dw+=(v=='diag'); _bw+=(v=='block'); _ti+=(v=='tie')
+    dc=(r'\bd{'+f'{d:+.2f}'+r'\%}') if d>5 else ((r'\g{'+f'{d:+.2f}'+r'\%}') if d<-5 else f'{d:+.2f}'+r'\%')
+    W(f'{esc(n)} & {cf:.4e} & {B[1][-1]:.4e} & {B[0][-1]:.1f}s & {Dg[1][-1]:.4e} & {Dg[0][-1]:.1f}s & {dc} & {v}'+r'\\')
+W(r'\midrule')
+W(f'\\textbf{{total wall}} & & & \\textbf{{{_wb:.0f}s}} & & \\textbf{{{_wd:.0f}s}} & & '+r'\\')
+W(r'\bottomrule')
+W(r'\caption{Positive blk-vs-diag delta = diag better. Both arms otherwise identical (camera-major build, menu gate, v6 policy).}')
+W(r'\end{longtable}')
+_qa=np.array(_q)
+W(f"""Quality is a dead heat in the middle (median ${np.median(_qa):+.3f}\\%$; diag better on
+{_dw}, block on {_bw}, tied {_ti}) and block is $\\sim2\\times$ faster in total wall
+({_wb:.0f}s vs {_wd:.0f}s). What the median hides is tail asymmetry: block's best quality win
+is $-7.4\\%$ (\\texttt{{final-3068}}) while its worst losses are $+78\\%$
+(\\texttt{{final-4585}}) and $+26\\%$ (\\texttt{{ladybug-1197}}); diag never loses to block
+by more than $7.4\\%$. \\textbf{{Same expected quality, very different risk: block is the
+faster solver with a fat tail, diag the slower solver with a bounded one.}}""")
+W(r'\subsection*{Cumulative verdict versus Caspar}')
+W(r'\begin{center}\begin{tabular}{lccccc}\toprule')
+W(r'policy & better/tied/worse & median q & worst loss & median crossing & C never reaches\\ \midrule')
+W(r'block & 15 / 1 / 7 & $-0.60\%$ & \bd{$+23.2\%$} & \g{$5.00\times$} & 15/23\\')
+W(r'diag & \g{18 / 2 / 3} & \g{$-1.28\%$} & \g{$+0.8\%$} & $2.14\times$ & \g{18/23}\\')
+W(r'best-of-both & 18 / 2 / 3 & $-1.45\%$ & $+0.8\%$ & $3.68\times$ & 18/23\\')
+W(r'\bottomrule\end{tabular}\end{center}')
+W(r"""Diag alone nearly matches the per-dataset oracle --- the oracle adds crossing speed, not
+wins. The cumulative statement: \textbf{the solver beats Caspar under either preconditioner;
+block converts the margin into speed ($5\times$ crossings, worst-case quality $+23\%$), diag
+converts it into quality (18/23 wins, worst case $+0.8\%$, and still $2.14\times$ faster to
+Caspar's own quality).}""")
+
 # ---------------------------------------------------------------- mono fuchsberg
 W(r'\section{Monocular Fuchsberg sweep and the persistent-ftol stop}')
 W(r"""Four fisheye rig problems converted to monocular pinhole ($70^\circ$ cutoff, shared
