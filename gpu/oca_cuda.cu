@@ -2685,6 +2685,33 @@ int CountCheiralityViolations(const DeviceProblem& p, const DeviceState& s) {
   return count;
 }
 
+// REVIEW 2026-09-02 (code review, CG launch batching): the multi-shift menu
+// update issues 3*(L-1) cublas launches per CG iteration (axpy into xs[l],
+// scal ps[l], axpy r into ps[l]). These are elementwise, so one launch can
+// process all shifts: xs[l][i] += als[l]*ps[l][i], then
+// ps[l][i] = bes[l]*ps[l][i] + znext[l]*r[i]. Rounding is written to mirror
+// the cublas sequence (fma for axpy, separate rounding for scal), but exact
+// bit-compat with cublas internals is EMPIRICAL -- hence opt-in via
+// OCA_MENU_FUSE=1 until validated. MSMAX bounds the menu width (L<=8).
+constexpr int MSMAX = 8;
+struct MSArgs {
+  Scalar* xs[MSMAX]; Scalar* ps[MSMAX];
+  Scalar als[MSMAX], bes[MSMAX], znext[MSMAX];
+};
+__global__ void MFMenuXUpdate(MSArgs a, int nl, int n) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx >= nl * n) return;
+  int l = idx / n, i = idx - l * n;
+  a.xs[l][i] = __fma_rn(a.als[l], a.ps[l][i], a.xs[l][i]);
+}
+__global__ void MFMenuPUpdate(MSArgs a, const Scalar* __restrict__ r, int nl, int n) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx >= nl * n) return;
+  int l = idx / n, i = idx - l * n;
+  Scalar t = a.bes[l] * a.ps[l][i];          // cublas Dscal rounding
+  a.ps[l][i] = __fma_rn(a.znext[l], r[i], t); // cublas Daxpy fma
+}
+
 // H_gn must be a valid, distinct (n x n) buffer (never nullptr / aliased to H) --
 // the kernel scatters into both every observation, so aliasing would corrupt H
 // with Gauss-Newton-only contributions. Callers that don't need H_gn still pass a
@@ -2807,6 +2834,14 @@ struct RunLog {
   std::vector<Scalar> costs;
 };
 
+// REVIEW 2026-09-02 (code review F5, structure): everything from here to the
+// champion is RESEARCH-ERA solvers (24 variants, ~5,600 lines) plus their
+// private helpers (Sturm/Tridiag). They are reachable only from the CLI
+// dispatch, which already sits behind !OCA_CORE_LIBRARY -- compiling them
+// into the embedding library tripled its build time and binary for zero
+// callers. Guarded, not deleted: the CLI keeps every variant for experiment
+// reproduction.
+#ifndef OCA_CORE_LIBRARY
 RunLog SolveLM(const DeviceProblem& p, DeviceState& s, Scalar mu0, Scalar tol, int max_iter, bool verbose) {
   int n = p.n;
   Scalar *grad, *H_true, *H_gn, *A, *d;
@@ -8384,11 +8419,15 @@ RunLog SolveOCADabaMultiLambda(const DeviceProblem& p, DeviceState& s, Scalar fa
 }
 
 // ============================================================== main
+#endif  // !OCA_CORE_LIBRARY (legacy research solvers)
+
+#ifndef OCA_CORE_LIBRARY
 void PrintUsage(const char* prog) {
   std::fprintf(stderr,
       "Usage: %s --problem PATH --algo lm|oca|oca_adaptive [--lam L] [--lam0 L0] [--lam1 L1] "
       "[--mu0 M] [--tol T] [--max_iter N] [--quiet]\n", prog);
 }
+#endif  // !OCA_CORE_LIBRARY
 
 // ---------------------------------------------------------------- s2.5/s2.6 driver
 struct MFStats { long matvecs=0; long negcurv=0; long cand_evals=0;
@@ -8462,6 +8501,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   float *Gp32=nullptr,*Gc32=nullptr,*Bo32=nullptr;   // ROUND 9: --mf-fp32 storage
   Scalar *xc_un=nullptr,*xpv=nullptr,*dfull=nullptr,
          *d_best=nullptr,*r_=nullptr,*pv_=nullptr,*Ap_=nullptr;
+  Scalar *pp1=nullptr,*pp2=nullptr,*pp3=nullptr,*pp4=nullptr;  // OCA_POLY_CONG scratch
   int* okf;
   auto M=[&](void**q,size_t b){CUDA_CHECK(cudaMalloc(q,b));};
   M((void**)&Hcc,(size_t)CD*CD*ncam*sizeof(Scalar));M((void**)&Cdiag,3ul*npt*sizeof(Scalar));
@@ -8509,6 +8549,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   M((void**)&xc_un,(size_t)n_cf*sizeof(Scalar));M((void**)&xpv,(size_t)n_p*sizeof(Scalar));
   M((void**)&dfull,(size_t)n*sizeof(Scalar));M((void**)&d_best,(size_t)n*sizeof(Scalar));
   M((void**)&r_,(size_t)n_c*sizeof(Scalar));M((void**)&pv_,(size_t)n_c*sizeof(Scalar));
+  if(getenv("OCA_POLY_CONG")){
+    M((void**)&pp1,(size_t)n_c*sizeof(Scalar));M((void**)&pp2,(size_t)n_c*sizeof(Scalar));
+    M((void**)&pp3,(size_t)n_c*sizeof(Scalar));M((void**)&pp4,(size_t)n_c*sizeof(Scalar)); }
   M((void**)&Ap_,(size_t)n_c*sizeof(Scalar));M((void**)&okf,npt*sizeof(int));
   Scalar *r2acc=nullptr,*obscnt=nullptr;   // ROUND 10: intrinsics damping accumulators
   if(CD==9&&intr_damp>0.0){ M((void**)&r2acc,ncam*sizeof(Scalar)); M((void**)&obscnt,ncam*sizeof(Scalar)); }
@@ -8868,8 +8911,41 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       if(shared_intr) Reduce(wf,vout);
       ++st.matvecs;
     };
+    // Equilibrated bare operator S_hat = E S E (diag path building block).
+    auto SvE=[&](const Scalar* vin,Scalar* vout){
+      CUDA_CHECK(cudaMemcpy(w,vin,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+      MFScaleVec<<<GridSize(n_c),256>>>(w,E,n_c);
+      Kv(w,vout);
+      MFScaleVec<<<GridSize(n_c),256>>>(vout,E,n_c);
+    };
+    // OCA_POLY_CONG=<d> (math review 2026-09-02, proposal 7): polynomial
+    // CONGRUENCE p(S_hat)*S_hat*p(S_hat) + sigma*I. Unlike ordinary
+    // polynomial preconditioning, the two-sided congruence keeps the damping
+    // as sigma*I in the transformed space, so the whole multi-shift menu
+    // survives one Krylov sweep -- the same property the block congruence
+    // has, but with NO factor build and no per-camera Cholesky (the block
+    // arm's basin lottery lives in that factor). p is a least-squares fit of
+    // t^(-1/2) on [lam_max*rho_lo, lam_max] at log-spaced nodes, refit each
+    // outer from an 8-step power-iteration lam_max. Costs 2d+1 S-matvecs per
+    // CG iteration and d per candidate lift; pays iff CG depth shrinks by
+    // more than that factor. Unshared+equil+diag path only; off = 0.
+    static const int poly_d = [](){ const char* e=getenv("OCA_POLY_CONG");
+      int v=e?std::atoi(e):0; return std::min(std::max(v,0),2); }();
+    const bool poly_on = poly_d>0 && use_equil && !shared_intr && !block_eq;
+    static Scalar poly_c[3]={0,0,0};
+    auto PolyApply=[&](const Scalar* vin,Scalar* vout){
+      // vout = c0*vin + c1*S_hat*vin (+ c2*S_hat^2*vin), scratch: xpv? no --
+      // uses w internally via SvE, so dedicated scratch pp1/pp2.
+      SvE(vin,pp1);
+      if(poly_d>=2) SvE(pp1,pp2);
+      CUDA_CHECK(cudaMemcpy(vout,vin,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+      { Scalar c0=poly_c[0]; cublasDscal(blas,n_c,&c0,vout,1); }
+      { Scalar c1=poly_c[1]; cublasDaxpy(blas,n_c,&c1,pp1,1,vout,1); }
+      if(poly_d>=2){ Scalar c2=poly_c[2]; cublasDaxpy(blas,n_c,&c2,pp2,1,vout,1); }
+    };
     auto KvS=[&](const Scalar* vin,Scalar* vout){
       if(!use_equil){ Kv(vin,vout); return; }
+      if(poly_on){ PolyApply(vin,pp3); SvE(pp3,pp4); PolyApply(pp4,vout); return; }
       if(block_on && !shared_intr){
         MFBlockSolve<CD><<<GridSize(ncam),256>>>(Bk,vin,ncam,1,w);   // L^-T
         Kv(w,vout);
@@ -8889,6 +8965,36 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       Kv(w,vout);
       MFScaleVec<<<GridSize(n_c),256>>>(vout,E,n_c);
     };
+    if(poly_on){
+      // 8-step power iteration on S_hat for lam_max, seeded from bprime.
+      CUDA_CHECK(cudaMemcpy(pp2,bprime,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+      Scalar lmax=1.0;
+      for(int it=0;it<8;++it){
+        SvE(pp2,pp1);
+        cublasDnrm2(blas,n_c,pp1,1,&lmax);
+        if(!(lmax>0.0)){ lmax=1.0; break; }
+        Scalar inv=1.0/lmax; cublasDscal(blas,n_c,&inv,pp1,1);
+        std::swap(pp1,pp2);
+      }
+      // LS fit of p(t)=c0+c1*t(+c2*t^2) to t^(-1/2), 32 log nodes on
+      // [lmax*1e-4, lmax]; tiny normal equations solved on the host.
+      { const int NN=32, m=poly_d+1; double A[3][3]={{0}},b3[3]={0};
+        for(int i=0;i<NN;++i){
+          double t=lmax*std::pow(1e-4,1.0-(double)i/(NN-1));
+          double f=1.0/std::sqrt(t), ph[3]={1.0,t,t*t};
+          for(int a=0;a<m;++a){ b3[a]+=ph[a]*f;
+            for(int c=0;c<m;++c) A[a][c]+=ph[a]*ph[c]; } }
+        for(int c=0;c<m;++c){ double piv=A[c][c];        // Gauss, no pivoting
+          for(int r=c+1;r<m;++r){ double f2=A[r][c]/piv;
+            for(int c2=c;c2<m;++c2) A[r][c2]-=f2*A[c][c2]; b3[r]-=f2*b3[c]; } }
+        for(int r=m-1;r>=0;--r){ double s2=b3[r];
+          for(int c=r+1;c<m;++c) s2-=A[r][c]*poly_c[c];
+          poly_c[r]=s2/A[r][r]; }
+        for(int a=m;a<3;++a) poly_c[a]=0.0; }
+      // Transform the rhs into the congruent space: b_tilde = p(S_hat) b'.
+      PolyApply(bprime,pp3);
+      CUDA_CHECK(cudaMemcpy(bprime,pp3,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+    }
     // ---- candidate scoring by TRUE nonlinear cost (existing rule, unchanged) ----
     Scalar best_cost=cost; int best_sh=-1,best_ck=-1; bool have=false;
     std::vector<Scalar> cbest_sh(L,std::numeric_limits<Scalar>::infinity());
@@ -8982,6 +9088,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       } else {
         if(block_on && !shared_intr && use_equil){
           MFBlockSolve<CD><<<GridSize(ncam),256>>>(Bk,x_scaled,ncam,1,xc_un);
+        } else if(poly_on){
+          // Lift the congruent-space iterate: x_hat = p(S_hat) y, then E.
+          PolyApply(x_scaled,pp3);
+          CUDA_CHECK(cudaMemcpy(xc_un,pp3,(size_t)n_cf*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+          MFScaleVec<<<GridSize(n_cf),256>>>(xc_un,E,n_cf);
         } else {
           CUDA_CHECK(cudaMemcpy(xc_un,x_scaled,(size_t)n_cf*sizeof(Scalar),cudaMemcpyDeviceToDevice));
           if(use_equil) MFScaleVec<<<GridSize(n_cf),256>>>(xc_un,E,n_cf);
@@ -9106,6 +9217,16 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     const int grid_down = std::min(std::max(grid_down_env, 0), L-1);
     std::vector<Scalar> shifts(L);
     for(int l=0;l<L;++l) shifts[l]=lam_cam*std::pow(10.0,(double)(l-grid_down));
+    // OCA_NEGCURV_RESEED=1 (math review 2026-09-02, proposal 2): negative
+    // curvature at the SEED shift aborts the whole sweep even though the
+    // direction has positive curvature at larger shifts (p^T(A+sigma)p grows
+    // linearly in sigma). Instead of surrendering the outer to the retry
+    // ladder, raise the entire menu to the smallest decade that restores SPD
+    // at the offending direction and redo the sweep ONCE (assembly, point
+    // factor and rhs are all reused; only matvecs are repaid). Off = legacy.
+    static const bool negcurv_reseed = getenv("OCA_NEGCURV_RESEED")!=nullptr;
+    int sweep_attempt=0; Scalar nc_pAp=0, nc_pp=0;
+    sweep_restart:
     for(int l=0;l<L;++l){ CUDA_CHECK(cudaMemset(xs[l],0,(size_t)n_c*sizeof(Scalar)));
       CUDA_CHECK(cudaMemcpy(ps[l],bprime,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice)); }
     std::vector<Scalar> zeta(L,1.0),zprev(L,1.0),znext(L,1.0),als(L,0.0),bes(L,0.0);
@@ -9166,13 +9287,14 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       KvS(pv_,Ap_);
       { const Scalar sh=shifts[0]; cublasDaxpy(blas,n_c,&sh,pv_,1,Ap_,1); }
       Scalar pAp,pp; cublasDdot(blas,n_c,pv_,1,Ap_,1,&pAp); cublasDdot(blas,n_c,pv_,1,pv_,1,&pp);
-      if(!(pAp>1e-14*pp)){ ++st.negcurv; trunc=true; break; }   // Steihaug-Toint
+      if(!(pAp>1e-14*pp)){ ++st.negcurv; trunc=true; nc_pAp=pAp; nc_pp=pp; break; }   // Steihaug-Toint
       Scalar al=rr/pAp;
       if(rho_mode) preds[0]+=0.5*al*rr;
       cublasDaxpy(blas,n_c,&al,pv_,1,xs[0],1);
       Scalar mal=-al; cublasDaxpy(blas,n_c,&mal,Ap_,1,r_,1);
       Scalar rr_new; cublasDdot(blas,n_c,r_,1,r_,1,&rr_new);
       Scalar be=rr_new/rr;
+      static const bool menu_fuse = getenv("OCA_MENU_FUSE")!=nullptr && L<=MSMAX;
       for(int l=1;l<L;++l){
         Scalar sg=shifts[l]-shifts[0];
         Scalar den=al*be_prev*(zprev[l]-zeta[l])+zprev[l]*al_prev*(1.0+sg*al);
@@ -9180,11 +9302,21 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         if(!std::isfinite(znext[l])) znext[l]=0.0;
         als[l]=al*znext[l]/zeta[l]; bes[l]=be*(znext[l]/zeta[l])*(znext[l]/zeta[l]);
         if(rho_mode) preds[l]+=0.5*als[l]*zeta[l]*zeta[l]*rr;
-        cublasDaxpy(blas,n_c,&als[l],ps[l],1,xs[l],1);
+        if(!menu_fuse) cublasDaxpy(blas,n_c,&als[l],ps[l],1,xs[l],1);
+      }
+      if(menu_fuse){
+        MSArgs ma{};
+        for(int l=1;l<L;++l){ ma.xs[l-1]=xs[l]; ma.ps[l-1]=ps[l];
+          ma.als[l-1]=als[l]; ma.bes[l-1]=bes[l]; ma.znext[l-1]=znext[l]; }
+        const int tot=(L-1)*n_c;
+        MFMenuXUpdate<<<GridSize(tot),256>>>(ma,L-1,n_c);
+        MFMenuPUpdate<<<GridSize(tot),256>>>(ma,r_,L-1,n_c);
       }
       for(int l=1;l<L;++l){
-        cublasDscal(blas,n_c,&bes[l],ps[l],1);
-        cublasDaxpy(blas,n_c,&znext[l],r_,1,ps[l],1);
+        if(!menu_fuse){
+          cublasDscal(blas,n_c,&bes[l],ps[l],1);
+          cublasDaxpy(blas,n_c,&znext[l],r_,1,ps[l],1);
+        }
         zprev[l]=zeta[l]; zeta[l]=znext[l];
         if(shift_prune>0.0 && std::fabs((double)zeta[l])*std::sqrt((double)rr_new)
                                 <= shift_prune*(double)nb) sconv[l]=1;
@@ -9206,6 +9338,21 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       }
       if(prof){cudaDeviceSynchronize();t0=now();}
       if(sqrt(rr_new)<=eta*nb){ cg_broke=true; break; }    // s2.7
+    }
+    if(trunc && negcurv_reseed && sweep_attempt==0 && L>1){
+      int kup=0;
+      for(int k=1;k<L;++k)
+        if(nc_pAp + shifts[0]*(std::pow((Scalar)10.0,(Scalar)k)-(Scalar)1.0)*nc_pp
+             > (Scalar)1e-14*nc_pp){ kup=k; break; }
+      if(kup>0){
+        ++sweep_attempt;
+        for(int l=0;l<L;++l) shifts[l]*=std::pow((Scalar)10.0,(Scalar)kup);
+        std::fill(preds.begin(),preds.end(),(Scalar)0.0);
+        std::fill(sconv.begin(),sconv.end(),0);
+        std::fill(sdone.begin(),sdone.end(),0);
+        if(verbose) std::printf("    [negcurv-reseed] menu raised %d decade(s), sweep restarted\n",kup);
+        goto sweep_restart;
+      }
     }
     if(trunc){ ScoreAll(cg_it); }
     else if(ci_==0){ ScoreAll(cg_it); }
@@ -9514,6 +9661,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // (fp32 vs fp64, block_eq off, shared_intr off) are safe no-ops.
   cudaFree(dfull);cudaFree(d_best);cudaFree(r_);cudaFree(pv_);cudaFree(Ap_);cudaFree(okf);
   cudaFree(r2acc);cudaFree(obscnt);cudaFree(rk_sv);
+  cudaFree(pp1);cudaFree(pp2);cudaFree(pp3);cudaFree(pp4);
   cudaFree(Hcc);cudaFree(Cdiag);cudaFree(Gp);cudaFree(Gc);cudaFree(Bo);
   cudaFree(Gp32);cudaFree(Gc32);cudaFree(Bo32);
   cudaFree(bc);cudaFree(bp);cudaFree(Rf);cudaFree(tacc);cudaFree(uu);cudaFree(w);
