@@ -38,3 +38,14 @@ for depth (D=2 1.32e7, D=3 1.12e7 vs the 7.0e6 basin; clean inert control on
 venice). Tau-adaptivity is now triple-refuted (V1 quality / V2 lockup / V3
 basin loss): the deep-tau probes are irreducible search. Per-problem
 OCA_TAU_PT remains the honest lever.
+
+## Per-iteration campaign result (2026-09-02)
+
+The candidate-scoring sub-scaling mystery is solved: `KernelCost` funneled
+every observation through a single global atomicAdd. Block reduction
+(`OCA_COST_BLOCKRED=1`): venice 7.0->2.6ms/eval, **final-13682 37.7->2.3ms
+(16.4x)** -- contention is latency-bound, which also explains the 1.7x
+cross-GPU scaling and the idle power draw. Per-outer ~891->~550ms.
+Subsampled/reduced-precision scoring: refuted (3 designs) -- selection inputs
+cannot be perturbed. Remaining ~10x per-iteration gap vs Caspar-f32 is the
+architectural price of true-cost multi-shift scoring.
