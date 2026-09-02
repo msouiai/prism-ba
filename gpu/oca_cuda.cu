@@ -217,6 +217,71 @@ __global__ void KernelCost(const int* __restrict__ cam_idx, const int* __restric
   atomicAdd(cost_out, 0.5 * (rk ? OcaRho(rk, rk_a2, ss) : ss));
 }
 
+// Block-reduced cost kernel. KernelCost above funnels EVERY observation's
+// contribution through a single global atomicAdd -- 5-29M threads serializing
+// on one address. Measured on venice-1778: 7.0ms per cost eval where the pure
+// bandwidth cost is ~1ms. This variant reduces within the block in shared
+// memory and issues ONE atomicAdd per 256-thread block (~20k atomics instead
+// of millions). Same math; summation order differs (rounding-level).
+// Selected by OCA_COST_BLOCKRED=1; default off = bit-compat.
+__global__ void KernelCostBlockRed(const int* __restrict__ cam_idx, const int* __restrict__ pt_idx,
+                            const Scalar* __restrict__ uv, const Scalar* __restrict__ R,
+                            const Scalar* __restrict__ t, const Scalar* __restrict__ X,
+                            const Scalar* __restrict__ f, const Scalar* __restrict__ k1,
+                            const Scalar* __restrict__ k2, int nobs, Scalar* __restrict__ cost_out,
+                            int rk, Scalar rk_a2) {
+  int o = blockIdx.x * blockDim.x + threadIdx.x;
+  Scalar v = 0.0;
+  if (o < nobs) {
+    int c = cam_idx[o], p = pt_idx[o];
+    const Scalar* Rc = R + 9 * c;
+    const Scalar* Xp = X + 3 * p;
+    Scalar Px = Rc[0]*Xp[0]+Rc[1]*Xp[1]+Rc[2]*Xp[2] + t[3*c];
+    Scalar Py = Rc[3]*Xp[0]+Rc[4]*Xp[1]+Rc[5]*Xp[2] + t[3*c+1];
+    Scalar Pz = Rc[6]*Xp[0]+Rc[7]*Xp[1]+Rc[8]*Xp[2] + t[3*c+2];
+    Scalar xp = -Px / Pz, yp = -Py / Pz;
+    Scalar r2 = xp*xp + yp*yp;
+    Scalar dist = 1.0 + k1[c]*r2 + k2[c]*r2*r2;
+    Scalar rx = f[c]*dist*xp - uv[2*o];
+    Scalar ry = f[c]*dist*yp - uv[2*o+1];
+    const Scalar ss = rx*rx + ry*ry;
+    v = 0.5 * (rk ? OcaRho(rk, rk_a2, ss) : ss);
+  }
+  __shared__ Scalar sh[256];
+  sh[threadIdx.x] = v;
+  __syncthreads();
+  for (int st = 128; st > 0; st >>= 1) {
+    if (threadIdx.x < st) sh[threadIdx.x] += sh[threadIdx.x + st];
+    __syncthreads();
+  }
+  if (threadIdx.x == 0) atomicAdd(cost_out, sh[0]);
+}
+
+// Strided clone of KernelCost (subsampled candidate scoring). Same body.
+__global__ void KernelCostStride(const int* __restrict__ cam_idx, const int* __restrict__ pt_idx,
+                            const Scalar* __restrict__ uv, const Scalar* __restrict__ R,
+                            const Scalar* __restrict__ t, const Scalar* __restrict__ X,
+                            const Scalar* __restrict__ f, const Scalar* __restrict__ k1,
+                            const Scalar* __restrict__ k2, int nobs, int stride,
+                            Scalar* __restrict__ cost_out, int rk, Scalar rk_a2) {
+  int o = blockIdx.x * blockDim.x + threadIdx.x;
+  if (o >= nobs) return;
+  int c = cam_idx[o], p = pt_idx[o];
+  if (p % stride) return;   // point-level subset (see MFPass1Stride)
+  const Scalar* Rc = R + 9 * c;
+  const Scalar* Xp = X + 3 * p;
+  Scalar Px = Rc[0]*Xp[0]+Rc[1]*Xp[1]+Rc[2]*Xp[2] + t[3*c];
+  Scalar Py = Rc[3]*Xp[0]+Rc[4]*Xp[1]+Rc[5]*Xp[2] + t[3*c+1];
+  Scalar Pz = Rc[6]*Xp[0]+Rc[7]*Xp[1]+Rc[8]*Xp[2] + t[3*c+2];
+  Scalar xp = -Px / Pz, yp = -Py / Pz;
+  Scalar r2 = xp*xp + yp*yp;
+  Scalar dist = 1.0 + k1[c]*r2 + k2[c]*r2*r2;
+  Scalar rx = f[c]*dist*xp - uv[2*o];
+  Scalar ry = f[c]*dist*yp - uv[2*o+1];
+  const Scalar ss = rx*rx + ry*ry;
+  atomicAdd(cost_out, 0.5 * (rk ? OcaRho(rk, rk_a2, ss) : ss));
+}
+
 // Per-observation squared residual, for the student-t EM scale estimate. The
 // body is KernelCost's verbatim (same Snavely -P/Pz convention) so the scale
 // is never estimated from a re-derived projection -- a sign slip there makes
@@ -1169,6 +1234,25 @@ __global__ void MFPass1(const HT* __restrict__ Gp,const int* __restrict__ scam,
     const int* __restrict__ spt,const Scalar* __restrict__ v,int nobs,Scalar* __restrict__ tacc){
   int k=blockIdx.x*blockDim.x+threadIdx.x; if(k>=nobs)return;
   int p=spt[k]; const Scalar* vc=v+CD*scam[k];
+  for(int j=0;j<3;++j){ Scalar q=0;
+    for(int i=0;i<CD;++i) q+=Gp[(size_t)(3*i+j)*nobs+k]*vc[i];
+    atomicAdd(&tacc[3*p+j],q); }
+}
+template <int CD, class HT>
+__global__ void MFPass1Stride(const HT* __restrict__ Gp,const int* __restrict__ scam,
+    const int* __restrict__ spt,const Scalar* __restrict__ v,int nobs,int stride,Scalar* __restrict__ tacc){
+  // POINT-level subset: include ALL observations of points with p%stride==0.
+  // Obs-level striding is fundamentally wrong here: the backsub map
+  // xp = Vinv(bp - W^T xc) is exact per point, and a point's W^T xc sampled at
+  // 1-in-S of its handful of observations has O(1) per-point error that no
+  // scaling fixes (measured: venice diverged to 1.2e8 under a scaled obs
+  // stride). With the point subset, subset points get EXACT steps and the
+  // subset cost (same filter, below) is an unbiased 1/S sample of the
+  // objective. The big Gp streams are only read by active threads, so the
+  // bandwidth saving is ~1/S even though the launch covers all nobs.
+  int k=blockIdx.x*blockDim.x+threadIdx.x; if(k>=nobs)return;
+  int p=spt[k]; if(p%stride) return;
+  const Scalar* vc=v+CD*scam[k];
   for(int j=0;j<3;++j){ Scalar q=0;
     for(int i=0;i<CD;++i) q+=Gp[(size_t)(3*i+j)*nobs+k]*vc[i];
     atomicAdd(&tacc[3*p+j],q); }
@@ -2460,9 +2544,37 @@ Scalar ComputeCost(const DeviceProblem& p, const DeviceState& s,
   Scalar* d_cost;
   CUDA_CHECK(cudaMalloc(&d_cost, sizeof(Scalar)));
   CUDA_CHECK(cudaMemset(d_cost, 0, sizeof(Scalar)));
-  KernelCost<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.R, s.t, s.X,
+  static const bool cost_blockred = getenv("OCA_COST_BLOCKRED")!=nullptr;
+  if (cost_blockred)
+    KernelCostBlockRed<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.R, s.t, s.X,
                                         INTR_F(p,s), INTR_K1(p,s), INTR_K2(p,s), p.nobs, d_cost,
                                         rk, rk_a2);
+  else
+    KernelCost<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.R, s.t, s.X,
+                                        INTR_F(p,s), INTR_K1(p,s), INTR_K2(p,s), p.nobs, d_cost,
+                                        rk, rk_a2);
+  Scalar cost;
+  CUDA_CHECK(cudaMemcpy(&cost, d_cost, sizeof(Scalar), cudaMemcpyDeviceToHost));
+  CUDA_CHECK(cudaFree(d_cost));
+  return cost;
+}
+
+// Strided variants for SUBSAMPLED CANDIDATE SCORING (OCA_SCORE_STRIDE=S).
+// Score every candidate on obs k with k%S==0 only; the winner is re-scored on
+// the full data before the accept decision, so accept/rho/trajectory semantics
+// remain exact -- the subset only decides WHO gets the full evaluation.
+// Self-consistent: each scored observation's point receives its Pass1
+// contributions from exactly the scored subset. Validated idea: the sketch
+// round measured 15%-of-obs scoring 0.03%-equal on plain L2 (unsafe only with
+// saturating robust kernels; these runs are L2).
+Scalar ComputeCostStride(const DeviceProblem& p, const DeviceState& s, int stride,
+                         int rk = 0, Scalar rk_a2 = 0.0) {
+  Scalar* d_cost;
+  CUDA_CHECK(cudaMalloc(&d_cost, sizeof(Scalar)));
+  CUDA_CHECK(cudaMemset(d_cost, 0, sizeof(Scalar)));
+  KernelCostStride<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.R, s.t, s.X,
+                                            INTR_F(p,s), INTR_K1(p,s), INTR_K2(p,s), p.nobs, stride,
+                                            d_cost, rk, rk_a2);
   Scalar cost;
   CUDA_CHECK(cudaMemcpy(&cost, d_cost, sizeof(Scalar), cudaMemcpyDeviceToHost));
   CUDA_CHECK(cudaFree(d_cost));
@@ -8463,6 +8575,23 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     const char* e=getenv("OCA_TAU_V3"); return e?std::atoi(e):0; }();
   Scalar tau_base=tau_pt, tau_used=tau_pt, tau_win=0.0;
   double t_asm=0,t_fac=0,t_mv=0,t_cand=0;
+  // OCA_PROF_SCORE=1: sub-phase breakdown of the candidate-scoring path.
+  static const bool prof_score = getenv("OCA_PROF_SCORE")!=nullptr;
+  double ts_unscale=0,ts_pass1=0,ts_copy=0,ts_retract=0,ts_cost=0; long ts_n=0;
+  // OCA_SCORE_STRIDE=<S>: subsampled candidate scoring (see KernelCostStride).
+  // All candidates scored on obs k%S==0; the WINNER is re-scored on full data
+  // before the accept decision, so trajectory semantics stay exact.
+  // 1/unset = off, bit-compat.
+  static const int score_stride_env = [](){
+    const char* e = getenv("OCA_SCORE_STRIDE"); int v=e?std::atoi(e):1; return v<1?1:v; }();
+  // PHASE-GATED: subsampled scoring only helps while candidate spreads are
+  // large (the opening; spreads 10-400%). In the grind, true candidate
+  // differences are ~1e-5 relative -- below the subset estimate's resolution
+  // -- and subsampling picks noise: measured on venice, stride-10 everywhere gave
+  // 86% of subset winners rejected on full rescore, +11% final, 5x wall.
+  // score_stride is therefore per-outer: env stride while the last accepted
+  // relative improvement exceeds 1e-3, full scoring once the grind begins.
+  int score_stride = score_stride_env;
   std::vector<std::string> jrows;
   std::chrono::steady_clock::time_point t0;
 
@@ -8520,6 +8649,8 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     // damps only the camera block and tau only the point block, so a reject
     // that escalates lam alone leaves the point relaxation -- the toxic half
     // on this scene -- untouched, and the streak runs until tau finally moves.
+    if(score_stride_env>1)
+      score_stride = (last_rel > (Scalar)1e-3) ? score_stride_env : 1;
     Scalar tau_eff = tau_base;
     if(CD==9 && rej_streak>0){
       tau_eff = tau_base*std::pow((Scalar)10.0,(Scalar)std::min(rej_streak,12));
@@ -8761,15 +8892,26 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           if(use_equil) MFScaleVec<<<GridSize(n_cf),256>>>(xc_un,E,n_cf);
         }
       }
+      auto _ps=[&](double& acc,auto&& fn){ if(prof_score){cudaDeviceSynchronize();auto q=now();fn();cudaDeviceSynchronize();acc+=std::chrono::duration<double>(now()-q).count();} else fn(); };
+      _ps(ts_pass1,[&]{
       CUDA_CHECK(cudaMemset(tacc,0,(size_t)n_p*sizeof(Scalar)));
-      if(mf_fp32) MFPass1<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,xc_un,nobs,tacc);
-      else        MFPass1<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,xc_un,nobs,tacc);
-      MFBackSub<<<GridSize(npt),256>>>(Rf,bp,tacc,npt,xpv);
+      if(score_stride>1){
+        if(mf_fp32) MFPass1Stride<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,xc_un,nobs,score_stride,tacc);
+        else        MFPass1Stride<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,xc_un,nobs,score_stride,tacc);
+      } else {
+        if(mf_fp32) MFPass1<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,xc_un,nobs,tacc);
+        else        MFPass1<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,xc_un,nobs,tacc);
+      }
+      MFBackSub<<<GridSize(npt),256>>>(Rf,bp,tacc,npt,xpv); });
+      _ps(ts_copy,[&]{
       CUDA_CHECK(cudaMemcpy(dfull,xc_un,(size_t)n_cf*sizeof(Scalar),cudaMemcpyDeviceToDevice));
       CUDA_CHECK(cudaMemcpy(dfull+n_cf,xpv,(size_t)n_p*sizeof(Scalar),cudaMemcpyDeviceToDevice));
-      KernelNegateInPlace<<<GridSize(n),256>>>(dfull,n);
-      DoRetract(dfull,s_new);
-      Scalar c=ComputeCost(p,s_new,rk,rk_a2);
+      KernelNegateInPlace<<<GridSize(n),256>>>(dfull,n); });
+      _ps(ts_retract,[&]{ DoRetract(dfull,s_new); });
+      Scalar c=0;
+      _ps(ts_cost,[&]{ c = score_stride>1 ? ComputeCostStride(p,s_new,score_stride,rk,rk_a2)
+                                          : ComputeCost(p,s_new,rk,rk_a2); });
+      if(prof_score) ++ts_n;
       if(getenv("MF_DEBUG")){ Scalar nx,np2;
         cublasDnrm2(blas,n_cf,xc_un,1,&nx); cublasDnrm2(blas,n_p,xpv,1,&np2);
         std::printf("      [dbg] shift=%d ckpt=%d  |x_c|=%.6e |x_p|=%.6e  cand_cost=%.10e  (cur=%.10e)%s\n",
@@ -8803,6 +8945,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     // (1e-3 regressed ladybug-1197 +60% wall). 0 (default) = off, bit-compat.
     static const double menu_gate = [](){
       const char* e = getenv("OCA_MENU_GATE"); return e ? std::atof(e) : 0.0; }();
+
     auto ScoreAll=[&](int depth){
       // Gate on the MODEL predictions, not on scored costs. preds[l] is the
       // accumulated quadratic-model decrease 1/2*sum(al*zeta^2*rr) per shift,
@@ -8989,6 +9132,12 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           CUDA_CHECK(cudaMemcpy(d_best,dfull,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice)); }
       }
       (void)base;
+    }
+    // Subsampled scoring: re-score the WINNER on the full data so the accept
+    // decision, rho, ftol and the logged trajectory all use true cost.
+    if(score_stride>1 && have){
+      DoRetract(d_best,s_new);
+      best_cost=ComputeCost(p,s_new,rk,rk_a2);
     }
     // ---- accept / reject (existing rule) ----
     bool accepted=false;
@@ -9205,6 +9354,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
            // inner retry above can `continue` without spending an iteration.
   }
   int cheir1=CountCheiralityViolations(p,s);
+  if(prof_score && ts_n>0)
+    std::printf("  [SCORE] n=%ld pass1+backsub=%.1fms copy+neg=%.1fms retract=%.1fms cost=%.1fms  (per eval)\n",
+                ts_n, 1e3*ts_pass1/ts_n, 1e3*ts_copy/ts_n, 1e3*ts_retract/ts_n, 1e3*ts_cost/ts_n);
   if(st.menu_gated+st.menu_full>0)
     std::printf("  MFCG menu gate: %ld of %ld menus flat (%.1f%%), interior scorings skipped %ld\n",
                 st.menu_gated, st.menu_gated+st.menu_full,
