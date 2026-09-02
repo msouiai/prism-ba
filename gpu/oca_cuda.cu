@@ -1257,6 +1257,73 @@ __global__ void MFPass1Stride(const HT* __restrict__ Gp,const int* __restrict__ 
     for(int i=0;i<CD;++i) q+=Gp[(size_t)(3*i+j)*nobs+k]*vc[i];
     atomicAdd(&tacc[3*p+j],q); }
 }
+// ============================================================================
+// OCA_JIT_J=1 (tier-1 Caspar-codegen adaptation): ON-THE-FLY JACOBIANS.
+// The stored fragments Gp/Gc hold W = A^T B per observation (3*CD doubles) and
+// re-reading them is the bandwidth floor of every matvec and scoring pass
+// (7+GB per matvec at 16.7M obs fp64). Caspar's core advantage is that it
+// never stores J -- generated kernels recompute it from state inside every
+// product, turning a bandwidth-bound op into a compute-bound one. These
+// kernels do the same for OUR two-block Schur matvec: recompute gx,gy via the
+// FD-validated BalResidualGrad12 (CSE'd, ~200 flops) and apply
+// W^T v = B^T(A v) / W u = A^T(B u) without ever forming W. Reads per obs:
+// state gathers only (cam 9+3+3, point 3, uv 2) instead of 27 stored doubles.
+// Exact same math as the stored path modulo product associativity (rounding).
+// CD=9 only (CD=6 uses a different generated grad). Default off, bit-compat.
+template <int CD>
+__global__ void MFPass1JIT(const int* __restrict__ ci,const int* __restrict__ pi,
+    const Scalar* __restrict__ uv,const Scalar* __restrict__ R,const Scalar* __restrict__ t,
+    const Scalar* __restrict__ X,const Scalar* __restrict__ f,const Scalar* __restrict__ k1,
+    const Scalar* __restrict__ k2,const Scalar* __restrict__ v,int nobs,Scalar k2mask,
+    int rk,Scalar rk_a2,Scalar* __restrict__ tacc){
+  static_assert(CD==9,"JIT path is dof9-only");
+  int o=blockIdx.x*blockDim.x+threadIdx.x; if(o>=nobs)return;
+  int c=ci[o],p=pi[o];
+  const Scalar* Rc=R+9*c; const Scalar* Xp=X+3*p;
+  Scalar gx[12],gy[12],r0x,r0y;
+  BalResidualGrad12(Rc[0],Rc[1],Rc[2],Rc[3],Rc[4],Rc[5],Rc[6],Rc[7],Rc[8],
+      t[3*c],t[3*c+1],t[3*c+2],Xp[0],Xp[1],Xp[2],f[c],k1[c],k2[c],uv[2*o],uv[2*o+1],gx,gy,&r0x,&r0y);
+  gx[8]*=k2mask; gy[8]*=k2mask;
+  if(rk){
+    const Scalar sw=sqrt(OcaRobustW(rk,rk_a2,r0x*r0x+r0y*r0y));
+    for(int i=0;i<12;++i){ gx[i]*=sw; gy[i]*=sw; }
+  }
+  const Scalar* vc=v+CD*c;
+  Scalar ax=0,ay=0;
+  for(int i=0;i<CD;++i){ ax+=gx[i]*vc[i]; ay+=gy[i]*vc[i]; }
+  for(int j=0;j<3;++j) atomicAdd(&tacc[3*p+j], gx[CD+j]*ax+gy[CD+j]*ay);
+}
+template <int CD>
+__global__ void MFHccMulJIT(const Scalar* __restrict__ Hcc,const Scalar* __restrict__ v,int ncam,Scalar* __restrict__ w){
+  int c=blockIdx.x*blockDim.x+threadIdx.x; if(c>=ncam)return;
+  const Scalar* H=Hcc+(size_t)CD*CD*c; const Scalar* vc=v+CD*c;
+  for(int i=0;i<CD;++i){ Scalar q=0;
+    for(int j=0;j<CD;++j) q+=H[CD*i+j]*vc[j];
+    w[CD*c+i]=q; }
+}
+template <int CD>
+__global__ void MFPass2JIT(const int* __restrict__ ci,const int* __restrict__ pi,
+    const Scalar* __restrict__ uv,const Scalar* __restrict__ R,const Scalar* __restrict__ t,
+    const Scalar* __restrict__ X,const Scalar* __restrict__ f,const Scalar* __restrict__ k1,
+    const Scalar* __restrict__ k2,const Scalar* __restrict__ u,int nobs,Scalar k2mask,
+    int rk,Scalar rk_a2,Scalar* __restrict__ wout){
+  static_assert(CD==9,"JIT path is dof9-only");
+  int o=blockIdx.x*blockDim.x+threadIdx.x; if(o>=nobs)return;
+  int c=ci[o],p=pi[o];
+  const Scalar* Rc=R+9*c; const Scalar* Xp=X+3*p;
+  Scalar gx[12],gy[12],r0x,r0y;
+  BalResidualGrad12(Rc[0],Rc[1],Rc[2],Rc[3],Rc[4],Rc[5],Rc[6],Rc[7],Rc[8],
+      t[3*c],t[3*c+1],t[3*c+2],Xp[0],Xp[1],Xp[2],f[c],k1[c],k2[c],uv[2*o],uv[2*o+1],gx,gy,&r0x,&r0y);
+  gx[8]*=k2mask; gy[8]*=k2mask;
+  if(rk){
+    const Scalar sw=sqrt(OcaRobustW(rk,rk_a2,r0x*r0x+r0y*r0y));
+    for(int i=0;i<12;++i){ gx[i]*=sw; gy[i]*=sw; }
+  }
+  const Scalar* up=u+3*p;
+  Scalar bx=0,by=0;
+  for(int j=0;j<3;++j){ bx+=gx[CD+j]*up[j]; by+=gy[CD+j]*up[j]; }
+  for(int i=0;i<CD;++i) atomicAdd(&wout[CD*c+i], -(gx[i]*bx+gy[i]*by));
+}
 __global__ void MFVinvApply(const Scalar* __restrict__ Rf,const Scalar* __restrict__ tacc,int npt,Scalar* __restrict__ u){
   int p=blockIdx.x*blockDim.x+threadIdx.x; if(p>=npt)return;
   const Scalar* Rp=Rf+6*p;
@@ -8582,6 +8649,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // All candidates scored on obs k%S==0; the WINNER is re-scored on full data
   // before the accept decision, so trajectory semantics stay exact.
   // 1/unset = off, bit-compat.
+  // OCA_JIT_J=1: on-the-fly Jacobian matvec (tier-1 Caspar-codegen adaptation;
+  // see MFPass1JIT). dof9 + unshared only in this first cut. Default off.
+  static const bool jit_j = getenv("OCA_JIT_J")!=nullptr;
+  const bool jit_on = jit_j && CD==9 && !shared_intr;
   static const int score_stride_env = [](){
     const char* e = getenv("OCA_SCORE_STRIDE"); int v=e?std::atoi(e):1; return v<1?1:v; }();
   // PHASE-GATED: subsampled scoring only helps while candidate spreads are
@@ -8764,7 +8835,16 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       const Scalar* vf=vin; Scalar* wf=vout;
       if(shared_intr){ Broadcast(vin,bcast_in); vf=bcast_in; wf=bcast_out; }
       CUDA_CHECK(cudaMemset(tacc,0,(size_t)n_p*sizeof(Scalar)));
-      if(mf_fp32){ MFPass1<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,vf,nobs,tacc);
+      if(jit_on){
+        if constexpr (CD==9) {
+        MFPass1JIT<9><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
+            INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),vf,nobs,k2mask,rk,rk_a2,tacc);
+        MFVinvApply<<<GridSize(npt),256>>>(Rf,tacc,npt,uu);
+        MFHccMulJIT<9><<<GridSize(ncam),256>>>(Hcc,vf,ncam,wf);
+        MFPass2JIT<9><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
+            INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),uu,nobs,k2mask,rk,rk_a2,wf);
+        }
+      } else if(mf_fp32){ MFPass1<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,vf,nobs,tacc);
                    MFVinvApply<<<GridSize(npt),256>>>(Rf,tacc,npt,uu);
                    MFPass2<CD,float><<<ncam,256>>>(Gc32,p.mf_cspt,p.mf_coff,uu,Hcc,vf,nobs,wf); }
       else       { MFPass1<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,vf,nobs,tacc);
