@@ -28,6 +28,9 @@ The Finals crossing gap is the REJECT STORM: final-4585 runs ~2,650 outers for
 ~313 accepts (88% rejects) on both GPUs, each reject re-paying the per-outer
 fixed phases. `OCA_TAU_PT=1e-4` collapses it on 4585-block (324s -> 133s at
 equal quality) but anti-composes with the scheduler and trades quality on
-13682 -- a per-problem lever. The durable fix is an adaptive tau base
-(promote the ratchet's discovered tau instead of re-learning it per outer):
-designed, not yet implemented.
+13682 -- a per-problem lever. Adaptive tau was subsequently REFUTED twice: the existing `tau_persist`
+(V2) ladder collapses the storm but stalls at 1.15e7 -- a no-ftol control
+(7,007 outers, 99% rejects, 620s, no further descent) proves the storm's
+escalation cycles ARE the descent mechanism on this problem. Best known:
+fixed OCA_TAU_PT=1e-4 (same depth as the storm at 2.4x less wall). A V3
+(adaptive ladder FLOOR, preserving low-tau re-probes) is designed but ungated.
