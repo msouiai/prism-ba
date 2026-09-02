@@ -2608,8 +2608,11 @@ Diagnostics ComputeDiagnostics(const DeviceProblem& p, const DeviceState& s) {
 
 Scalar ComputeCost(const DeviceProblem& p, const DeviceState& s,
                    int rk = 0, Scalar rk_a2 = 0.0) {
-  Scalar* d_cost;
-  CUDA_CHECK(cudaMalloc(&d_cost, sizeof(Scalar)));
+  // REVIEW 2026-09-02: persistent scalar (d_nf pattern). This function runs
+  // thousands of times per solve; a cudaMalloc/Free pair per call serializes
+  // the stream on allocator traffic (~3-15% of scoring wall at scale).
+  static Scalar* d_cost = nullptr;
+  if (!d_cost) CUDA_CHECK(cudaMalloc(&d_cost, sizeof(Scalar)));
   CUDA_CHECK(cudaMemset(d_cost, 0, sizeof(Scalar)));
   static const bool cost_blockred = getenv("OCA_COST_BLOCKRED")!=nullptr;
   if (cost_blockred)
@@ -2622,7 +2625,6 @@ Scalar ComputeCost(const DeviceProblem& p, const DeviceState& s,
                                         rk, rk_a2);
   Scalar cost;
   CUDA_CHECK(cudaMemcpy(&cost, d_cost, sizeof(Scalar), cudaMemcpyDeviceToHost));
-  CUDA_CHECK(cudaFree(d_cost));
   return cost;
 }
 
@@ -2636,15 +2638,14 @@ Scalar ComputeCost(const DeviceProblem& p, const DeviceState& s,
 // saturating robust kernels; these runs are L2).
 Scalar ComputeCostStride(const DeviceProblem& p, const DeviceState& s, int stride,
                          int rk = 0, Scalar rk_a2 = 0.0) {
-  Scalar* d_cost;
-  CUDA_CHECK(cudaMalloc(&d_cost, sizeof(Scalar)));
+  static Scalar* d_cost = nullptr;
+  if (!d_cost) CUDA_CHECK(cudaMalloc(&d_cost, sizeof(Scalar)));
   CUDA_CHECK(cudaMemset(d_cost, 0, sizeof(Scalar)));
   KernelCostStride<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.R, s.t, s.X,
                                             INTR_F(p,s), INTR_K1(p,s), INTR_K2(p,s), p.nobs, stride,
                                             d_cost, rk, rk_a2);
   Scalar cost;
   CUDA_CHECK(cudaMemcpy(&cost, d_cost, sizeof(Scalar), cudaMemcpyDeviceToHost));
-  CUDA_CHECK(cudaFree(d_cost));
   return cost;
 }
 
@@ -2675,13 +2676,12 @@ __global__ void KernelCountCheirality(const int* __restrict__ cam_idx, const int
 }
 
 int CountCheiralityViolations(const DeviceProblem& p, const DeviceState& s) {
-  int* d_count;
-  CUDA_CHECK(cudaMalloc(&d_count, sizeof(int)));
+  static int* d_count = nullptr;
+  if (!d_count) CUDA_CHECK(cudaMalloc(&d_count, sizeof(int)));
   CUDA_CHECK(cudaMemset(d_count, 0, sizeof(int)));
   KernelCountCheirality<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, s.R, s.t, s.X, p.nobs, d_count);
   int count;
   CUDA_CHECK(cudaMemcpy(&count, d_count, sizeof(int), cudaMemcpyDeviceToHost));
-  CUDA_CHECK(cudaFree(d_count));
   return count;
 }
 
@@ -8426,7 +8426,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
                            // small but REAL end-residual cost -- see
                            // OPENING_ACCEL.md. Off by default.
                            bool fast_opening = false,
-                           int fast_opening_depth = 32) {
+                           int fast_opening_depth = 32,
+                           // REVIEW 2026-09-02: warm-start feedback for the
+                           // mapper (Result::final_lambda). The rig path has
+                           // always had this; the BAL path returned 0.0.
+                           Scalar* final_lambda_out = nullptr) {
   int ncam=p.ncam, npt=p.npt, n_p=3*npt, nobs=p.nobs;
   // ROUND 11: with shared intrinsics the CG runs in the REDUCED camera space
   // [6*ncam poses | 3*ncalib calibrations]; the assembly kernels keep writing
@@ -8456,7 +8460,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
          *corr=nullptr,*E=nullptr,*dk=nullptr;
   Scalar *Bk=nullptr,*bscr=nullptr;   // REVIEW: block-congruence factor + scratch
   float *Gp32=nullptr,*Gc32=nullptr,*Bo32=nullptr;   // ROUND 9: --mf-fp32 storage
-  Scalar *xc_un=nullptr,*xpv=nullptr,*dcam=nullptr,*dpt=nullptr,*dfull=nullptr,
+  Scalar *xc_un=nullptr,*xpv=nullptr,*dfull=nullptr,
          *d_best=nullptr,*r_=nullptr,*pv_=nullptr,*Ap_=nullptr;
   int* okf;
   auto M=[&](void**q,size_t b){CUDA_CHECK(cudaMalloc(q,b));};
@@ -8503,7 +8507,6 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   M((void**)&bprime,(size_t)n_c*sizeof(Scalar));M((void**)&corr,(size_t)n_cf*sizeof(Scalar));
   M((void**)&E,(size_t)n_c*sizeof(Scalar));M((void**)&dk,(size_t)n_cf*sizeof(Scalar));
   M((void**)&xc_un,(size_t)n_cf*sizeof(Scalar));M((void**)&xpv,(size_t)n_p*sizeof(Scalar));
-  M((void**)&dcam,(size_t)n_c*sizeof(Scalar));M((void**)&dpt,(size_t)n_p*sizeof(Scalar));
   M((void**)&dfull,(size_t)n*sizeof(Scalar));M((void**)&d_best,(size_t)n*sizeof(Scalar));
   M((void**)&r_,(size_t)n_c*sizeof(Scalar));M((void**)&pv_,(size_t)n_c*sizeof(Scalar));
   M((void**)&Ap_,(size_t)n_c*sizeof(Scalar));M((void**)&okf,npt*sizeof(int));
@@ -8752,6 +8755,18 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     else        MFPointFactor<Scalar><<<GridSize(npt),256>>>(Bo,Cdiag,p.point_obs_offsets,p.point_obs_list,tau_eff,npt,Rf,okf);
     // b' = b_c - H_cp V^-1 b_p
     MFVinvApply<<<GridSize(npt),256>>>(Rf,bp,npt,uu);
+    // OCA_RHO_PT=1 (math review 2026-09-02, finding 1): preds[l] accumulates
+    // only the CAMERA-Schur-space quadratic decrease. The full-space model
+    // decrease of the eliminated step additionally contains the CONSTANT
+    // point-block term 1/2 * b_p^T (V+tau D)^-1 b_p -- identical for every
+    // candidate (so selection is unaffected) but missing from rho's
+    // denominator, inflating rho -> Nielsen under-damps -> feeds reject
+    // storms. uu = V^-1 b_p is already computed on this line; the fix is one
+    // Ddot per attempt. Selection-facing via the lambda trajectory: needs the
+    // full trajectory-validation protocol, hence opt-in.
+    static const bool rho_pt_fix = getenv("OCA_RHO_PT")!=nullptr;
+    Scalar pred_pt = 0.0;
+    if(rho_pt_fix){ Scalar v=0; cublasDdot(blas,n_p,bp,1,uu,1,&v); pred_pt=0.5*v; }
     CUDA_CHECK(cudaMemset(corr,0,(size_t)n_cf*sizeof(Scalar)));
     if(mf_fp32) MFRhsPrime<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,uu,nobs,corr);
     else        MFRhsPrime<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,uu,nobs,corr);
@@ -9026,6 +9041,18 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     static const double menu_gate = [](){
       const char* e = getenv("OCA_MENU_GATE"); return e ? std::atof(e) : 0.0; }();
 
+    // OCA_SHIFT_PRUNE=<tol> (math review 2026-09-02, proposal 3): the zeta
+    // recurrence already yields each shift's EXACT shifted-residual norm for
+    // free (|zeta_l|*sqrt(rr)). Once shift l's system has converged below
+    // tol*|b'|, its iterate is frozen to CG accuracy -- scoring it again at
+    // later checkpoints re-evaluates a near-identical candidate at full
+    // 2-pass cost. Score once after convergence (sdone), then skip. Uses
+    // exact per-shift information, NOT a subsample/proxy of the cost -- the
+    // refuted designs perturbed the scores themselves; this only removes
+    // duplicate menu entries. Shift 0 (the seed) is never pruned. Off = 0.
+    static const double shift_prune = [](){
+      const char* e=getenv("OCA_SHIFT_PRUNE"); return e?std::atof(e):0.0; }();
+    std::vector<char> sconv(L,0), sdone(L,0);
     auto ScoreAll=[&](int depth){
       // Gate on the MODEL predictions, not on scored costs. preds[l] is the
       // accumulated quadratic-model decrease 1/2*sum(al*zeta^2*rr) per shift,
@@ -9055,7 +9082,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         }
       }
       ++st.menu_full;
-      for(int l=0;l<L;++l) Score(xs[l],l,depth);
+      for(int l=0;l<L;++l){
+        if(shift_prune>0.0 && l>0 && sconv[l] && sdone[l]) continue;
+        Score(xs[l],l,depth);
+        if(sconv[l]) sdone[l]=1;
+      }
     };
     // ---- multi-shift CG.  seed = SMALLEST shift (required for stability). ----
     // OCA_GRID_DOWN=d shifts the menu two-sided: lam*10^(l-d), l=0..L-1, so d
@@ -9152,6 +9183,8 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         cublasDscal(blas,n_c,&bes[l],ps[l],1);
         cublasDaxpy(blas,n_c,&znext[l],r_,1,ps[l],1);
         zprev[l]=zeta[l]; zeta[l]=znext[l];
+        if(shift_prune>0.0 && std::fabs((double)zeta[l])*std::sqrt((double)rr_new)
+                                <= shift_prune*(double)nb) sconv[l]=1;
       }
       al_prev=al; be_prev=be;
       cublasDscal(blas,n_c,&be,pv_,1);
@@ -9244,7 +9277,8 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         // overshoot zig-zag (gradient bouncing 4e3->5e4->1.6e4 measured on
         // venice-52 under the unconditional x0.5 decay).
         const Scalar act = cost_pre_accept - cost;
-        const Scalar rho = (pred_best>1e-300) ? act/pred_best : 1.0;
+        const Scalar pred_full = pred_best + pred_pt;   // OCA_RHO_PT: pred_pt=0 when off
+        const Scalar rho = (pred_full>1e-300) ? act/pred_full : 1.0;
         const Scalar f3 = 2.0*rho - 1.0;
         Scalar fac = 1.0 - f3*f3*f3;
         if(fac < (Scalar)(1.0/3.0)) fac = (Scalar)(1.0/3.0);
@@ -9458,12 +9492,6 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       std::fprintf(jf,"],\"cheirality_start\":%d,\"cheirality_end\":%d}\n",cheir0,cheir1);
       std::fclose(jf); std::fprintf(stderr,"[R9] wrote %s\n",jsonpath.c_str()); }
   }
-  for(int l=0;l<L;++l){cudaFree(xs[l]);cudaFree(ps[l]);}
-  cudaFree(Gp32);cudaFree(Gc32);cudaFree(Bo32);
-  cudaFree(bcast_in);cudaFree(bcast_out);
-  cudaFree(Hcc);cudaFree(Cdiag);cudaFree(Gp);cudaFree(Gc);cudaFree(Bo);cudaFree(bc);cudaFree(bp);
-  cudaFree(Rf);cudaFree(tacc);cudaFree(uu);cudaFree(w);cudaFree(bprime);cudaFree(corr);
-  cudaFree(E);cudaFree(dk);cudaFree(xc_un);cudaFree(xpv);cudaFree(dcam);cudaFree(dpt);
   // REVIEW 2026-09-01: this block used to free only 9 of ~39 per-call device
   // buffers. Standalone benchmarks never noticed (one solve per process), but
   // the MAPPER calls this function once per global BA -- ~47 times on the
@@ -9477,12 +9505,13 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   cudaFree(bc);cudaFree(bp);cudaFree(Rf);cudaFree(tacc);cudaFree(uu);cudaFree(w);
   cudaFree(bprime);cudaFree(corr);cudaFree(E);cudaFree(dk);
   cudaFree(Bk);cudaFree(bscr);cudaFree(Bp);cudaFree(Bg);
-  cudaFree(xc_un);cudaFree(xpv);cudaFree(dcam);cudaFree(dpt);
+  cudaFree(xc_un);cudaFree(xpv);
   cudaFree(bcast_in);cudaFree(bcast_out);
   for(int l=0;l<L;++l){ cudaFree(xs[l]); cudaFree(ps[l]); }
   cudaFree(s_new.R);cudaFree(s_new.t);cudaFree(s_new.X);cudaFree(s_new.intr);
   cublasDestroy(blas);
   CsvClose();
+  if(final_lambda_out) *final_lambda_out = lam_cam;
   return log;
 }
 
@@ -10113,6 +10142,7 @@ Result Solve(const Problem& pr, const Options& opt, State* st) {
     std::vector<int> ckpts = opt.cg_checkpoints;
     if (ckpts.empty()) ckpts.push_back(opt.max_iterations);
 
+    Scalar final_lam_bal = 0.0;
     RunLog log =
         dof9 ? SolveMFreeShiftedCG<9>(
                    p, s, opt.initial_lambda, opt.max_iterations, opt.verbose,
@@ -10124,7 +10154,7 @@ Result Solve(const Problem& pr, const Options& opt, State* st) {
                    opt.max_inner_retries, /*tau_persist=*/false,
                    opt.func_tolerance, opt.max_consecutive_failures,
                    opt.robust_kernel, opt.robust_scale2, opt.robust_nu,
-                   opt.fast_opening, opt.fast_opening_depth)
+                   opt.fast_opening, opt.fast_opening_depth, &final_lam_bal)
              : SolveMFreeShiftedCG<6>(
                    p, s, opt.initial_lambda, opt.max_iterations, opt.verbose,
                    opt.point_damping, ckpts, opt.num_shifts, opt.equilibrate,
@@ -10141,7 +10171,7 @@ Result Solve(const Problem& pr, const Options& opt, State* st) {
                    opt.max_inner_retries, /*tau_persist=*/false,
                    opt.func_tolerance, opt.max_consecutive_failures,
                    opt.robust_kernel, opt.robust_scale2, opt.robust_nu,
-                   opt.fast_opening, opt.fast_opening_depth);
+                   opt.fast_opening, opt.fast_opening_depth, &final_lam_bal);
     CUDA_CHECK(cudaDeviceSynchronize());
 
     // Write the solution back through the caller's arrays.
@@ -10172,6 +10202,7 @@ Result Solve(const Problem& pr, const Options& opt, State* st) {
       res.final_cost = log.costs.back();
     }
     res.final_median_error_px = diag1.median_reproj_err_px;
+    res.final_lambda = (double)final_lam_bal;
     res.cost_per_iteration.assign(log.costs.begin(), log.costs.end());
     // costs[0] is the initial cost, so the accepted-step count is one less.
     res.iterations = std::max<int>(0, static_cast<int>(log.costs.size()) - 1);
