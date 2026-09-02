@@ -18,3 +18,16 @@ digits, COLMAP-default config). N=3 per arm, medians. See fig3_gold.png.
 Verdict: quality 5/6 (two by ~40%); crossings won on small/mid sets, lost
 ~2.5x on the two Finals. Caspar reaches a Prism final on 1 of 6.
 
+
+## Iteration-cost diagnosis (overnight 2026-09-02)
+
+Cross-GPU per-unit profiling (RTX 2000 Ada vs RTX 4090, identical configs):
+no hardware pathology -- krylov/matvec and pointfactor/outer scale 2.3-5.2x
+(~bandwidth ratio); candidate scoring subscales (1.7x, latency-floored).
+The Finals crossing gap is the REJECT STORM: final-4585 runs ~2,650 outers for
+~313 accepts (88% rejects) on both GPUs, each reject re-paying the per-outer
+fixed phases. `OCA_TAU_PT=1e-4` collapses it on 4585-block (324s -> 133s at
+equal quality) but anti-composes with the scheduler and trades quality on
+13682 -- a per-problem lever. The durable fix is an adaptive tau base
+(promote the ratchet's discovered tau instead of re-learning it per outer):
+designed, not yet implemented.
