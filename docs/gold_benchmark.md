@@ -49,3 +49,13 @@ cross-GPU scaling and the idle power draw. Per-outer ~891->~550ms.
 Subsampled/reduced-precision scoring: refuted (3 designs) -- selection inputs
 cannot be perturbed. Remaining ~10x per-iteration gap vs Caspar-f32 is the
 architectural price of true-cost multi-shift scoring.
+
+## Dual-hardware result (2026-09-02, local RTX 2000 Ada 70W, same protocol)
+
+Quality is machine-identical; the speed gap tilts with hardware class.
+Crossings to Caspar-f64's final (best Prism arm), 70W vs 4090:
+dubrovnik 7.6x vs 3.2x | trafalgar 2.3x vs 1.6x | venice 3.7x vs 1.8x |
+final-13682 **1.3x vs 0.4x (loss flips to a both-axes win)** | final-4585
+0.8x vs 0.4x. Caspar pays 5-6x for the budget card (fp32-FLOPs-bound); Prism
+pays ~3x (bandwidth-bound). On power-constrained hardware the trade surface
+tilts to Prism: both-axes wins on 4/6 datasets, near-parity on a 5th.
