@@ -32,5 +32,9 @@ equal quality) but anti-composes with the scheduler and trades quality on
 (V2) ladder collapses the storm but stalls at 1.15e7 -- a no-ftol control
 (7,007 outers, 99% rejects, 620s, no further descent) proves the storm's
 escalation cycles ARE the descent mechanism on this problem. Best known:
-fixed OCA_TAU_PT=1e-4 (same depth as the storm at 2.4x less wall). A V3
-(adaptive ladder FLOOR, preserving low-tau re-probes) is designed but ungated.
+fixed OCA_TAU_PT=1e-4 (same depth as the storm at 2.4x less wall). A V3 (adaptive ladder FLOOR, `OCA_TAU_V3=<D>`, first attempt untouched,
+low-tau re-probes preserved) was implemented and gated the same day: REFUTED
+for depth (D=2 1.32e7, D=3 1.12e7 vs the 7.0e6 basin; clean inert control on
+venice). Tau-adaptivity is now triple-refuted (V1 quality / V2 lockup / V3
+basin loss): the deep-tau probes are irreducible search. Per-problem
+OCA_TAU_PT remains the honest lever.

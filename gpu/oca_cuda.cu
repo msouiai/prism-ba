@@ -8456,6 +8456,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   static const double tau_pt_env = [](){
     const char* e = getenv("OCA_TAU_PT"); return e ? std::atof(e) : 0.0; }();
   if(tau_pt_env>0.0) tau_pt=(Scalar)tau_pt_env;
+  // OCA_TAU_V3=<D>: adaptive retry-ladder floor, D decades below the last
+  // winning tau (see the tau_eff block). Requires tau_win tracking, which is
+  // enabled below whenever V3 is on, independent of --tau-persist.
+  static const int tau_v3_dec = [](){
+    const char* e=getenv("OCA_TAU_V3"); return e?std::atoi(e):0; }();
   Scalar tau_base=tau_pt, tau_used=tau_pt, tau_win=0.0;
   double t_asm=0,t_fac=0,t_mv=0,t_cand=0;
   std::vector<std::string> jrows;
@@ -8520,6 +8525,25 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       tau_eff = tau_base*std::pow((Scalar)10.0,(Scalar)std::min(rej_streak,12));
       if(tau_persist && tau_win>tau_eff)
         tau_eff = tau_win*std::pow((Scalar)10.0,(Scalar)(rej_streak-1));
+      // OCA_TAU_V3=<D>: V3 ADAPTIVE LADDER FLOOR. Engineered around both prior
+      // failure modes: V1 (raising the base degraded first-attempt step
+      // quality) -- the FIRST attempt stays at tau_base, untouched; V2
+      // (tau_persist jumps retries straight to the winning tau, removing the
+      // low-tau re-probes that ARE the descent mechanism on final-4585:
+      // measured 7,007 outers / 99% rejects / stuck at 1.15e7 without them).
+      // V3 keeps the full probe LADDER but starts it from a floor trailing
+      // the last winning tau by D decades: retries still probe D rungs below
+      // the winner (re-probes preserved), but skip the deep decades that never
+      // win (final-4585's storm spends most of its 2,645 outers climbing from
+      // 1e-7 toward ~1e-4 again and again). Floor fades with tau_win's 0.5x
+      // decay on clean accepts, so a scene that stops needing it drifts back.
+      // Unset/0 = off, bit-compat.
+      if(tau_v3_dec>0 && tau_win>0.0){
+        const Scalar lo = tau_win*std::pow((Scalar)10.0,(Scalar)(-tau_v3_dec));
+        const Scalar base_eff = std::max(tau_base, lo);
+        Scalar cand = base_eff*std::pow((Scalar)10.0,(Scalar)std::min(rej_streak,12));
+        if(cand>tau_eff) tau_eff=cand;
+      }
     }
     tau_used = tau_eff;
     if(mf_fp32) MFPointFactor<float><<<GridSize(npt),256>>>(Bo32,Cdiag,p.point_obs_offsets,p.point_obs_list,tau_eff,npt,Rf,okf);
@@ -9049,7 +9073,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       else if(CD==9 && rej_streak>0 && !lm_classic)
                                 lam_cam=std::max(lam_pre_streak*0.5,lam_floor);
       else                      lam_cam=std::max(lam_cam*0.5,lam_floor);
-      if(CD==9 && tau_persist){
+      if(CD==9 && (tau_persist || tau_v3_dec>0)){
         if(rej_streak>0) tau_win=tau_used;          // remember what won
         else             tau_win*=(Scalar)0.5;      // fade when not needed
       }
