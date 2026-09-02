@@ -9027,7 +9027,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         if(rho_mode && alpha_rho){
           Scalar bd=0; cublasDdot(blas,n_c,bprime,1,x_scaled,1,&bd);
           bpd_best=bd; }
-        CUDA_CHECK(cudaMemcpy(d_best,dfull,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice)); }
+        // REVIEW 2026-09-02 (code review F: winner copy): dfull is rebuilt
+        // from scratch at every Score, so swapping the pointers records the
+        // winner without the O(n) D2D copy. Numerically identical.
+        std::swap(d_best,dfull); }
     };
     // OCA_MENU_GATE=<tol>: skip scoring a DEGENERATE menu (see ScoreAll below
     // for the mechanism -- it gates on the zeta-recurrence PREDICTIONS, not on
@@ -9242,7 +9245,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           if(rho_mode){
             s_cum*=as[a1];
             pred_best=s_cum*bpd0-s_cum*s_cum*(bpd0-pred1); }
-          CUDA_CHECK(cudaMemcpy(d_best,dfull,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice)); }
+          std::swap(d_best,dfull); }   // REVIEW 2026-09-02: same swap as in Score
       }
       (void)base;
     }
@@ -9297,7 +9300,18 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         // storms bank permanently (that was the lam=inf mechanism).
         const Scalar rel = act / std::max(cost_pre_accept, (Scalar)1e-300);
         if(rel > (Scalar)1e-4) fac = std::min(fac, (Scalar)0.5);
-        Scalar base = (CD==9 && rej_streak>0 && !lm_classic) ? lam_pre_streak : lam_cam;
+        // OCA_STREAK_GM=1 (math review 2026-09-02, proposal 4): rebasing a
+        // contested accept all the way back to the PRE-streak lambda drops
+        // below the accept boundary the streak just found, inviting the next
+        // reject streak -- a derivable sawtooth limit cycle matching the
+        // final-4585 storm signature. The geometric mean of the pre-streak
+        // lambda and the escalated lambda that actually won keeps half the
+        // streak's information (in log space) without banking the full x10^k.
+        static const bool streak_gm = getenv("OCA_STREAK_GM")!=nullptr;
+        Scalar base = (CD==9 && rej_streak>0 && !lm_classic)
+                        ? (streak_gm ? std::sqrt(lam_pre_streak*lam_cam)
+                                     : lam_pre_streak)
+                        : lam_cam;
         // OCA_RHO_SHIFT: the accepted step was solved at sigma_win; make
         // that the anchor Nielsen updates from, so the menu's damping
         // information survives into the next outer.
