@@ -1223,6 +1223,38 @@ __global__ void MFPointFactor(const HT* __restrict__ Bo,const Scalar* __restrict
   ok[p]=((Rp[0]>0.0)&&(Rp[3]>0.0)&&(Rp[5]>0.0))?1:0;
   for(int i=0;i<6;++i) Rf[6*p+i]=Rp[i];
 }
+// GAP-4090 F5 (2026-09-03): tau-SPLIT point factor. The O(nobs) Givens sweep
+// above is tau-independent -- tau enters only the 3 trailing augmentation
+// rows. Since R from Givens QR is invariant to the row order actually used
+// here (obs rows first, tau rows last, same as the fused kernel), caching the
+// post-obs R (6 doubles/pt) once per ASSEMBLY and replaying only the tau rows
+// per ATTEMPT is bit-identical to MFPointFactor while cutting the per-retry
+// cost from a full fragment stream to a 6-double/pt pass. Default ON
+// (OCA_TAU_SPLIT=0 restores the fused kernel).
+template <class HT>
+__global__ void MFPointFactorObs(const HT* __restrict__ Bo,
+    const int* __restrict__ poff,const int* __restrict__ plist,int npt,
+    Scalar* __restrict__ R0f){
+  int p=blockIdx.x*blockDim.x+threadIdx.x; if(p>=npt)return;
+  Scalar Rp[6]={0,0,0,0,0,0};
+  int s=poff[p],e=poff[p+1];
+  for(int k=s;k<e;++k){ int o=plist[k];
+    Scalar v0[3]={(Scalar)Bo[6*o],(Scalar)Bo[6*o+1],(Scalar)Bo[6*o+2]};   MFGivens(Rp,v0);
+    Scalar v1[3]={(Scalar)Bo[6*o+3],(Scalar)Bo[6*o+4],(Scalar)Bo[6*o+5]}; MFGivens(Rp,v1); }
+  for(int i=0;i<6;++i) R0f[6*p+i]=Rp[i];
+}
+__global__ void MFPointFactorTau(const Scalar* __restrict__ Cdiag,
+    const Scalar* __restrict__ R0f,Scalar tau,int npt,
+    Scalar* __restrict__ Rf,int* __restrict__ ok){
+  int p=blockIdx.x*blockDim.x+threadIdx.x; if(p>=npt)return;
+  Scalar cd[3]={Cdiag[3*p],Cdiag[3*p+1],Cdiag[3*p+2]};
+  Scalar tr=cd[0]+cd[1]+cd[2], fl=tau*tr/3.0; if(!(fl>0.0)) fl=1e-32;
+  Scalar Rp[6]; for(int i=0;i<6;++i) Rp[i]=R0f[6*p+i];
+  for(int i=0;i<3;++i){ Scalar q=tau*cd[i]; if(!(q>1e-3*fl)) q=1e-3*fl;
+    Scalar v[3]={0,0,0}; v[i]=sqrt(q); MFGivens(Rp,v); }
+  ok[p]=((Rp[0]>0.0)&&(Rp[3]>0.0)&&(Rp[5]>0.0))?1:0;
+  for(int i=0;i<6;++i) Rf[6*p+i]=Rp[i];
+}
 __device__ __forceinline__ void MFVinv(const Scalar* Rp,const Scalar* tv,Scalar* u){
   Scalar y0=tv[0]/Rp[0];
   Scalar y1=(tv[1]-Rp[1]*y0)/Rp[3];
@@ -1237,6 +1269,28 @@ __global__ void MFPass1(const HT* __restrict__ Gp,const int* __restrict__ scam,
   for(int j=0;j<3;++j){ Scalar q=0;
     for(int i=0;i<CD;++i) q+=Gp[(size_t)(3*i+j)*nobs+k]*vc[i];
     atomicAdd(&tacc[3*p+j],q); }
+}
+// GAP-4090 F2 (2026-09-03): MULTI-RHS Pass1. At a scoring checkpoint the menu
+// evaluates up to L candidates, each paying a full Gp stream (27 doubles/obs)
+// -- the dominant bandwidth of the candidate phase (45% of storm wall).
+// Reading the fragment ONCE and applying it to all candidates cuts the menu's
+// Gp traffic by ~L. Per-candidate arithmetic is identical to MFPass1 (same
+// products, same per-obs atomicAdd); only atomic arrival order changes, the
+// same nondeterminism class every scoring pass already has.
+template <int CD, class HT>
+__global__ void MFPass1Multi(const HT* __restrict__ Gp,const int* __restrict__ scam,
+    const int* __restrict__ spt,const Scalar* __restrict__ XCU,int n_cf,int nl,
+    int nobs,Scalar* __restrict__ TACC,int n_p){
+  int k=blockIdx.x*blockDim.x+threadIdx.x; if(k>=nobs)return;
+  int p=spt[k]; int cbase=CD*scam[k];
+  Scalar g[3*CD];
+  for(int t=0;t<3*CD;++t) g[t]=(Scalar)Gp[(size_t)t*nobs+k];
+  for(int l=0;l<nl;++l){
+    const Scalar* vc=XCU+(size_t)l*n_cf+cbase;
+    for(int j=0;j<3;++j){ Scalar q=0;
+      for(int i=0;i<CD;++i) q+=g[3*i+j]*vc[i];
+      atomicAdd(&TACC[(size_t)l*n_p+3*p+j],q); }
+  }
 }
 template <int CD, class HT>
 __global__ void MFPass1Stride(const HT* __restrict__ Gp,const int* __restrict__ scam,
@@ -2614,7 +2668,12 @@ Scalar ComputeCost(const DeviceProblem& p, const DeviceState& s,
   static Scalar* d_cost = nullptr;
   if (!d_cost) CUDA_CHECK(cudaMalloc(&d_cost, sizeof(Scalar)));
   CUDA_CHECK(cudaMemset(d_cost, 0, sizeof(Scalar)));
-  static const bool cost_blockred = getenv("OCA_COST_BLOCKRED")!=nullptr;
+  // GAP-4090 (2026-09-03): default ON. The single-scalar-atomic KernelCost
+  // serializes millions of threads (measured 43.6 ms/eval at 29M obs vs
+  // 2.3 ms block-reduced = ~35% of default per-outer wall). Rounding-order
+  // change only; OCA_COST_BLOCKRED=0 restores the legacy kernel.
+  static const bool cost_blockred = [](){ const char* e=getenv("OCA_COST_BLOCKRED");
+    return e ? atoi(e)!=0 : true; }();
   if (cost_blockred)
     KernelCostBlockRed<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.R, s.t, s.X,
                                         INTR_F(p,s), INTR_K1(p,s), INTR_K2(p,s), p.nobs, d_cost,
@@ -8502,6 +8561,8 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   Scalar *xc_un=nullptr,*xpv=nullptr,*dfull=nullptr,
          *d_best=nullptr,*r_=nullptr,*pv_=nullptr,*Ap_=nullptr;
   Scalar *pp1=nullptr,*pp2=nullptr,*pp3=nullptr,*pp4=nullptr;  // OCA_POLY_CONG scratch
+  Scalar *R0f=nullptr;   // GAP-4090 F5: tau-independent point-factor cache
+  Scalar *XCU=nullptr,*TACC=nullptr;   // GAP-4090 F2: multi-RHS scoring buffers
   int* okf;
   auto M=[&](void**q,size_t b){CUDA_CHECK(cudaMalloc(q,b));};
   M((void**)&Hcc,(size_t)CD*CD*ncam*sizeof(Scalar));M((void**)&Cdiag,3ul*npt*sizeof(Scalar));
@@ -8549,6 +8610,12 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   M((void**)&xc_un,(size_t)n_cf*sizeof(Scalar));M((void**)&xpv,(size_t)n_p*sizeof(Scalar));
   M((void**)&dfull,(size_t)n*sizeof(Scalar));M((void**)&d_best,(size_t)n*sizeof(Scalar));
   M((void**)&r_,(size_t)n_c*sizeof(Scalar));M((void**)&pv_,(size_t)n_c*sizeof(Scalar));
+  static const bool tau_split = [](){ const char* e=getenv("OCA_TAU_SPLIT");
+    return e ? atoi(e)!=0 : true; }();
+  if(tau_split) M((void**)&R0f,6ul*npt*sizeof(Scalar));
+  static const bool multi_rhs = getenv("OCA_MULTI_RHS")!=nullptr;
+  if(multi_rhs){ M((void**)&XCU,(size_t)n_shifts*n_cf*sizeof(Scalar));
+                 M((void**)&TACC,(size_t)n_shifts*n_p*sizeof(Scalar)); }
   if(getenv("OCA_POLY_CONG")){
     M((void**)&pp1,(size_t)n_c*sizeof(Scalar));M((void**)&pp2,(size_t)n_c*sizeof(Scalar));
     M((void**)&pp3,(size_t)n_c*sizeof(Scalar));M((void**)&pp4,(size_t)n_c*sizeof(Scalar)); }
@@ -8723,6 +8790,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // and stops rejects consuming the iteration budget. CD=6 keeps round-9
   // behaviour exactly (max_inner_retry is forced to 0 at the call site).
   bool need_assembly=true; int retries=0;
+  bool pf_obs_dirty=true;   // GAP-4090 F5: R0f stale whenever assembly reran
   for(int k=0;k<max_iter;){
    if(need_assembly){
     if (g_bal_ptr && std::find(g_dump_iters.begin(), g_dump_iters.end(), k) != g_dump_iters.end())
@@ -8745,6 +8813,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
         p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
     if(r2acc) KernelDampIntr9<<<GridSize(ncam),256>>>(Hcc,INTR_F(p,s),r2acc,obscnt,ncam,intr_damp,k2mask);
+    pf_obs_dirty=true;   // Bo/Cdiag just rebuilt
     if(prof){cudaDeviceSynchronize();t_asm+=std::chrono::duration<double>(now()-t0).count();}
    }  // end if(need_assembly)
     if(prof){cudaDeviceSynchronize();t0=now();}
@@ -8794,7 +8863,15 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       }
     }
     tau_used = tau_eff;
-    if(mf_fp32) MFPointFactor<float><<<GridSize(npt),256>>>(Bo32,Cdiag,p.point_obs_offsets,p.point_obs_list,tau_eff,npt,Rf,okf);
+    if(tau_split){
+      if(pf_obs_dirty){
+        if(mf_fp32) MFPointFactorObs<float><<<GridSize(npt),256>>>(Bo32,p.point_obs_offsets,p.point_obs_list,npt,R0f);
+        else        MFPointFactorObs<Scalar><<<GridSize(npt),256>>>(Bo,p.point_obs_offsets,p.point_obs_list,npt,R0f);
+        pf_obs_dirty=false;
+      }
+      MFPointFactorTau<<<GridSize(npt),256>>>(Cdiag,R0f,tau_eff,npt,Rf,okf);
+    }
+    else if(mf_fp32) MFPointFactor<float><<<GridSize(npt),256>>>(Bo32,Cdiag,p.point_obs_offsets,p.point_obs_list,tau_eff,npt,Rf,okf);
     else        MFPointFactor<Scalar><<<GridSize(npt),256>>>(Bo,Cdiag,p.point_obs_offsets,p.point_obs_list,tau_eff,npt,Rf,okf);
     // b' = b_c - H_cp V^-1 b_p
     MFVinvApply<<<GridSize(npt),256>>>(Rf,bp,npt,uu);
@@ -8823,6 +8900,17 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       { const Scalar m1=-1.0; cublasDaxpy(blas,n_cf,&m1,corr,1,bprime,1); }
     }
     if(use_equil){
+      // GAP-4090 F3 (2026-09-03): when the BLOCK congruence is active this
+      // outer, the Jacobi vector E is never read -- KvS and Score both go
+      // through BlockSolve, and the Bk build reads Gc/Gp+Rf+Hcc, not dk/E.
+      // MFDiagK is a full 27-double/obs fragment stream plus 9 Vinv solves
+      // per obs (~13-20 ms of the 39 ms pf+rhs at 29M obs), paid per attempt
+      // including every retry. Skipping it on block outers is bit-identical.
+      // With the scheduler, diag opening outers still build E as before.
+      // OCA_F3_OFF=1 restores the old always-build for A/B.
+      static const bool f3_off = getenv("OCA_F3_OFF")!=nullptr;
+      const bool e_dead = !f3_off && ((block_on && !shared_intr) || BlockRedOn());
+      if(!e_dead){
       CUDA_CHECK(cudaMemset(dk,0,(size_t)n_cf*sizeof(Scalar)));
       if(mf_fp32) MFDiagK<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_spt,p.mf_scam,Rf,nobs,dk);
       else        MFDiagK<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_spt,p.mf_scam,Rf,nobs,dk);
@@ -8835,6 +8923,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         MFMakeEquilBlocked<CD><<<GridSize(ncam),256>>>(dk,ncam,equil_floor,E);
       else
         MFMakeEquil<<<GridSize(n_c),256>>>(dk_eq,n_c,E);
+      }
       if(block_on && !shared_intr){
         CUDA_CHECK(cudaMemset(Bk,0,(size_t)CD*CD*ncam*sizeof(Scalar)));
         // OCA_BLOCK_CM=1: atomics-free camera-major build (deterministic).
@@ -9072,8 +9161,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     Scalar bpd_best=0.0;   // b'^T x of the winning candidate (scaled space)
 
     CUDA_CHECK(cudaMemset(d_best,0,(size_t)n*sizeof(Scalar)));
-    auto Score=[&](const Scalar* x_scaled,int sh,int ck){
-      std::chrono::steady_clock::time_point q0; if(prof){cudaDeviceSynchronize();q0=now();}
+    // GAP-4090 F2 refactor: Lift writes the un-equilibrated camera step into
+    // xc_un; ScoreTail consumes a given (xcu,tacc) pair. Score composes them
+    // exactly as before; the multi-RHS path shares one MFPass1Multi stream
+    // across the menu and then runs the identical tail per candidate.
+    auto Lift=[&](const Scalar* x_scaled){
       // Undo the equilibration in the space the CG worked in, then lift to the
       // full 9-per-camera layout the retraction and MFPass1 expect. Poses in a
       // calibration group therefore receive the SAME intrinsics delta.
@@ -9098,19 +9190,14 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           if(use_equil) MFScaleVec<<<GridSize(n_cf),256>>>(xc_un,E,n_cf);
         }
       }
-      auto _ps=[&](double& acc,auto&& fn){ if(prof_score){cudaDeviceSynchronize();auto q=now();fn();cudaDeviceSynchronize();acc+=std::chrono::duration<double>(now()-q).count();} else fn(); };
+    };
+    auto _ps=[&](double& acc,auto&& fn){ if(prof_score){cudaDeviceSynchronize();auto q=now();fn();cudaDeviceSynchronize();acc+=std::chrono::duration<double>(now()-q).count();} else fn(); };
+    auto ScoreTail=[&](const Scalar* x_scaled,const Scalar* xcu,Scalar* tac,int sh,int ck,
+                       std::chrono::steady_clock::time_point q0){
       _ps(ts_pass1,[&]{
-      CUDA_CHECK(cudaMemset(tacc,0,(size_t)n_p*sizeof(Scalar)));
-      if(score_stride>1){
-        if(mf_fp32) MFPass1Stride<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,xc_un,nobs,score_stride,tacc);
-        else        MFPass1Stride<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,xc_un,nobs,score_stride,tacc);
-      } else {
-        if(mf_fp32) MFPass1<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,xc_un,nobs,tacc);
-        else        MFPass1<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,xc_un,nobs,tacc);
-      }
-      MFBackSub<<<GridSize(npt),256>>>(Rf,bp,tacc,npt,xpv); });
+      MFBackSub<<<GridSize(npt),256>>>(Rf,bp,tac,npt,xpv); });
       _ps(ts_copy,[&]{
-      CUDA_CHECK(cudaMemcpy(dfull,xc_un,(size_t)n_cf*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+      CUDA_CHECK(cudaMemcpy(dfull,xcu,(size_t)n_cf*sizeof(Scalar),cudaMemcpyDeviceToDevice));
       CUDA_CHECK(cudaMemcpy(dfull+n_cf,xpv,(size_t)n_p*sizeof(Scalar),cudaMemcpyDeviceToDevice));
       KernelNegateInPlace<<<GridSize(n),256>>>(dfull,n); });
       _ps(ts_retract,[&]{ DoRetract(dfull,s_new); });
@@ -9119,7 +9206,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
                                           : ComputeCost(p,s_new,rk,rk_a2); });
       if(prof_score) ++ts_n;
       if(getenv("MF_DEBUG")){ Scalar nx,np2;
-        cublasDnrm2(blas,n_cf,xc_un,1,&nx); cublasDnrm2(blas,n_p,xpv,1,&np2);
+        cublasDnrm2(blas,n_cf,xcu,1,&nx); cublasDnrm2(blas,n_p,xpv,1,&np2);
         std::printf("      [dbg] shift=%d ckpt=%d  |x_c|=%.6e |x_p|=%.6e  cand_cost=%.10e  (cur=%.10e)%s\n",
                     sh,ck,(double)nx,(double)np2,(double)c,(double)cost, std::isfinite((double)c)?"":"  <-- NON-FINITE"); }
       ++st.cand_evals;
@@ -9142,6 +9229,20 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         // from scratch at every Score, so swapping the pointers records the
         // winner without the O(n) D2D copy. Numerically identical.
         std::swap(d_best,dfull); }
+    };
+    auto Score=[&](const Scalar* x_scaled,int sh,int ck){
+      std::chrono::steady_clock::time_point q0; if(prof){cudaDeviceSynchronize();q0=now();}
+      Lift(x_scaled);
+      _ps(ts_pass1,[&]{
+      CUDA_CHECK(cudaMemset(tacc,0,(size_t)n_p*sizeof(Scalar)));
+      if(score_stride>1){
+        if(mf_fp32) MFPass1Stride<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,xc_un,nobs,score_stride,tacc);
+        else        MFPass1Stride<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,xc_un,nobs,score_stride,tacc);
+      } else {
+        if(mf_fp32) MFPass1<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,xc_un,nobs,tacc);
+        else        MFPass1<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,xc_un,nobs,tacc);
+      } });
+      ScoreTail(x_scaled,xc_un,tacc,sh,ck,q0);
     };
     // OCA_MENU_GATE=<tol>: skip scoring a DEGENERATE menu (see ScoreAll below
     // for the mechanism -- it gates on the zeta-recurrence PREDICTIONS, not on
@@ -9196,6 +9297,30 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         }
       }
       ++st.menu_full;
+      if(multi_rhs && score_stride<=1){
+        // GAP-4090 F2: one Gp stream for the whole menu, then the identical
+        // per-candidate tail in canonical order 0..L-1.
+        int act[16]; int na=0;
+        for(int l=0;l<L;++l){
+          if(shift_prune>0.0 && l>0 && sconv[l] && sdone[l]) continue;
+          act[na++]=l;
+        }
+        for(int a=0;a<na;++a){
+          Lift(xs[act[a]]);
+          CUDA_CHECK(cudaMemcpy(XCU+(size_t)a*n_cf,xc_un,(size_t)n_cf*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+        }
+        _ps(ts_pass1,[&]{
+        CUDA_CHECK(cudaMemset(TACC,0,(size_t)na*n_p*sizeof(Scalar)));
+        if(mf_fp32) MFPass1Multi<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,XCU,n_cf,na,nobs,TACC,n_p);
+        else        MFPass1Multi<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,XCU,n_cf,na,nobs,TACC,n_p); });
+        for(int a=0;a<na;++a){
+          int l=act[a];
+          std::chrono::steady_clock::time_point q0; if(prof){cudaDeviceSynchronize();q0=now();}
+          ScoreTail(xs[l],XCU+(size_t)a*n_cf,TACC+(size_t)a*n_p,l,depth,q0);
+          if(sconv[l]) sdone[l]=1;
+        }
+        return;
+      }
       for(int l=0;l<L;++l){
         if(shift_prune>0.0 && l>0 && sconv[l] && sdone[l]) continue;
         Score(xs[l],l,depth);
@@ -9661,7 +9786,8 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // (fp32 vs fp64, block_eq off, shared_intr off) are safe no-ops.
   cudaFree(dfull);cudaFree(d_best);cudaFree(r_);cudaFree(pv_);cudaFree(Ap_);cudaFree(okf);
   cudaFree(r2acc);cudaFree(obscnt);cudaFree(rk_sv);
-  cudaFree(pp1);cudaFree(pp2);cudaFree(pp3);cudaFree(pp4);
+  cudaFree(pp1);cudaFree(pp2);cudaFree(pp3);cudaFree(pp4);cudaFree(R0f);
+  cudaFree(XCU);cudaFree(TACC);
   cudaFree(Hcc);cudaFree(Cdiag);cudaFree(Gp);cudaFree(Gc);cudaFree(Bo);
   cudaFree(Gp32);cudaFree(Gc32);cudaFree(Bo32);
   cudaFree(bc);cudaFree(bp);cudaFree(Rf);cudaFree(tacc);cudaFree(uu);cudaFree(w);
