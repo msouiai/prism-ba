@@ -1545,6 +1545,17 @@ __global__ void MFBlockRedSplit(const Scalar* __restrict__ Bk,
 }
 // Cholesky of each block, in place: lower triangle of Bk becomes L.
 // Degrades to diagonal scaling if the block is not positive definite.
+// OCA_RI_OPEN helper: Levenberg damping of a per-camera block diagonal
+// (B_ii *= 1+lam, with an absolute floor so an all-zero block stays SPD).
+template <int CD>
+__global__ void MFBlockDampDiag(Scalar* __restrict__ Bk,int ncam,Scalar lam){
+  int c=blockIdx.x*blockDim.x+threadIdx.x; if(c>=ncam)return;
+  Scalar* B=Bk+(size_t)CD*CD*c;
+  for(int i=0;i<CD;++i){
+    Scalar d=B[CD*i+i];
+    B[CD*i+i]=d*((Scalar)1.0+lam)+lam*(Scalar)1e-12;
+  }
+}
 template <int CD>
 __global__ void MFBlockChol(Scalar* __restrict__ Bk,int ncam,Scalar eps,
                             int* __restrict__ nfail=nullptr){
@@ -8781,6 +8792,96 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
 
   MemMark("mfree_shifted_cg solver allocations");
   CsvOpen("mfree_shifted_cg", g_csv_problem.c_str()); CsvRow(0, (double)cost);
+  // ---- OCA_RI_OPEN=<n>: RESECTION-INTERSECTION OPENING PHASE ---------------
+  // Haensch/Drude/Hellwich 2016 (ISPRS III-3:43) measure first-order
+  // alternation (cameras given points, points given cameras) descending
+  // FASTEST in the early iterations, and stalling later -- the exact
+  // complement of our diagnosed profile on final-4585 ("our finisher wins,
+  // our opening loses", warm-starting from Caspar descends 4.2% below it).
+  // An RI sweep here costs one assembly + two block solves (~25 ms at 29M
+  // obs) against ~550 ms for a full outer, cannot storm (no retries, no CG,
+  // no menu), and runs entirely BEFORE the first candidate menu, so it
+  // cannot perturb any selection input -- it only moves the point the main
+  // solver starts from. Each sweep is accepted only if the TRUE cost drops;
+  // the first non-improving sweep ends the phase (that is the documented
+  // stall, and it is the signal to hand over to the real solver).
+  static const int ri_open = [](){ const char* e=getenv("OCA_RI_OPEN");
+    return e? std::atoi(e) : 0; }();
+  if(ri_open>0){
+    Scalar* RIb=nullptr; Scalar* RId=nullptr;
+    M((void**)&RIb,(size_t)CD*CD*ncam*sizeof(Scalar));
+    M((void**)&RId,(size_t)n*sizeof(Scalar));
+    Scalar ri_lam = lam0, ri_tau = std::max(tau_base,(Scalar)1e-6);
+    int ri_done=0;
+    for(int it=0; it<ri_open; ++it){
+      CUDA_CHECK(cudaMemset(Hcc,0,(size_t)CD*CD*ncam*sizeof(Scalar)));
+      CUDA_CHECK(cudaMemset(Cdiag,0,3ul*npt*sizeof(Scalar)));
+      CUDA_CHECK(cudaMemset(bc,0,(size_t)n_cf*sizeof(Scalar)));
+      CUDA_CHECK(cudaMemset(bp,0,(size_t)n_p*sizeof(Scalar)));
+      if(mf_fp32) MFAssemble<CD,float><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
+          INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
+          p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+      else        MFAssemble<CD,Scalar><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
+          INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
+          p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+      // RESECTION half: per-camera damped block solve H_cc dx_c = b_c with the
+      // point coupling dropped, points held FIXED. Accepted on true cost.
+      CUDA_CHECK(cudaMemcpy(RIb,Hcc,(size_t)CD*CD*ncam*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+      MFBlockDampDiag<CD><<<GridSize(ncam),256>>>(RIb,ncam,ri_lam);
+      MFBlockChol<CD><<<GridSize(ncam),256>>>(RIb,ncam,(Scalar)1e-10,nullptr);
+      MFBlockSolve<CD><<<GridSize(ncam),256>>>(RIb,bc,ncam,0,w);
+      CUDA_CHECK(cudaMemset(RId,0,(size_t)n*sizeof(Scalar)));
+      MFBlockSolve<CD><<<GridSize(ncam),256>>>(RIb,w,ncam,1,RId);
+      KernelNegateInPlace<<<GridSize(n),256>>>(RId,n);
+      DoRetract(RId,s_new);
+      Scalar c_res = ComputeCost(p,s_new,rk,rk_a2);
+      bool any=false;
+      if(std::isfinite((double)c_res) && c_res < cost){
+        CopyState(s,s_new,ncam,npt); cost=c_res; any=true;
+        ri_lam=std::max(ri_lam*(Scalar)0.5,lam_floor);
+      } else ri_lam*=10.0;
+      // INTERSECTION half: re-linearize at the (possibly updated) cameras and
+      // solve (V+tau D) dx_p = b_p per point, cameras held FIXED. This is the
+      // half that must NOT reuse the resection linearization -- that was the
+      // first design's flaw (simultaneous updates = block-Jacobi, rejected on
+      // every sweep of final-4585 because both halves overshoot together).
+      if(any){
+        CUDA_CHECK(cudaMemset(Cdiag,0,3ul*npt*sizeof(Scalar)));
+        CUDA_CHECK(cudaMemset(Hcc,0,(size_t)CD*CD*ncam*sizeof(Scalar)));
+        CUDA_CHECK(cudaMemset(bc,0,(size_t)n_cf*sizeof(Scalar)));
+        CUDA_CHECK(cudaMemset(bp,0,(size_t)n_p*sizeof(Scalar)));
+        if(mf_fp32) MFAssemble<CD,float><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
+            INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
+            p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+        else        MFAssemble<CD,Scalar><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
+            INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
+            p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+      }
+      if(mf_fp32) MFPointFactor<float><<<GridSize(npt),256>>>(Bo32,Cdiag,p.point_obs_offsets,p.point_obs_list,ri_tau,npt,Rf,okf);
+      else        MFPointFactor<Scalar><<<GridSize(npt),256>>>(Bo,Cdiag,p.point_obs_offsets,p.point_obs_list,ri_tau,npt,Rf,okf);
+      CUDA_CHECK(cudaMemset(RId,0,(size_t)n*sizeof(Scalar)));
+      MFVinvApply<<<GridSize(npt),256>>>(Rf,bp,npt,RId+n_cf);
+      KernelNegateInPlace<<<GridSize(n),256>>>(RId,n);
+      DoRetract(RId,s_new);
+      const Scalar c_int = ComputeCost(p,s_new,rk,rk_a2);
+      if(std::isfinite((double)c_int) && c_int < cost){
+        CopyState(s,s_new,ncam,npt); cost=c_int; any=true;
+        ri_tau=std::max(ri_tau*(Scalar)0.5,(Scalar)1e-12);
+      } else ri_tau*=10.0;
+      if(any){
+        ++ri_done;
+        log.costs.push_back((double)cost); CsvRow((int)log.costs.size()-1,(double)cost);
+        if(verbose) std::printf("  [ri-open] sweep %d cost=%.6e lam=%.2e tau=%.2e\n",
+                                it+1,(double)cost,(double)ri_lam,(double)ri_tau);
+      } else {
+        if(verbose) std::printf("  [ri-open] sweep %d stalled (lam=%.2e tau=%.2e)\n",
+                                it+1,(double)ri_lam,(double)ri_tau);
+        break;   // documented RI stall: hand over to the main solver
+      }
+    }
+    if(verbose) std::printf("  [ri-open] %d accepted sweeps, cost -> %.6e\n",ri_done,(double)cost);
+    cudaFree(RIb); cudaFree(RId);
+  }
   // AUDIT 2026-08-22: inner LM retry. A rejected step leaves the state -- and
   // therefore the entire assembly (Hcc, Gp/Gc/Bo, bc, bp, and the intrinsics
   // damping) -- bit-for-bit unchanged; only lam and tau_eff move. The original
