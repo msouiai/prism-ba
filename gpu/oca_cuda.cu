@@ -9738,6 +9738,20 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
               if(j==0) sel0=bi; else sel1=bi; }
             for(int l=0;l<L;++l)
               if(l==sel0||l==sel1) Score(xs[l],l,depth);
+            // OCA_QH_FB=1 (rlq bench finding): the horizon prior deliberately
+            // picks immediately-non-improving candidates, and when NONE of
+            // its top-k beats cost0 the attempt used to fall to the reject
+            // path -- a full retry sweep at lam x10, which inflated wall
+            // 2-3.4x on accept-heavy scenes (insta360: 288 rejects vs the
+            // champion's 9). The fallback scores the REMAINING shifts in
+            // canonical order instead: the true-cost accept gate is
+            // untouched, the prior only loses its eval savings on exactly
+            // the attempts where it was wrong. Off by default.
+            static const bool qh_fb = getenv("OCA_QH_FB")!=nullptr;
+            if(mode==10 && qh_fb && (!have || !(best_cost<cost))){
+              for(int l=0;l<L;++l)
+                if(l!=sel0&&l!=sel1) Score(xs[l],l,depth);
+            }
             handled=true;
           }
           if(handled) return;
