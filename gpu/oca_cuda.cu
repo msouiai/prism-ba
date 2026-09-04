@@ -8521,6 +8521,22 @@ struct LearnPolicy {
   double dmu[NS]={0},dsd[NS]={0},dw[NS]={0},db=0;
   double rmu[NR]={0},rsd[NR]={0},rw[NR]={0},rb=0;
   long n_flat=0,n_dec=0,n_menus=0;        // telemetry
+  // Optional GBT forest for the utility head (OCA_LEARN_FOREST): plain
+  // threshold rules exported by train34.py, evaluated on the RAW 22-dim
+  // rank feature vector (no standardization). pred = init + lr*sum(trees).
+  struct FNode { int feat,left,right; double thr,val; };
+  std::vector<FNode> fnodes; std::vector<int> froot;
+  double f_init=0.0,f_lr=0.1; bool forest_on=false;
+  double ForestU(const double* f) const {
+    double s=f_init;
+    for(size_t t=0;t<froot.size();++t){
+      int i=froot[t];
+      while(fnodes[i].feat>=0)
+        i = (f[fnodes[i].feat]<=fnodes[i].thr) ? fnodes[i].left : fnodes[i].right;
+      s += f_lr*fnodes[i].val;
+    }
+    return s;
+  }
   static double Sig(double z){ return 1.0/(1.0+std::exp(-z)); }
   double DecP(const double* f) const {
     double z=db;
@@ -8585,6 +8601,37 @@ static void LoadLearnPolicy(){
   if(ok&&got>=8){ g_lp.on=true;
     std::fprintf(stderr,"[learn] policy loaded (%s, mode %d, thr %.2f)\n",mp,g_lp.mode,g_lp.dec_thr); }
   else std::fprintf(stderr,"[learn] policy file %s incomplete (got %d/8), OFF\n",mp,got);
+  // Optional forest utility head (threshold rules; see LearnPolicy::ForestU).
+  if(const char* fp2=getenv("OCA_LEARN_FOREST")){
+    FILE* ff=std::fopen(fp2,"r");
+    if(!ff){ std::fprintf(stderr,"[learn] cannot open forest %s\n",fp2); return; }
+    int nf=0,nt=0; double init=0,lr=0;
+    if(std::fscanf(ff,"forest %d %d %lf %lf",&nf,&nt,&init,&lr)==4 &&
+       nf==LearnPolicy::NR && nt>0 && nt<=4096){
+      g_lp.f_init=init; g_lp.f_lr=lr;
+      bool fok=true;
+      for(int t=0;t<nt&&fok;++t){
+        int nn=0;
+        if(std::fscanf(ff," tree %d",&nn)!=1 || nn<=0 || nn>65535){ fok=false; break; }
+        const int base=(int)g_lp.fnodes.size();
+        g_lp.froot.push_back(base);
+        for(int i=0;i<nn;++i){
+          LearnPolicy::FNode nd{};
+          if(std::fscanf(ff," %d %lf %d %d %lf",
+                         &nd.feat,&nd.thr,&nd.left,&nd.right,&nd.val)!=5){ fok=false; break; }
+          if(nd.feat>=0){ nd.left+=base; nd.right+=base;
+            if(nd.feat>=LearnPolicy::NR){ fok=false; break; } }
+          g_lp.fnodes.push_back(nd);
+        }
+      }
+      if(fok){ g_lp.forest_on=true;
+        std::fprintf(stderr,"[learn] forest loaded (%s: %d trees, %zu nodes)\n",
+                     fp2,nt,g_lp.fnodes.size()); }
+      else { g_lp.fnodes.clear(); g_lp.froot.clear();
+        std::fprintf(stderr,"[learn] forest file %s malformed, OFF\n",fp2); }
+    } else std::fprintf(stderr,"[learn] forest header bad in %s\n",fp2);
+    std::fclose(ff);
+  }
 }
 // ROUND 10: CD templates the camera-block dimension. CD=6 reproduces round 9
 // exactly (s.intr null, intrinsics read from the immutable problem arrays).
@@ -9637,7 +9684,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
               f[3]=slog(xnp[l])-slog(xnp[gd]);
               f[4]=rel*sfe[9]; f[5]=rel*sfe[2]; f[6]=rel*sfe[4]; f[7]=rel*sfe[11];
               for(int i=0;i<LearnPolicy::NS;++i) f[8+i]=sfe[i];
-              u[l]=g_lp.RankU(f);
+              u[l]=g_lp.forest_on ? g_lp.ForestU(f) : g_lp.RankU(f);
             }
             const int k=(mode==1)?1:2;
             int sel0=-1,sel1=-1;
