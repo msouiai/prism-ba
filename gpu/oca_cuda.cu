@@ -8575,6 +8575,8 @@ static void LoadLearnPolicy(){
     else if(!std::strcmp(key,"rank_sd"))ok&=rd(g_lp.rsd,LearnPolicy::NR),++got;
     else if(!std::strcmp(key,"rank_w")) ok&=rd(g_lp.rw ,LearnPolicy::NR),++got;
     else if(!std::strcmp(key,"rank_b")) ok&=rd(&g_lp.rb,1),++got;
+    else if(!std::strcmp(key,"dec_thr")&&!getenv("OCA_LEARN_DEC_THR"))
+      rd(&g_lp.dec_thr,1);   // file-provided threshold; env wins
   }
   std::fclose(fp);
   if(ok&&got>=8){ g_lp.on=true;
