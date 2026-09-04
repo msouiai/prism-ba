@@ -8550,9 +8550,10 @@ static void LoadLearnPolicy(){
   else if(!std::strcmp(mm,"ada"))    g_lp.mode=3;
   else if(!std::strcmp(mm,"ada2"))   g_lp.mode=4;
   else if(!std::strcmp(mm,"fixed2")) g_lp.mode=5;
+  else if(!std::strcmp(mm,"force"))  g_lp.mode=6;   // Exp 10 branched rollouts
   else { std::fprintf(stderr,"[learn] unknown OCA_LEARN_MODE=%s\n",mm); return; }
   if(const char* e=getenv("OCA_LEARN_DEC_THR")) g_lp.dec_thr=std::atof(e);
-  if(g_lp.mode==5){ g_lp.on=true; return; }   // fixed2 needs no weights
+  if(g_lp.mode==5||g_lp.mode==6){ g_lp.on=true; return; }  // no weights needed
   if(!mp){ std::fprintf(stderr,"[learn] OCA_LEARN_MODE without OCA_LEARN_POLICY\n"); return; }
   FILE* fp=std::fopen(mp,"r");
   if(!fp){ std::fprintf(stderr,"[learn] cannot open %s\n",mp); return; }
@@ -9555,6 +9556,17 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           if(b!=a) Score(xs[b],b,depth);
           return;
         }
+        if(g_lp.mode==6){                     // force (Exp 10 branched rollouts):
+          // outer 0 scores ONLY the forced shift; later outers run normally.
+          static const int fsh=[](){ const char* e=getenv("OCA_FORCE_SH");
+            return e?std::atoi(e):-1; }();
+          if(k==0 && fsh>=0){
+            const int l=std::min(fsh,L-1);
+            Score(xs[l],l,depth); return;
+          }
+          // fall through to the normal (gated/full) path
+        }
+        if(g_lp.mode!=6){
         double xnp[16]; bool xok=true;
         for(int l=0;l<L;++l){ Scalar v=0; cublasDnrm2(blas,n_c,xs[l],1,&v);
           xnp[l]=(double)v; if(!std::isfinite(xnp[l])) xok=false; }
@@ -9614,6 +9626,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           }
           if(handled) return;
         }
+        }  // g_lp.mode!=6
       }
       ++st.menu_full;
       if(multi_rhs && score_stride<=1){
