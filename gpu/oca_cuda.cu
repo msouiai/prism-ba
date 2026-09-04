@@ -8789,6 +8789,29 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   int score_stride = score_stride_env;
   std::vector<std::string> jrows;
   std::chrono::steady_clock::time_point t0;
+  // ---- OCA_LEARN_LOG=<path>: opt-in JSONL for the learned-damping study ----
+  // (agent_rev/learn Exp 1). One "c" record per scored menu candidate, one
+  // "al" record per alpha-grid evaluation, one "a" record per attempt
+  // (accepted outer or inner retry), plus one "hdr" record. Everything is
+  // guarded by learn_f so the flag-off path is unchanged (a single getenv +
+  // fopen at solver entry). Logged runs add one Dnrm2 (blocking) per menu
+  // candidate for the step-norm feature: NEVER use a logged run for
+  // wall-clock claims.
+  FILE* learn_f=nullptr;
+  { const char* e=getenv("OCA_LEARN_LOG"); if(e&&*e) learn_f=std::fopen(e,"w"); }
+  long learn_att_id=0;
+  if(learn_f){
+    const int gd_env=[](){ const char* e=getenv("OCA_GRID_DOWN");
+      return e?std::atoi(e):0; }();
+    std::fprintf(learn_f,"{\"t\":\"hdr\",\"ncam\":%d,\"npt\":%d,\"nobs\":%d,"
+      "\"L\":%d,\"cd\":%d,\"grid_down\":%d,\"lam0\":%.6e,\"tau_pt\":%.6e,"
+      "\"cost0\":%.10e,\"ckpts\":[",
+      ncam,npt,nobs,L,CD,std::min(std::max(gd_env,0),L-1),
+      (double)lam_cam,(double)tau_pt,(double)cost);
+    for(size_t i=0;i<ckpts.size();++i)
+      std::fprintf(learn_f,"%s%d",i?",":"",ckpts[i]);
+    std::fprintf(learn_f,"]}\n");
+  }
 
   MemMark("mfree_shifted_cg solver allocations");
   CsvOpen("mfree_shifted_cg", g_csv_problem.c_str()); CsvRow(0, (double)cost);
@@ -8879,6 +8902,17 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         break;   // documented RI stall: hand over to the main solver
       }
     }
+    // OCA_RI_LAM=1: hand the RI phase's damping state to the main solver.
+    // Without it the solver restarts at lam0 (measured on final-4585: RI ends
+    // at lam=7.8e-2, the solver reopens at 1e2 and burns a 5-deep retry
+    // ladder before its first accept). The menu can re-select from here.
+    static const bool ri_lam_handover = getenv("OCA_RI_LAM")!=nullptr;
+    if(ri_lam_handover && ri_done>0){
+      lam_cam=std::max(ri_lam,lam_floor); lam_pre_streak=lam_cam;
+      if(CD==9 && tau_persist) tau_win=ri_tau;
+      if(verbose) std::printf("  [ri-open] handover lam=%.3e tau=%.3e\n",
+                              (double)lam_cam,(double)ri_tau);
+    }
     if(verbose) std::printf("  [ri-open] %d accepted sweeps, cost -> %.6e\n",ri_done,(double)cost);
     cudaFree(RIb); cudaFree(RId);
   }
@@ -8938,6 +8972,14 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     // on this scene -- untouched, and the streak runs until tau finally moves.
     if(score_stride_env>1)
       score_stride = (last_rel > (Scalar)1e-3) ? score_stride_env : 1;
+    // OCA_LEARN_LOG: snapshot the attempt's pre-action state (lam/streak/cost
+    // move inside the accept branch below, so they must be captured here).
+    const Scalar learn_lam_att=lam_cam, learn_cost_att=cost;
+    const int learn_streak_att=rej_streak;
+    const long learn_ev0=st.cand_evals, learn_mg0=st.menu_gated,
+               learn_mv0=st.matvecs;
+    std::chrono::steady_clock::time_point learn_t0;
+    if(learn_f) learn_t0=now();
     Scalar tau_eff = tau_base;
     if(CD==9 && rej_streak>0){
       tau_eff = tau_base*std::pow((Scalar)10.0,(Scalar)std::min(rej_streak,12));
@@ -9260,6 +9302,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     std::vector<Scalar> preds(L,0.0);
     Scalar pred_best=0.0;
     Scalar bpd_best=0.0;   // b'^T x of the winning candidate (scaled space)
+    // OCA_LEARN_LOG: the shift menu is declared below the Score lambdas, so
+    // candidate records reach it through this pointer (set after the fill;
+    // stays valid across the negcurv reseed, which edits shifts in place).
+    const Scalar* learn_shift_ptr=nullptr;
 
     CUDA_CHECK(cudaMemset(d_best,0,(size_t)n*sizeof(Scalar)));
     // GAP-4090 F2 refactor: Lift writes the un-equilibrated camera step into
@@ -9312,6 +9358,20 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
                     sh,ck,(double)nx,(double)np2,(double)c,(double)cost, std::isfinite((double)c)?"":"  <-- NON-FINITE"); }
       ++st.cand_evals;
       if(prof){cudaDeviceSynchronize();t_cand+=std::chrono::duration<double>(now()-q0).count();}
+      if(learn_f){
+        // One record per scored (shift, depth) candidate. xn = |x| in the CG's
+        // (scaled) space -- available BEFORE scoring, so it is a legal feature
+        // for a deployed controller; pred is the zeta-recurrence model
+        // decrease at score time (also pre-scoring information).
+        Scalar xn=0; cublasDnrm2(blas,n_c,x_scaled,1,&xn);
+        std::fprintf(learn_f,"{\"t\":\"c\",\"o\":%d,\"a\":%ld,\"sh\":%d,"
+          "\"ck\":%d,\"sig\":%.6e,\"pred\":%.10e,\"cost\":%.10e,\"xn\":%.6e,"
+          "\"fin\":%d}\n",
+          k,learn_att_id,sh,ck,
+          (learn_shift_ptr&&sh>=0&&sh<L)?(double)learn_shift_ptr[sh]:-1.0,
+          (sh>=0&&sh<L)?(double)preds[sh]:0.0,(double)c,(double)xn,
+          std::isfinite((double)c)?1:0);
+      }
       if(sh>=0 && sh<L && c<cbest_sh[sh]) cbest_sh[sh]=c;
       // ORDER-INDEPENDENT tie-break. With a strict `<` the winner of an exact
       // tie is whichever shift happened to be scored FIRST, so any change to
@@ -9443,6 +9503,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     const int grid_down = std::min(std::max(grid_down_env, 0), L-1);
     std::vector<Scalar> shifts(L);
     for(int l=0;l<L;++l) shifts[l]=lam_cam*std::pow(10.0,(double)(l-grid_down));
+    learn_shift_ptr=shifts.data();   // OCA_LEARN_LOG (no-op when logging off)
     // OCA_NEGCURV_RESEED=1 (math review 2026-09-02, proposal 2): negative
     // curvature at the SEED shift aborts the whole sweep even though the
     // direction has positive curvature at larger shifts (p^T(A+sigma)p grows
@@ -9614,6 +9675,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         MFAlphaScale<<<GridSize(n),256>>>(dfull,d_best,as[a1],as[a2],n_cf,n);
         DoRetract(dfull,s_new);
         Scalar c=ComputeCost(p,s_new,rk,rk_a2);
+        if(learn_f)
+          std::fprintf(learn_f,"{\"t\":\"al\",\"o\":%d,\"a\":%ld,\"a1\":%.2f,"
+            "\"a2\":%.2f,\"cost\":%.10e}\n",
+            k,learn_att_id,(double)as[a1],(double)as[a2],(double)c);
         if(c<best_cost){ best_cost=c; alpha_win=1;
           if(rho_mode){
             s_cum*=as[a1];
@@ -9630,6 +9695,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     }
     // ---- accept / reject (existing rule) ----
     bool accepted=false;
+    double learn_rho=std::numeric_limits<double>::quiet_NaN(),
+           learn_fac=std::numeric_limits<double>::quiet_NaN(),
+           learn_predfull=0.0;   // OCA_LEARN_LOG capture (accept branch only)
     if(have && best_cost<cost){
       const Scalar cost_pre_accept = cost;
       DoRetract(d_best,s_new); CopyState(s,s_new,ncam,npt);
@@ -9673,6 +9741,8 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         // storms bank permanently (that was the lam=inf mechanism).
         const Scalar rel = act / std::max(cost_pre_accept, (Scalar)1e-300);
         if(rel > (Scalar)1e-4) fac = std::min(fac, (Scalar)0.5);
+        if(learn_f){ learn_rho=(double)rho; learn_fac=(double)fac;
+                     learn_predfull=(double)pred_full; }
         // OCA_STREAK_GM=1 (math review 2026-09-02, proposal 4): rebasing a
         // contested accept all the way back to the PRE-streak lambda drops
         // below the accept boundary the streak just found, inviting the next
@@ -9733,6 +9803,28 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     } else {
       if(rej_streak==0) lam_pre_streak=lam_cam;
       lam_cam*=10.0; ++n_reject; ++rej_streak;
+    }
+    // OCA_LEARN_LOG: one record per attempt, after the accept/reject decision
+    // and the lambda/tau updates (lam=pre-action damping, lam1=post-update).
+    if(learn_f){
+      std::fprintf(learn_f,"{\"t\":\"a\",\"o\":%d,\"a\":%ld,\"retry\":%d,"
+        "\"streak\":%d,\"lam\":%.6e,\"tau\":%.6e,\"nb\":%.6e,\"eta\":%.4e,"
+        "\"cost0\":%.10e,\"cg\":%d,\"brk\":%d,\"tr\":%d,\"gated\":%ld,"
+        "\"ev\":%ld,\"mv\":%ld,\"bsh\":%d,\"bck\":%d,\"aw\":%d,"
+        "\"bcost\":%.10e,\"acc\":%d,\"rho\":%.6e,\"fac\":%.4f,"
+        "\"pred\":%.10e,\"predpt\":%.10e,\"lam1\":%.6e,\"tauwin\":%.6e,"
+        "\"dt\":%.4f,\"preds\":[",
+        k,learn_att_id,retries,learn_streak_att,(double)learn_lam_att,
+        (double)tau_eff,(double)nb,(double)eta,(double)learn_cost_att,
+        cg_it,cg_broke?1:0,trunc?1:0,st.menu_gated-learn_mg0,
+        st.cand_evals-learn_ev0,st.matvecs-learn_mv0,best_sh,best_ck,
+        alpha_win,(double)best_cost,accepted?1:0,learn_rho,learn_fac,
+        learn_predfull,(double)pred_pt,(double)lam_cam,(double)tau_win,
+        std::chrono::duration<double>(now()-learn_t0).count());
+      for(int l=0;l<L;++l)
+        std::fprintf(learn_f,"%s%.10e",l?",":"",(double)preds[l]);
+      std::fprintf(learn_f,"]}\n");
+      ++learn_att_id;
     }
     // AUDIT 2026-08-22: retry this outer step rather than spending it. The
     // state is unchanged, so the next attempt skips assembly entirely and only
@@ -9900,6 +9992,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   cudaFree(s_new.R);cudaFree(s_new.t);cudaFree(s_new.X);cudaFree(s_new.intr);
   cublasDestroy(blas);
   CsvClose();
+  if(learn_f){ std::fclose(learn_f);
+    std::fprintf(stderr,"[learn] wrote %s (%ld attempts)\n",
+                 getenv("OCA_LEARN_LOG"),learn_att_id); }
   if(final_lambda_out) *final_lambda_out = lam_cam;
   return log;
 }
