@@ -8551,9 +8551,11 @@ static void LoadLearnPolicy(){
   else if(!std::strcmp(mm,"ada2"))   g_lp.mode=4;
   else if(!std::strcmp(mm,"fixed2")) g_lp.mode=5;
   else if(!std::strcmp(mm,"force"))  g_lp.mode=6;   // Exp 10 branched rollouts
+  else if(!std::strcmp(mm,"shi1"))   g_lp.mode=7;   // streak: {L-1} probe
+  else if(!std::strcmp(mm,"shi2"))   g_lp.mode=8;   // streak: {L-2,L-1} probe
   else { std::fprintf(stderr,"[learn] unknown OCA_LEARN_MODE=%s\n",mm); return; }
   if(const char* e=getenv("OCA_LEARN_DEC_THR")) g_lp.dec_thr=std::atof(e);
-  if(g_lp.mode==5||g_lp.mode==6){ g_lp.on=true; return; }  // no weights needed
+  if(g_lp.mode>=5){ g_lp.on=true; return; }  // modes 5-8 need no weights
   if(!mp){ std::fprintf(stderr,"[learn] OCA_LEARN_MODE without OCA_LEARN_POLICY\n"); return; }
   FILE* fp=std::fopen(mp,"r");
   if(!fp){ std::fprintf(stderr,"[learn] cannot open %s\n",mp); return; }
@@ -9568,7 +9570,21 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           }
           // fall through to the normal (gated/full) path
         }
-        if(g_lp.mode!=6){
+        if(g_lp.mode==7||g_lp.mode==8){       // streak probes (trivial arm):
+          // during a reject streak the attempt fails ~90% of the time and
+          // contested winners sit at the TOP shifts (final-3068: 85% at
+          // L-2/L-1) -- score a thin high-damping probe, keep the full path
+          // on clean attempts. One-integer rule; the baseline any learned
+          // reject-regime policy must beat.
+          if(rej_streak>0){
+            ++g_lp.n_flat;
+            if(g_lp.mode==8 && L>=2) Score(xs[L-2],L-2,depth);
+            Score(xs[L-1],L-1,depth);
+            return;
+          }
+          // clean attempt: fall through to the normal (gated/full) path
+        }
+        if(g_lp.mode<5){
         double xnp[16]; bool xok=true;
         for(int l=0;l<L;++l){ Scalar v=0; cublasDnrm2(blas,n_c,xs[l],1,&v);
           xnp[l]=(double)v; if(!std::isfinite(xnp[l])) xok=false; }
