@@ -8975,12 +8975,26 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // stall, and it is the signal to hand over to the real solver).
   static const int ri_open = [](){ const char* e=getenv("OCA_RI_OPEN");
     return e? std::atoi(e) : 0; }();
-  if(ri_open>0){
+  // OCA_RI_AT=<k>: run the RI sweeps AFTER outer k instead of before outer 0.
+  // Motivation (2026-09-04): the RI dose-response shows the basin is committed
+  // by ~3 greedy sweeps AT THE START -- and the branched rollouts show the
+  // greedy/horizon disagreement vanishes after ~5 outers. So greedy
+  // alternation is destructive only while the basin is still being chosen;
+  // once the champion has settled it, RI cannot commit anything it has not
+  // already committed, and Haensch's stall property makes it a cheap polish
+  // step (~0.28 s/sweep vs ~0.5-15 s per champion outer). This tests the
+  // inverted schedule the opening experiment could not.
+  static const int ri_at = [](){ const char* e=getenv("OCA_RI_AT");
+    return e? std::atoi(e) : -1; }();
+  // RunRIPhase: the sweeps, callable either before outer 0 (OCA_RI_OPEN) or
+  // after outer OCA_RI_AT. Returns the number of accepted sweeps.
+  auto RunRIPhase=[&](int nsweeps)->int{
     Scalar* RIb=nullptr; Scalar* RId=nullptr;
     M((void**)&RIb,(size_t)CD*CD*ncam*sizeof(Scalar));
     M((void**)&RId,(size_t)n*sizeof(Scalar));
-    Scalar ri_lam = lam0, ri_tau = std::max(tau_base,(Scalar)1e-6);
+    Scalar ri_lam = lam_cam, ri_tau = std::max(tau_base,(Scalar)1e-6);
     int ri_done=0;
+    const int ri_open = nsweeps;
     for(int it=0; it<ri_open; ++it){
       CUDA_CHECK(cudaMemset(Hcc,0,(size_t)CD*CD*ncam*sizeof(Scalar)));
       CUDA_CHECK(cudaMemset(Cdiag,0,3ul*npt*sizeof(Scalar)));
@@ -9060,7 +9074,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     }
     if(verbose) std::printf("  [ri-open] %d accepted sweeps, cost -> %.6e\n",ri_done,(double)cost);
     cudaFree(RIb); cudaFree(RId);
-  }
+    return ri_done;
+  };
+  if(ri_open>0 && ri_at<0) RunRIPhase(ri_open);
   // AUDIT 2026-08-22: inner LM retry. A rejected step leaves the state -- and
   // therefore the entire assembly (Hcc, Gp/Gc/Bo, bc, bp, and the intrinsics
   // damping) -- bit-for-bit unchanged; only lam and tau_eff move. The original
@@ -10247,6 +10263,21 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       jrows.push_back(buf); }
     ++k;   // AUDIT 2026-08-22: advanced here, not in the for-header, so an
            // inner retry above can `continue` without spending an iteration.
+    // OCA_RI_AT=<k>: LATE resection-intersection. Fires once, after outer k,
+    // when the basin is already committed (rollouts: greedy/horizon
+    // disagreement vanishes past ~5 outers). RI keeps its own true-cost
+    // accept gates, so it can only lower the cost it is handed; the question
+    // this tests is whether cheap alternation still finds descent the damped
+    // Newton step has stopped finding -- and whether the state it leaves
+    // helps or hurts the outers that follow.
+    if(ri_at>=0 && ri_open>0 && k==ri_at+1){
+      const Scalar c_pre=cost;
+      const int done=RunRIPhase(ri_open);
+      need_assembly=true;   // RI moved the state; the cached assembly is stale
+      if(verbose) std::printf("  [ri-late] after outer %d: %d sweeps, %.6e -> %.6e (%+.2f%%)\n",
+                              k,done,(double)c_pre,(double)cost,
+                              100.0*((double)cost-(double)c_pre)/(double)c_pre);
+    }
   }
   int cheir1=CountCheiralityViolations(p,s);
   if(prof_score && ts_n>0)
