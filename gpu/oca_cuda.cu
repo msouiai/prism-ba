@@ -8553,6 +8553,7 @@ static void LoadLearnPolicy(){
   else if(!std::strcmp(mm,"force"))  g_lp.mode=6;   // Exp 10 branched rollouts
   else if(!std::strcmp(mm,"shi1"))   g_lp.mode=7;   // streak: {L-1} probe
   else if(!std::strcmp(mm,"shi2"))   g_lp.mode=8;   // streak: {L-2,L-1} probe
+  else if(!std::strcmp(mm,"shi2fx")) g_lp.mode=9;   // streak probe + clean fixed2
   else { std::fprintf(stderr,"[learn] unknown OCA_LEARN_MODE=%s\n",mm); return; }
   if(const char* e=getenv("OCA_LEARN_DEC_THR")) g_lp.dec_thr=std::atof(e);
   if(g_lp.mode>=5){ g_lp.on=true; return; }  // modes 5-8 need no weights
@@ -9570,7 +9571,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           }
           // fall through to the normal (gated/full) path
         }
-        if(g_lp.mode==7||g_lp.mode==8){       // streak probes (trivial arm):
+        if(g_lp.mode>=7){                     // streak probes (trivial arms):
           // during a reject streak the attempt fails ~90% of the time and
           // contested winners sit at the TOP shifts (final-3068: 85% at
           // L-2/L-1) -- score a thin high-damping probe, keep the full path
@@ -9578,11 +9579,17 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           // reject-regime policy must beat.
           if(rej_streak>0){
             ++g_lp.n_flat;
-            if(g_lp.mode==8 && L>=2) Score(xs[L-2],L-2,depth);
+            if(g_lp.mode>=8 && L>=2) Score(xs[L-2],L-2,depth);
             Score(xs[L-1],L-1,depth);
             return;
           }
-          // clean attempt: fall through to the normal (gated/full) path
+          if(g_lp.mode==9){                   // clean attempts: fixed2
+            const int a=gd, b=std::min(gd+1,L-1);
+            Score(xs[a],a,depth);
+            if(b!=a) Score(xs[b],b,depth);
+            return;
+          }
+          // clean attempt (modes 7/8): fall through to the gated/full path
         }
         if(g_lp.mode<5){
         double xnp[16]; bool xok=true;
