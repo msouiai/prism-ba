@@ -8570,39 +8570,16 @@ static void LoadLearnPolicy(){
   else if(!std::strcmp(mm,"shi1"))   g_lp.mode=7;   // streak: {L-1} probe
   else if(!std::strcmp(mm,"shi2"))   g_lp.mode=8;   // streak: {L-2,L-1} probe
   else if(!std::strcmp(mm,"shi2fx")) g_lp.mode=9;   // streak probe + clean fixed2
+  else if(!std::strcmp(mm,"qh"))     g_lp.mode=10;  // horizon-Q prior (rlq study)
   else { std::fprintf(stderr,"[learn] unknown OCA_LEARN_MODE=%s\n",mm); return; }
   if(const char* e=getenv("OCA_LEARN_DEC_THR")) g_lp.dec_thr=std::atof(e);
-  if(g_lp.mode>=5){ g_lp.on=true; return; }  // modes 5-8 need no weights
-  if(!mp){ std::fprintf(stderr,"[learn] OCA_LEARN_MODE without OCA_LEARN_POLICY\n"); return; }
-  FILE* fp=std::fopen(mp,"r");
-  if(!fp){ std::fprintf(stderr,"[learn] cannot open %s\n",mp); return; }
-  // skip comment + feature-name lines by keyed reads
-  char line[4096];
-  // format: '# ...' then dec_feats <names...> etc. Read line-wise, key-wise.
-  bool ok=true; int got=0;
-  while(std::fgets(line,sizeof line,fp)){
-    char key[64]; int off=0;
-    if(std::sscanf(line,"%63s%n",key,&off)!=1) continue;
-    auto rd=[&](double* v,int n){ const char* p=line+off; char* end;
-      for(int i=0;i<n;++i){ v[i]=std::strtod(p,&end); if(end==p){return false;} p=end; }
-      return true; };
-    if(!std::strcmp(key,"dec_mu")) ok&=rd(g_lp.dmu,LearnPolicy::NS),++got;
-    else if(!std::strcmp(key,"dec_sd")) ok&=rd(g_lp.dsd,LearnPolicy::NS),++got;
-    else if(!std::strcmp(key,"dec_w"))  ok&=rd(g_lp.dw ,LearnPolicy::NS),++got;
-    else if(!std::strcmp(key,"dec_b"))  ok&=rd(&g_lp.db,1),++got;
-    else if(!std::strcmp(key,"rank_mu"))ok&=rd(g_lp.rmu,LearnPolicy::NR),++got;
-    else if(!std::strcmp(key,"rank_sd"))ok&=rd(g_lp.rsd,LearnPolicy::NR),++got;
-    else if(!std::strcmp(key,"rank_w")) ok&=rd(g_lp.rw ,LearnPolicy::NR),++got;
-    else if(!std::strcmp(key,"rank_b")) ok&=rd(&g_lp.rb,1),++got;
-    else if(!std::strcmp(key,"dec_thr")&&!getenv("OCA_LEARN_DEC_THR"))
-      rd(&g_lp.dec_thr,1);   // file-provided threshold; env wins
-  }
-  std::fclose(fp);
-  if(ok&&got>=8){ g_lp.on=true;
-    std::fprintf(stderr,"[learn] policy loaded (%s, mode %d, thr %.2f)\n",mp,g_lp.mode,g_lp.dec_thr); }
-  else std::fprintf(stderr,"[learn] policy file %s incomplete (got %d/8), OFF\n",mp,got);
   // Optional forest utility head (threshold rules; see LearnPolicy::ForestU).
-  if(const char* fp2=getenv("OCA_LEARN_FOREST")){
+  // Used by the linear-policy modes when present, and REQUIRED by mode qh
+  // (which carries no linear-policy file at all -- its forest was trained on
+  // H-outer branched-rollout returns, not one-step cost; rlq study).
+  auto load_forest=[&](){
+    const char* fp2=getenv("OCA_LEARN_FOREST");
+    if(!fp2) return;
     FILE* ff=std::fopen(fp2,"r");
     if(!ff){ std::fprintf(stderr,"[learn] cannot open forest %s\n",fp2); return; }
     int nf=0,nt=0; double init=0,lr=0;
@@ -8631,7 +8608,43 @@ static void LoadLearnPolicy(){
         std::fprintf(stderr,"[learn] forest file %s malformed, OFF\n",fp2); }
     } else std::fprintf(stderr,"[learn] forest header bad in %s\n",fp2);
     std::fclose(ff);
+  };
+  if(g_lp.mode==10){
+    load_forest();
+    if(g_lp.forest_on) g_lp.on=true;
+    else std::fprintf(stderr,"[learn] mode qh requires a valid OCA_LEARN_FOREST; OFF\n");
+    return;
   }
+  if(g_lp.mode>=5){ g_lp.on=true; return; }  // modes 5-9 need no weights
+  if(!mp){ std::fprintf(stderr,"[learn] OCA_LEARN_MODE without OCA_LEARN_POLICY\n"); return; }
+  FILE* fp=std::fopen(mp,"r");
+  if(!fp){ std::fprintf(stderr,"[learn] cannot open %s\n",mp); return; }
+  // skip comment + feature-name lines by keyed reads
+  char line[4096];
+  // format: '# ...' then dec_feats <names...> etc. Read line-wise, key-wise.
+  bool ok=true; int got=0;
+  while(std::fgets(line,sizeof line,fp)){
+    char key[64]; int off=0;
+    if(std::sscanf(line,"%63s%n",key,&off)!=1) continue;
+    auto rd=[&](double* v,int n){ const char* p=line+off; char* end;
+      for(int i=0;i<n;++i){ v[i]=std::strtod(p,&end); if(end==p){return false;} p=end; }
+      return true; };
+    if(!std::strcmp(key,"dec_mu")) ok&=rd(g_lp.dmu,LearnPolicy::NS),++got;
+    else if(!std::strcmp(key,"dec_sd")) ok&=rd(g_lp.dsd,LearnPolicy::NS),++got;
+    else if(!std::strcmp(key,"dec_w"))  ok&=rd(g_lp.dw ,LearnPolicy::NS),++got;
+    else if(!std::strcmp(key,"dec_b"))  ok&=rd(&g_lp.db,1),++got;
+    else if(!std::strcmp(key,"rank_mu"))ok&=rd(g_lp.rmu,LearnPolicy::NR),++got;
+    else if(!std::strcmp(key,"rank_sd"))ok&=rd(g_lp.rsd,LearnPolicy::NR),++got;
+    else if(!std::strcmp(key,"rank_w")) ok&=rd(g_lp.rw ,LearnPolicy::NR),++got;
+    else if(!std::strcmp(key,"rank_b")) ok&=rd(&g_lp.rb,1),++got;
+    else if(!std::strcmp(key,"dec_thr")&&!getenv("OCA_LEARN_DEC_THR"))
+      rd(&g_lp.dec_thr,1);   // file-provided threshold; env wins
+  }
+  std::fclose(fp);
+  if(ok&&got>=8){ g_lp.on=true;
+    std::fprintf(stderr,"[learn] policy loaded (%s, mode %d, thr %.2f)\n",mp,g_lp.mode,g_lp.dec_thr); }
+  else std::fprintf(stderr,"[learn] policy file %s incomplete (got %d/8), OFF\n",mp,got);
+  load_forest();
 }
 // ROUND 10: CD templates the camera-block dimension. CD=6 reproduces round 9
 // exactly (s.intr null, intrinsics read from the immutable problem arrays).
@@ -9581,6 +9594,22 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       // Here the canonical order 0..L-1 is preserved unconditionally, so a
       // non-flat menu takes EXACTLY the ungated path -- the idle case is a
       // true no-op, not a perturbation.
+      // rlq study (2026-09): OCA_LEARN_MODE=force must BYPASS the analytic
+      // menu gate on the fork outer. Historically the gate ran first, so on a
+      // FLAT menu a "forced" branch silently scored shift 0 -- all branches
+      // then took the same action and their divergence at H measured only
+      // run-to-run noise, not the action. The winner INDEX drives the lambda
+      // recentre even on equal-cost menus, so a real fork must score the
+      // forced shift unconditionally. Only mode=force (opt-in rollout
+      // instrumentation) is affected; every other path is untouched.
+      if(g_lp.on && g_lp.mode==6 && L>1 && rho_mode){
+        static const int fsh0=[](){ const char* e=getenv("OCA_FORCE_SH");
+          return e?std::atoi(e):-1; }();
+        if(k==0 && fsh0>=0){
+          const int l=std::min(fsh0,L-1);
+          Score(xs[l],l,depth); return;
+        }
+      }
       if(menu_gate>0.0 && L>1 && rho_mode){
         double p0=(double)preds[0], lo=p0, hi=p0; bool fin=std::isfinite(p0);
         for(int l=1;l<L && fin;++l){
@@ -9638,7 +9667,22 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           }
           // clean attempt (modes 7/8): fall through to the gated/full path
         }
-        if(g_lp.mode<5){
+        // OCA_LEARN_MODE=qh (rlq study): horizon-Q prior. Same features, same
+        // forest walker, same deployment point and same top-k mechanics as the
+        // refuted one-step top1/top2 arms -- the ONLY change is the label the
+        // forest was trained on: the H-outer branched-rollout return instead
+        // of the one-step candidate cost. OCA_QH_K = candidates scored (1 or
+        // 2, default 2). OCA_QH_OUTERS >= 0 phase-gates the prior: it applies
+        // only while outer < OCA_QH_OUTERS or during a reject streak (exactly
+        // the regimes where one-step and horizon labels disagree); elsewhere
+        // this block is skipped and the normal gated/full path runs.
+        static const int qh_k=[](){ const char* e=getenv("OCA_QH_K");
+          const int v=e?std::atoi(e):2; return std::min(std::max(v,1),2); }();
+        static const int qh_outers=[](){ const char* e=getenv("OCA_QH_OUTERS");
+          return e?std::atoi(e):-1; }();
+        const bool qh_active = g_lp.mode==10 &&
+          !(qh_outers>=0 && k>=qh_outers && rej_streak==0);
+        if(g_lp.mode<5 || qh_active){
         double xnp[16]; bool xok=true;
         for(int l=0;l<L;++l){ Scalar v=0; cublasDnrm2(blas,n_c,xs[l],1,&v);
           xnp[l]=(double)v; if(!std::isfinite(xnp[l])) xok=false; }
@@ -9674,7 +9718,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
             ++g_lp.n_dec;
             // mode 3 decisive: fall through to the full-menu path below
           }
-          if(mode==1||mode==2||mode==4){
+          if(mode==1||mode==2||mode==4||mode==10){
             double u[16]; const double lc0=slog((double)cost);
             for(int l=0;l<L;++l){
               double f[LearnPolicy::NR];
@@ -9686,7 +9730,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
               for(int i=0;i<LearnPolicy::NS;++i) f[8+i]=sfe[i];
               u[l]=g_lp.forest_on ? g_lp.ForestU(f) : g_lp.RankU(f);
             }
-            const int k=(mode==1)?1:2;
+            const int k=(mode==1)?1:((mode==10)?qh_k:2);
             int sel0=-1,sel1=-1;
             for(int j=0;j<k;++j){ int bi=-1; double bu=1e300;
               for(int l=0;l<L;++l){ if(l==sel0||l==sel1) continue;
