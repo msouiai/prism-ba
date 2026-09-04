@@ -156,6 +156,37 @@ __global__ void RFCostKernel(const int* __restrict__ ci, const int* __restrict__
   const Scalar ss = rx * rx + ry * ry;
   atomicAdd(cost, 0.5 * (rk ? OcaRho(rk, rk_a2, ss) : ss));
 }
+// RIG PORT of KernelCostBlockRed (2026-09-04): the kernel above funnels every
+// observation through ONE global atomicAdd — the same serialization that cost
+// 43.6 ms/eval on the BAL path (16.4x fix there). Shared-memory block
+// reduction + one atomic per block; rounding-order change only.
+__global__ void RFCostBlockRed(const int* __restrict__ ci, const int* __restrict__ pi,
+                               const Scalar* __restrict__ uv,
+                               const Scalar* __restrict__ Rc, const Scalar* __restrict__ tc,
+                               const Scalar* __restrict__ X,
+                               const Scalar* __restrict__ intr,
+                               const int* __restrict__ calib_of_cam,
+                               int nobs, Scalar* __restrict__ cost,
+                               int rk = 0, Scalar rk_a2 = 0.0) {
+  int o = blockIdx.x * blockDim.x + threadIdx.x;
+  Scalar v = 0.0;
+  if (o < nobs) {
+    int c = ci[o];
+    Scalar rx, ry;
+    RFResidual(Rc + 9 * c, tc + 3 * c, X + 3 * pi[o],
+               intr + RF_NI * calib_of_cam[c], uv[2 * o], uv[2 * o + 1], &rx, &ry);
+    const Scalar ss = rx * rx + ry * ry;
+    v = 0.5 * (rk ? OcaRho(rk, rk_a2, ss) : ss);
+  }
+  __shared__ Scalar sh[256];
+  sh[threadIdx.x] = v;
+  __syncthreads();
+  for (int st = 128; st > 0; st >>= 1) {
+    if (threadIdx.x < st) sh[threadIdx.x] += sh[threadIdx.x + st];
+    __syncthreads();
+  }
+  if (threadIdx.x == 0) atomicAdd(cost, sh[0]);
+}
 
 // Per-observation |r|^2 for the student-t EM scale, reusing RFResidual so the
 // scale is never estimated from a re-derived projection. INACTIVE
@@ -449,9 +480,16 @@ __global__ void RFRetractPoints(const Scalar* __restrict__ X_old,
 inline Scalar RFComputeCost(const RFDeviceProblem& p, const RFDeviceState& s,
                             Scalar* dcost, int rk = 0, Scalar rk_a2 = 0.0) {
   CUDA_CHECK(cudaMemset(dcost, 0, sizeof(Scalar)));
-  RFCostKernel<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.Rc, s.tc,
-                                          s.X, s.intr, p.calib_of_cam, p.nobs, dcost,
-                                          rk, rk_a2);
+  static const bool rf_blockred = [](){ const char* e=getenv("OCA_COST_BLOCKRED");
+    return e ? atoi(e)!=0 : true; }();
+  if (rf_blockred)
+    RFCostBlockRed<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.Rc, s.tc,
+                                              s.X, s.intr, p.calib_of_cam, p.nobs, dcost,
+                                              rk, rk_a2);
+  else
+    RFCostKernel<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.Rc, s.tc,
+                                            s.X, s.intr, p.calib_of_cam, p.nobs, dcost,
+                                            rk, rk_a2);
   Scalar h; CUDA_CHECK(cudaMemcpy(&h, dcost, sizeof(Scalar), cudaMemcpyDeviceToHost));
   return h;
 }
@@ -504,6 +542,12 @@ inline RunLog SolveRigFisheye(const RFDeviceProblem& p, RFDeviceState& s,
                M((void**)&Bo,6ul*nobs*sizeof(Scalar)); }
   M((void**)&bc,(size_t)n_cf*sizeof(Scalar)); M((void**)&bp,(size_t)n_p*sizeof(Scalar));
   M((void**)&Rfac,6ul*npt*sizeof(Scalar)); M((void**)&tacc,(size_t)n_p*sizeof(Scalar));
+  // RIG PORT of the tau-split point factor (2026-09-04, GAP-4090 F5).
+  static const bool rf_tau_split = [](){ const char* e=getenv("OCA_TAU_SPLIT");
+    return e ? atoi(e)!=0 : true; }();
+  Scalar* R0fac=nullptr;
+  if(rf_tau_split) M((void**)&R0fac,6ul*npt*sizeof(Scalar));
+  bool rf_pf_dirty=true;
   M((void**)&uu,(size_t)n_p*sizeof(Scalar)); M((void**)&w,(size_t)n_c*sizeof(Scalar));
   M((void**)&bprime,(size_t)n_c*sizeof(Scalar)); M((void**)&corr,(size_t)n_cf*sizeof(Scalar));
   M((void**)&E,(size_t)n_c*sizeof(Scalar)); M((void**)&dk,(size_t)n_cf*sizeof(Scalar));
@@ -614,6 +658,7 @@ inline RunLog SolveRigFisheye(const RFDeviceProblem& p, RFDeviceState& s,
     else        RFAssemble<Scalar><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,
         s.Rc,s.tc,s.X,s.intr,p.calib_of_cam,p.imask,p.obs2pslot,p.obs2cslot,nobs,
         Hcc,Cdiag,Gp,Gc,Bo,bc,bp,rk,rk_a2);
+    rf_pf_dirty=true;   // Bo/Cdiag just rebuilt
    }
     // tau ratchet with warm ladder (always on here; this path always has
     // intrinsics in the camera block, the situation the ratchet exists for).
@@ -623,7 +668,15 @@ inline RunLog SolveRigFisheye(const RFDeviceProblem& p, RFDeviceState& s,
       if(tau_win>tau_eff) tau_eff = tau_win*std::pow((Scalar)10.0,(Scalar)(rej_streak-1));
     }
     tau_used = tau_eff;
-    if(mf_fp32) MFPointFactor<float><<<GridSize(npt),256>>>(Bo32,Cdiag,p.point_obs_offsets,p.point_obs_list,tau_eff,npt,Rfac,okf);
+    if(rf_tau_split){
+      if(rf_pf_dirty){
+        if(mf_fp32) MFPointFactorObs<float><<<GridSize(npt),256>>>(Bo32,p.point_obs_offsets,p.point_obs_list,npt,R0fac);
+        else        MFPointFactorObs<Scalar><<<GridSize(npt),256>>>(Bo,p.point_obs_offsets,p.point_obs_list,npt,R0fac);
+        rf_pf_dirty=false;
+      }
+      MFPointFactorTau<<<GridSize(npt),256>>>(Cdiag,R0fac,tau_eff,npt,Rfac,okf);
+    }
+    else if(mf_fp32) MFPointFactor<float><<<GridSize(npt),256>>>(Bo32,Cdiag,p.point_obs_offsets,p.point_obs_list,tau_eff,npt,Rfac,okf);
     else        MFPointFactor<Scalar><<<GridSize(npt),256>>>(Bo,Cdiag,p.point_obs_offsets,p.point_obs_list,tau_eff,npt,Rfac,okf);
     MFVinvApply<<<GridSize(npt),256>>>(Rfac,bp,npt,uu);
     CUDA_CHECK(cudaMemset(corr,0,(size_t)n_cf*sizeof(Scalar)));
@@ -859,7 +912,7 @@ inline RunLog SolveRigFisheye(const RFDeviceProblem& p, RFDeviceState& s,
   RFFree(s_new);
   cudaFree(Gp32);cudaFree(Gc32);cudaFree(Bo32);
   cudaFree(Hcc);cudaFree(Cdiag);cudaFree(Gp);cudaFree(Gc);cudaFree(Bo);cudaFree(bc);cudaFree(bp);
-  cudaFree(Rfac);cudaFree(tacc);cudaFree(uu);cudaFree(w);cudaFree(bprime);cudaFree(corr);
+  cudaFree(Rfac);cudaFree(R0fac);cudaFree(tacc);cudaFree(uu);cudaFree(w);cudaFree(bprime);cudaFree(corr);
   cudaFree(E);cudaFree(dk);cudaFree(xc_un);cudaFree(xr_un);cudaFree(xpv);cudaFree(dred);cudaFree(d_best);
   cudaFree(r_);cudaFree(pv_);cudaFree(Ap_);cudaFree(okf);
   cudaFree(bcast_in);cudaFree(bcast_out);cudaFree(dcost);cudaFree(dviol);
