@@ -8502,6 +8502,84 @@ void PrintUsage(const char* prog) {
 // ---------------------------------------------------------------- s2.5/s2.6 driver
 struct MFStats { long matvecs=0; long negcurv=0; long cand_evals=0;
                  long menu_gated=0; long menu_full=0; };
+
+// ---- OCA_LEARN_POLICY: learned candidate-set controller (agent_rev/learn,
+// Exp 5-7). Chooses WHICH menu candidates get true-cost scoring; never
+// touches how a candidate is scored (selection-perturbation law). Two linear
+// heads exported by train34.py: a decisiveness logistic over 14 state
+// features and a per-shift utility ridge over 8 rank + 14 state features.
+// Feature order here MUST match menus.py FEATS / train34.py SFEATS.
+// Modes (OCA_LEARN_MODE): fixed2 | top1 | top2 | ada | ada2.
+//   fixed2 : score {center, center+1} (trivial 2-eval baseline arm)
+//   top1/2 : score the k best candidates by the utility head
+//   ada    : flat menus (p_decisive < thr) score shift 0 only, else full menu
+//   ada2   : flat -> shift 0, decisive -> top-2 by utility
+struct LearnPolicy {
+  bool on=false; int mode=0;              // 1=top1 2=top2 3=ada 4=ada2 5=fixed2
+  double dec_thr=0.5;
+  static constexpr int NS=14, NR=22;      // state dims; rank dims (8+14)
+  double dmu[NS]={0},dsd[NS]={0},dw[NS]={0},db=0;
+  double rmu[NR]={0},rsd[NR]={0},rw[NR]={0},rb=0;
+  long n_flat=0,n_dec=0,n_menus=0;        // telemetry
+  static double Sig(double z){ return 1.0/(1.0+std::exp(-z)); }
+  double DecP(const double* f) const {
+    double z=db;
+    for(int i=0;i<NS;++i) z+=dw[i]*((f[i]-dmu[i])/(dsd[i]!=0?dsd[i]:1.0));
+    return Sig(z);
+  }
+  double RankU(const double* f) const {
+    double z=rb;
+    for(int i=0;i<NR;++i) z+=rw[i]*((f[i]-rmu[i])/(rsd[i]!=0?rsd[i]:1.0));
+    return z;                             // lower = better (log10 badness)
+  }
+  static bool ReadVec(FILE* fp,const char* key,double* v,int n){
+    char k[64];
+    if(std::fscanf(fp,"%63s",k)!=1||std::strcmp(k,key)!=0) return false;
+    for(int i=0;i<n;++i) if(std::fscanf(fp,"%lf",v+i)!=1) return false;
+    return true;
+  }
+};
+static LearnPolicy g_lp;
+static void LoadLearnPolicy(){
+  static bool done=false; if(done) return; done=true;
+  const char* mp=getenv("OCA_LEARN_POLICY");
+  const char* mm=getenv("OCA_LEARN_MODE");
+  if(!mm) return;
+  if     (!std::strcmp(mm,"top1"))   g_lp.mode=1;
+  else if(!std::strcmp(mm,"top2"))   g_lp.mode=2;
+  else if(!std::strcmp(mm,"ada"))    g_lp.mode=3;
+  else if(!std::strcmp(mm,"ada2"))   g_lp.mode=4;
+  else if(!std::strcmp(mm,"fixed2")) g_lp.mode=5;
+  else { std::fprintf(stderr,"[learn] unknown OCA_LEARN_MODE=%s\n",mm); return; }
+  if(const char* e=getenv("OCA_LEARN_DEC_THR")) g_lp.dec_thr=std::atof(e);
+  if(g_lp.mode==5){ g_lp.on=true; return; }   // fixed2 needs no weights
+  if(!mp){ std::fprintf(stderr,"[learn] OCA_LEARN_MODE without OCA_LEARN_POLICY\n"); return; }
+  FILE* fp=std::fopen(mp,"r");
+  if(!fp){ std::fprintf(stderr,"[learn] cannot open %s\n",mp); return; }
+  // skip comment + feature-name lines by keyed reads
+  char line[4096];
+  // format: '# ...' then dec_feats <names...> etc. Read line-wise, key-wise.
+  bool ok=true; int got=0;
+  while(std::fgets(line,sizeof line,fp)){
+    char key[64]; int off=0;
+    if(std::sscanf(line,"%63s%n",key,&off)!=1) continue;
+    auto rd=[&](double* v,int n){ const char* p=line+off; char* end;
+      for(int i=0;i<n;++i){ v[i]=std::strtod(p,&end); if(end==p){return false;} p=end; }
+      return true; };
+    if(!std::strcmp(key,"dec_mu")) ok&=rd(g_lp.dmu,LearnPolicy::NS),++got;
+    else if(!std::strcmp(key,"dec_sd")) ok&=rd(g_lp.dsd,LearnPolicy::NS),++got;
+    else if(!std::strcmp(key,"dec_w"))  ok&=rd(g_lp.dw ,LearnPolicy::NS),++got;
+    else if(!std::strcmp(key,"dec_b"))  ok&=rd(&g_lp.db,1),++got;
+    else if(!std::strcmp(key,"rank_mu"))ok&=rd(g_lp.rmu,LearnPolicy::NR),++got;
+    else if(!std::strcmp(key,"rank_sd"))ok&=rd(g_lp.rsd,LearnPolicy::NR),++got;
+    else if(!std::strcmp(key,"rank_w")) ok&=rd(g_lp.rw ,LearnPolicy::NR),++got;
+    else if(!std::strcmp(key,"rank_b")) ok&=rd(&g_lp.rb,1),++got;
+  }
+  std::fclose(fp);
+  if(ok&&got>=8){ g_lp.on=true;
+    std::fprintf(stderr,"[learn] policy loaded (%s, mode %d, thr %.2f)\n",mp,g_lp.mode,g_lp.dec_thr); }
+  else std::fprintf(stderr,"[learn] policy file %s incomplete (got %d/8), OFF\n",mp,got);
+}
 // ROUND 10: CD templates the camera-block dimension. CD=6 reproduces round 9
 // exactly (s.intr null, intrinsics read from the immutable problem arrays).
 // CD=9 runs with s.intr non-null; k2mask=0 holds k2 fixed (Caspar-matched
@@ -8800,6 +8878,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   FILE* learn_f=nullptr;
   { const char* e=getenv("OCA_LEARN_LOG"); if(e&&*e) learn_f=std::fopen(e,"w"); }
   long learn_att_id=0;
+  LoadLearnPolicy();   // OCA_LEARN_POLICY / OCA_LEARN_MODE (no-op when unset)
   if(learn_f){
     const int gd_env=[](){ const char* e=getenv("OCA_GRID_DOWN");
       return e?std::atoi(e):0; }();
@@ -9306,6 +9385,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     // candidate records reach it through this pointer (set after the fill;
     // stays valid across the negcurv reseed, which edits shifts in place).
     const Scalar* learn_shift_ptr=nullptr;
+    // OCA_LEARN_POLICY mirrors for values declared below the lambdas
+    // (assigned before the CG loop, i.e. before any ScoreAll fires).
+    double lp_nb=0.0, lp_eta=0.0;
 
     CUDA_CHECK(cudaMemset(d_best,0,(size_t)n*sizeof(Scalar)));
     // GAP-4090 F2 refactor: Lift writes the un-equilibrated camera step into
@@ -9457,6 +9539,82 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           Score(xs[0],0,depth); ++st.menu_gated; return;
         }
       }
+      // ---- OCA_LEARN_POLICY hook (Exp 5-7): choose the candidate SET.
+      // Runs AFTER the analytic menu gate (the gate is free and validated;
+      // the policy handles the menus the gate did not flatten). Scoring of
+      // any chosen candidate is the unchanged exact path, in canonical
+      // 0..L-1 order (reordering evaluation is a refuted perturbation).
+      if(g_lp.on && L>1 && L<=16 && rho_mode){
+        static const int lp_gd_env=[](){ const char* e=getenv("OCA_GRID_DOWN");
+          return e?std::atoi(e):0; }();
+        const int gd=std::min(std::max(lp_gd_env,0),L-1);
+        ++g_lp.n_menus;
+        if(g_lp.mode==5){                     // fixed2: {center, center+1}
+          const int a=gd, b=std::min(gd+1,L-1);
+          Score(xs[a],a,depth);
+          if(b!=a) Score(xs[b],b,depth);
+          return;
+        }
+        double xnp[16]; bool xok=true;
+        for(int l=0;l<L;++l){ Scalar v=0; cublasDnrm2(blas,n_c,xs[l],1,&v);
+          xnp[l]=(double)v; if(!std::isfinite(xnp[l])) xok=false; }
+        double phi=-1e300, plo=1e300; bool pfin=true;
+        for(int l=0;l<L;++l){ double v=(double)preds[l];
+          if(!std::isfinite(v)){ pfin=false; break; }
+          phi=std::max(phi,v); plo=std::min(plo,v); }
+        if(pfin && xok){
+          auto slog=[](double x){ return std::log10(std::max(std::fabs(x),1e-300)); };
+          double xhi=xnp[0],xlo=xnp[0];
+          for(int l=1;l<L;++l){ xhi=std::max(xhi,xnp[l]); xlo=std::min(xlo,xnp[l]); }
+          double sfe[LearnPolicy::NS];
+          sfe[0]=slog((phi-plo)/std::max(std::fabs(phi),1e-300));
+          sfe[1]=slog((xhi-xlo)/std::max(xhi,1e-300));
+          sfe[2]=slog((double)lam_cam);
+          sfe[3]=slog((double)tau_eff);
+          sfe[4]=std::min(rej_streak,5);
+          sfe[5]=std::min(retries,8);
+          sfe[6]=slog(lp_nb);
+          sfe[7]=lp_eta;
+          sfe[8]=std::log2((double)std::max(depth,1));
+          sfe[9]=slog(std::max((double)last_rel,1e-12));
+          sfe[10]=last_win_sh-gd;
+          sfe[11]=(double)n_reject/(double)(n_accept+n_reject+1);
+          sfe[12]=slog((double)cost/(double)nobs);
+          sfe[13]=slog((double)nobs);
+          const int mode=g_lp.mode;
+          bool handled=false;
+          if(mode==3||mode==4){
+            const double p=g_lp.DecP(sfe);
+            if(p<g_lp.dec_thr){ ++g_lp.n_flat;
+              Score(xs[0],0,depth); return; }  // flat: mirror the gate fallback
+            ++g_lp.n_dec;
+            // mode 3 decisive: fall through to the full-menu path below
+          }
+          if(mode==1||mode==2||mode==4){
+            double u[16]; const double lc0=slog((double)cost);
+            for(int l=0;l<L;++l){
+              double f[LearnPolicy::NR];
+              const double rel=l-gd;
+              f[0]=rel; f[1]=rel*rel;
+              f[2]=slog((double)preds[l])-lc0;
+              f[3]=slog(xnp[l])-slog(xnp[gd]);
+              f[4]=rel*sfe[9]; f[5]=rel*sfe[2]; f[6]=rel*sfe[4]; f[7]=rel*sfe[11];
+              for(int i=0;i<LearnPolicy::NS;++i) f[8+i]=sfe[i];
+              u[l]=g_lp.RankU(f);
+            }
+            const int k=(mode==1)?1:2;
+            int sel0=-1,sel1=-1;
+            for(int j=0;j<k;++j){ int bi=-1; double bu=1e300;
+              for(int l=0;l<L;++l){ if(l==sel0||l==sel1) continue;
+                if(u[l]<bu){ bu=u[l]; bi=l; } }
+              if(j==0) sel0=bi; else sel1=bi; }
+            for(int l=0;l<L;++l)
+              if(l==sel0||l==sel1) Score(xs[l],l,depth);
+            handled=true;
+          }
+          if(handled) return;
+        }
+      }
       ++st.menu_full;
       if(multi_rhs && score_stride<=1){
         // GAP-4090 F2: one Gp stream for the whole menu, then the identical
@@ -9528,6 +9686,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     Scalar eta = ew_eta_max;
     if(prev_bnorm>0.0){ Scalar q=(nb*nb)/(prev_bnorm*prev_bnorm); eta=std::min(ew_eta_max,(Scalar)0.9*q); }
     prev_bnorm=nb;
+    lp_nb=(double)nb; lp_eta=(double)eta;   // OCA_LEARN_POLICY feature mirrors
     int maxck = ckpts.empty()?64:*std::max_element(ckpts.begin(),ckpts.end());
     // The opening accelerators are a bet that the cheap path ranks candidates
     // as well as the full menu. A REJECTED step is direct evidence the bet
@@ -9955,6 +10114,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
                 st.menu_gated, st.menu_gated+st.menu_full,
                 100.0*st.menu_gated/(double)(st.menu_gated+st.menu_full),
                 st.menu_gated*3);
+  if(g_lp.on)
+    std::printf("  MFCG learn-policy: mode %d, %ld menus (%ld flat / %ld decisive)\n",
+                g_lp.mode, g_lp.n_menus, g_lp.n_flat, g_lp.n_dec);
   std::printf("  MFCG: accepts=%d rejects=%d total_matvecs=%ld negcurv=%ld cand_evals=%ld "
               "mean_cg_per_outer=%.1f\n",
               n_accept,n_reject,st.matvecs,st.negcurv,st.cand_evals,
