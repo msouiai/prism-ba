@@ -13,12 +13,28 @@
 > −12.1% better; ladybug-1197: 3.6696e5 vs our 3.7737e5 = **+2.8% worse**, not
 > −17.1% better).
 >
-> **Corrected ledger vs Caspar-f64: 5 wins / 6 ties / 12 losses, worst loss
-> +40.1%** (`/workspace/agent_rev/fresh/results/ledger.txt`). What survives at
-> every precision and budget: **final-4585 −38.1%** and **final-3068 −8.2%**,
-> plus three ≈noise venice wins. The λ-explosion "stall class" is likewise an
-> fp32 artifact on 5 of its 7 scenes — in f64 the ladybugs and venice-1672 run
-> clean; it is real in f64 only on final-3068 and insta360.
+> **Corrected ledger vs Caspar-f64 — the tally depends on the arm rule, so all
+> three are given** (independently re-derived and reproduced in
+> `/workspace/agent_rev/prec/`): single pre-registered config (block, quality
+> profile, N≥3 medians) **5W / 5T / 13L, worst +65.7%**; the first audit's rule
+> **5W / 6T / 12L, worst +40.1%**; best-recorded-across-quality-arms
+> **9W / 6T / 8L, worst +3.0%**. What survives every rule, precision and
+> budget: **final-4585 −38%** and **final-3068 −7.2% (block) / −13.8% (diag)**.
+> The λ-explosion "stall class" is an fp32 artifact on **6 of its 7 scenes** —
+> in f64 only final-3068 persists (insta360 is rep-dependent), though f64 is
+> not stall-free (final-4585 shows a λ plateau).
+>
+> **fp32 is Caspar's as-published configuration** (its own paper's experiments
+> are float32; the vendored generator defaults to it), so an fp32 column is
+> legitimate *labelled as such* — the defect was mixing precisions within one
+> table and presenting the result as the algorithmic comparison.
+>
+> **The broken baseline also steered our arm selection.** The diag arm was only
+> ever run where block looked contested *against the fp32 baseline*. Completing
+> the diag column (21/23) turns ladybug-1469 from +40% to **+1.7%**, venice-52
+> to +0.23%, wins venice-1672 (−1.8%), and deepens final-3068 to −13.8%: diag
+> scores **7W / 5T / 9L with no loss worse than +3.2%**. Diag, not block, is the
+> defensible pre-registered default (gating cell final-4585 in progress).
 >
 > §1's "Prism" column is additionally a post-hoc best-of-{block,diag} selection
 > made after seeing results, and the diag arm was only ever run on the scenes
@@ -26,20 +42,36 @@
 > worse. Any future table must fix one configuration in advance, or report the
 > arm-selection rule as part of the method.
 >
-> **Unaffected by this correction** (independently checked by the audit): §3
-> product-workload results, including the N=3 end-to-end 10.5% pipeline /
-> 41.6% BA-phase gain (non-BA work equal across arms to 0.7%; the
+> **§3 is unaffected EXCEPT one sentence**: "beats Caspar-f64 on 21/22 dumps"
+> is the same threshold inflation §1 was retracted for — the honest count at a
+> ±0.01% tolerance is **10 wins / 12 ties / 0 losses** (independently recounted
+> twice). The wall claims stand. Also unaffected: the N=3 end-to-end 10.5%
+> pipeline / 41.6% BA-phase gain (non-BA work equal across arms to 0.7%; the
 > different-trajectory confound is empirically absent), and §4's solver
 > changes, with two attribution corrections: the ρ point-constant is **−1.0%**
 > in the controlled same-machine A/B (the −5.2% figure subtracted across two
 > different machines), and "43.6 → 2.3 ms/eval" splices a worst-case before
 > against a best-case after from different configs.
 >
-> **Process rule adopted:** never compare against a baseline whose build
-> configuration has not been verified in the same session that produces the
-> numbers, and assert the baseline's reported initial cost against our own
-> objective at load time (a one-line `score_init` check would have caught this
-> months ago).
+> **§2's speed multiples are NOT yet corrected**: they were computed against
+> fp32 endpoints. Recomputed against f64, a single-config Prism reaches
+> Caspar-f64@200's endpoint on 11/23 scenes and f64-best on 7/23; the
+> 7.6×/3.7×/2.3× crossing multiples need a fast-profile rerun before reuse.
+>
+> **Process rules adopted** (full text in `/workspace/agent_rev/prec/PROTOCOL.md`):
+> verify the baseline's build configuration in the same session as the numbers;
+> log `score_init` on every run and assert it against an independent evaluation
+> of the BAL file at 1e-6 (this doubles as an fp32 fingerprint — an fp32 build
+> cannot pass); pre-register ONE Prism configuration, or a selection *rule* run
+> everywhere with its overhead counted; N≥3 per verdict cell with printed
+> spreads, verdict only if |Δmedian| > 0.15% AND ranges are disjoint; stamp
+> provenance per cell; re-run stale baselines rather than quoting them.
+>
+> One earlier claim in the first audit is itself **withdrawn**: the alleged
+> "+0.69% lossy BAL→COLMAP conversion" is a misdiagnosis — standalone fp32,
+> which involves no conversion, reproduces the harness `score_init` on every
+> scene tested; the offset is fp32 *evaluation* of near-singular observations.
+> The f64 baseline is sound and the corrected ledger needs no redo.
 
 Machine unless stated: RTX 2000 Ada, 70 W (the "budget" tier). Objective:
 SIMPLE_RADIAL / `--dof9 --zero_k2` (f, k1 free; k2 = 0), identical for all
