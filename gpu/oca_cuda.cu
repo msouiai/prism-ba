@@ -9885,6 +9885,34 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       if(ckpts_eff.empty()) ckpts_eff.push_back(cap_en);
       maxck = std::min(maxck, cap_en);
     }
+    // cgrl study (2026-09): OCA_STREAK_CKPT=<d> -- STREAK-CONDITIONED CG depth
+    // cap. An attempt entering with rej_streak>0 fails with P=0.75-0.96 (the
+    // shi2 finding), and when it does accept, the winner sits at checkpoint
+    // <=8 in 91-94% of 1,176 logged streak accepts (20-scene corpus, gate +
+    // nogate; capping the menu at depth 8 offline flips 11/1176 = 0.9% and
+    // has median regret 0.0000 of the attempt's gain). Yet streak attempts
+    // carry 59-74% of ALL matvecs and evals on reject-prone scenes -- deep
+    // sweeps on near-certainly-doomed attempts, kept alive by the seed shift
+    // lam/100 whose ill-conditioning blocks the Eisenstat-Walker break (the
+    // pathological case: trafalgar-257 retries run the full 128-deep sweep).
+    // While rej_streak>0, cap the ladder and the sweep at d. Same one-integer
+    // regime variable as the shi2 eval rule and the tau ladder; clean
+    // attempts are untouched, so reject-free trajectories are bit-identical.
+    // NOTE this caps DEPTH, not shifts: down-shift winners (96% of
+    // dubrovnik-356's streak accepts -- which refuted the "one-sided menu in
+    // streaks" variant offline) remain reachable. Unset/0 = off, bit-compat.
+    static const int streak_ckpt_env = [](){ const char* e=getenv("OCA_STREAK_CKPT");
+      return e? std::atoi(e) : 0; }();
+    if(streak_ckpt_env>0 && rej_streak>0){
+      std::vector<int> cf2;
+      for(int c : ckpts_eff) if(c<=streak_ckpt_env) cf2.push_back(c);
+      if(cf2.empty()) cf2.push_back(streak_ckpt_env);
+      ckpts_eff.swap(cf2);
+      maxck = std::min(maxck, streak_ckpt_env);
+      static bool sc_once=false;
+      if(!sc_once){ std::printf("  [streak-ckpt] active: cap=%d (first fire: outer %d, streak %d)\n",
+                                streak_ckpt_env, k, rej_streak); sc_once=true; }
+    }
     Scalar al_prev=1.0,be_prev=0.0; size_t ci_=0; int cg_it=0; bool trunc=false;
     int last_ck_fired=-1; bool cg_broke=false;
     if(prof){cudaDeviceSynchronize();t0=now();}
