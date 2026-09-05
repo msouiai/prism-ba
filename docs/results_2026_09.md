@@ -1,5 +1,46 @@
 # Prism — consolidated results, September 2026
 
+> **⚠ CORRECTION 2026-09-05 — §1 IS SUPERSEDED. READ THIS FIRST.**
+>
+> An independent audit (`/workspace/agent_rev/fresh/REPORT.md`) demonstrated
+> that the Caspar baselines in §1 are **fp32** on 15 of 23 scenes: the harness
+> that produced them was built with `CASPAR_USE_DOUBLE:BOOL=OFF` (verified in
+> `/workspace/colmap_rev/build_combo/CMakeCache.txt`), while the "10× budget"
+> column is the **f64** standalone binary — two different solvers in one table.
+> The auditor re-ran the missing scenes with standalone f64 at 200 and 2000
+> iterations; I independently reproduced two of the flips (ladybug-1469:
+> Caspar-f64 4.2558e5 in 6.9 s vs our 5.9498e5 = **we are +39.8% worse**, not
+> −12.1% better; ladybug-1197: 3.6696e5 vs our 3.7737e5 = **+2.8% worse**, not
+> −17.1% better).
+>
+> **Corrected ledger vs Caspar-f64: 5 wins / 6 ties / 12 losses, worst loss
+> +40.1%** (`/workspace/agent_rev/fresh/results/ledger.txt`). What survives at
+> every precision and budget: **final-4585 −38.1%** and **final-3068 −8.2%**,
+> plus three ≈noise venice wins. The λ-explosion "stall class" is likewise an
+> fp32 artifact on 5 of its 7 scenes — in f64 the ladybugs and venice-1672 run
+> clean; it is real in f64 only on final-3068 and insta360.
+>
+> §1's "Prism" column is additionally a post-hoc best-of-{block,diag} selection
+> made after seeing results, and the diag arm was only ever run on the scenes
+> where block looked contested. A single fixed configuration scores materially
+> worse. Any future table must fix one configuration in advance, or report the
+> arm-selection rule as part of the method.
+>
+> **Unaffected by this correction** (independently checked by the audit): §3
+> product-workload results, including the N=3 end-to-end 10.5% pipeline /
+> 41.6% BA-phase gain (non-BA work equal across arms to 0.7%; the
+> different-trajectory confound is empirically absent), and §4's solver
+> changes, with two attribution corrections: the ρ point-constant is **−1.0%**
+> in the controlled same-machine A/B (the −5.2% figure subtracted across two
+> different machines), and "43.6 → 2.3 ms/eval" splices a worst-case before
+> against a best-case after from different configs.
+>
+> **Process rule adopted:** never compare against a baseline whose build
+> configuration has not been verified in the same session that produces the
+> numbers, and assert the baseline's reported initial cost against our own
+> objective at load time (a one-line `score_init` check would have caught this
+> months ago).
+
 Machine unless stated: RTX 2000 Ada, 70 W (the "budget" tier). Objective:
 SIMPLE_RADIAL / `--dof9 --zero_k2` (f, k1 free; k2 = 0), identical for all
 solvers. Caspar = the vendored SymForce-derived GPU BA solver (arXiv
