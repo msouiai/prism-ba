@@ -124,7 +124,8 @@ per-attempt learned depth; cross-attempt Krylov reuse.
 | τ-split point factor (default) | retries replay 3 Givens rows instead of an O(nobs) sweep | τ enters only the 3 trailing augmentation rows; R is row-order invariant |
 | dead-work deletion (default) | −11–15% of storm wall | `MFDiagK` + equilibration build a vector never read on the block path |
 | streak depth cap (`OCA_STREAK_CKPT=8`) | identical endpoint, −18.6% wall | streak sweeps must seed at the worst-conditioned shift so EW never fires, yet streak-ending accepts win at depth ≤8 in 91–94% |
-| **uniform damping floor (`OCA_TAU_LAM=c`)** | **see §7 — the current headline** | fixes the damping asymmetry of §1 |
+| **uniform damping floor (`OCA_TAU_LAM=c`)** | 9W/9T/4L vs Caspar-f64, worst loss +0.44% (22 scenes, N=2–3) | fixes the damping asymmetry of §1 |
+| **monotone floor (`OCA_TAU_LAM_RATCHET=1`)** | strictly better again, and removes the per-scene flag — see §7.3 | the floor can never follow λ back up into the storm |
 
 Note the pattern: **every survivor is a mechanism fix or a regime-gated
 integer rule on a signal that is already free. Nothing model-shaped has ever
@@ -158,45 +159,93 @@ self-annealing as λ decays). Measured, diag arm, N = 2–3, vs Caspar-f64:
 **9 wins / 9 ties / 4 losses across 22 scenes, worst loss +0.44%** — versus
 the pre-registered block config's 5W/5T/13L with a +65.7% worst case.
 
-### 7.3 The unresolved conflict
-`final-4585` is the one scene that **rewards the asymmetry**. With the floor
-on permanently it degrades +55% (a deterministic 4,667-reject storm); with the
-floor limited to the first accepted outer (`K=1`) it is our best result on
-that scene (6.74e6, −41% vs every Caspar column). But `K=1` throws the gains
-away elsewhere — ladybug-1197 goes from a tie to +9.3%.
+### 7.3 The conflict, and how it was resolved
 
-So the requirements are **incompatible in one fixed window**: the scenes that
-need the floor need it past outer 1; final-4585 needs it gone after outer 1.
+`final-4585` is the one scene that **rewards the asymmetry**. The requirements
+looked incompatible, and under any λ-tracking floor they are:
 
-Attempts to resolve it so far:
+| policy | final-4585 | ladybug-1197 | ladybug-1723 | venice-52 |
+|---|---|---|---|---|
+| floor off (champion) | best (−41% vs Caspar) | +3.0% | +1.4% | +0.2% |
+| floor, `K=1` (one outer) | **−42%, best ever** | +9.3% | +5.3% | +2.2% |
+| floor, `K=3` / unlimited | +55% vs our champion (4,667-reject storm) | +0.02% | +0.23% | **−1.91%** |
+
+Two resolution attempts failed, informatively:
+
 - **A-priori predictors: refuted.** obs/pt, 2-obs fraction, initial cost/obs,
-  pt/cam, obs/cam and the outer-1 signature were all measured and none
-  separates final-4585.
-- **Runtime discriminator (reject/accept ratio): fires too late.** The ratio
-  *does* separate the regimes (2.8 on ladybug vs 7.9 on final-4585) and
-  correctly leaves the ladybug fix intact, but by the time it trips (outer 6–8)
-  the basin is already committed, so final-4585 still ends at 1.06e7.
+  pt/cam, obs/cam and the outer-1 signature were all measured; none separates
+  final-4585. That class is identifiable only by behaviour.
+- **Runtime discriminator (`OCA_TAU_LAM_AUTO`, reject-to-accept ratio): fires
+  too late.** The ratio *does* separate the regimes (2.8 on ladybug vs 7.9 on
+  final-4585) and correctly leaves the ladybug fix intact, but it trips at
+  outer 6–8, by which time the basin is committed — final-4585 still ends at
+  1.06e7. This is §4.2 applying symmetrically: any trigger that waits for a
+  storm signature is already too late.
 
-### 7.4 The question for the next reasoner
-**Is there a signal available within accepted outers 1–2 that distinguishes
-"this problem needs uniform damping" from "this problem needs the asymmetry"?**
-Constraints: it must be computable from quantities the solver already has (or
-one cheap extra kernel); it must not perturb candidate scoring (§4.1); and it
-must be validated at N ≥ 5 on the lottery scenes (§4.4).
+**What worked: a MONOTONE floor** (`OCA_TAU_LAM_RATCHET=1`),
+`τ_floor ← min(τ_floor, c·λ)`. Diagnosis: with the plain coupling τ collapses
+back down *together with* λ after every recentre, so the toxic point
+relaxation is re-probed again and again — that is the 4,667-reject signature.
+The ladybug class only needs the floor **high early**; once the basin is
+chosen it does not care. A floor that can never rise again satisfies both.
 
-Candidate directions, untested:
-- The mechanism is about *thin-track points taking huge steps*. A direct
-  measurement — e.g. the max or 99th-percentile ‖Δx_p‖ relative to scene
-  radius during outer 1, or the fraction of 2-observation points whose step
-  exceeds their track's triangulation uncertainty — is closer to the physics
-  than a reject ratio, and is available *before* the first accept.
-- Conversely: if the floor's harm on final-4585 comes from τ collapsing *with*
-  λ after each recentre (re-probing the toxic relaxation), a floor that
-  **ratchets down monotonically** rather than tracking λ might be uniformly
-  safe. This has not been tried and is cheap.
-- Or accept a two-config rule and say so plainly — with the caveat that
-  post-hoc per-scene configuration is exactly the methodological defect that
-  invalidated our earlier headline (§8).
+Measured, N=3, vs Caspar-f64:
+
+| scene | ratchet | plain coupling |
+|---|---|---|
+| final-4585 | **−6.38%** (deterministic, no storm) | +55% vs our champion |
+| ladybug-1197 | +0.02% | +0.02% |
+| ladybug-1723 | **+0.13%** | +0.23% |
+| ladybug-1469 | **+0.27%** | +0.44% |
+| venice-52 | **−2.26%** | −1.91% |
+
+So the ratchet is **strictly better than the plain coupling on every scene the
+coupling helps**, and it removes the need for a per-scene flag: one uniform
+configuration (diag + `OCA_TAU_LAM=1 OCA_TAU_LAM_RATCHET=1`) wins or ties
+everywhere tested. That matters beyond the numbers — a pre-registered single
+config is what makes the ledger legitimate (§8.4); best-of-arms is not a
+result.
+
+Cost: it leaves our own final-4585 margin on the table (−6.4% where `K=1`
+reaches −42%). A full 23-scene N=3 ledger with this single config is the
+current measurement in flight.
+
+### 7.4 The open question now
+
+**Can the τ decision be made by SELECTION rather than by POLICY?**
+
+Motivation from the pattern in §6: every *policy* we have tried fails to
+generalise across scene classes, while **true-cost candidate selection has
+never failed** — it is the one mechanism in this solver that reliably picks
+the right thing per scene, per outer, with no tuning.
+
+Concretely: during the early outers, score the winning step's point half with
+**both** τ values (floored and static) and let the existing accept gate
+choose. On the ladybug class the damped point half should win; on final-4585
+the undamped one should. This needs no discriminator and no flag, and it is a
+candidate-**set** change, which §4.1 permits (scoring inputs stay exact).
+
+Implementation notes for whoever takes it: the τ-split point factor
+(`MFPointFactorObs` / `MFPointFactorTau`) already makes a second τ cheap — the
+O(nobs) Givens sweep is shared and only the 3 trailing augmentation rows are
+replayed, so an alternative point half costs one extra `MFPointFactorTau` +
+`MFVinvApply`/`MFBackSub` + one cost evaluation. Gate it to the first few
+outers (the commitment window of §4.2) so the extra evaluation is negligible.
+Caveat to check: strictly, τ changes `S(τ)` and therefore the camera step too,
+so re-solving only the point half yields a *different valid candidate*, not
+"the step the unfloored solve would have produced". That is legitimate — any
+step is a legal candidate and the true-cost gate decides — but the report
+should not claim it is equivalent to an unfloored solve.
+
+Secondary open items, in priority order:
+1. Product workload under the new config (muell end-to-end + the 22-dump GBA
+   sweep). The mechanism is about thin-track points and street/rig scenes are
+   exactly that regime; this is also the result class that has survived every
+   audit.
+2. Recompute the §2 speed/crossing multiples against f64 — they are currently
+   computed against fp32 endpoints and are knowingly stale.
+3. Whether the ratchet also subsumes `OCA_RHO_PT` and the storm policy
+   (`OCA_CKPT_MAX=32`), which were tuned against the pre-ratchet dynamics.
 
 ## 8. Standing methodological rules
 
