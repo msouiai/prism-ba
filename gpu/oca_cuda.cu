@@ -9166,6 +9166,41 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         if(cand>tau_eff) tau_eff=cand;
       }
     }
+    // OCA_TAU_LAM=<c>: UNIFORM DAMPING FLOOR (basin study 2026-09). Caspar-f64
+    // damps every block -- points included -- with ONE relative Marquardt
+    // multiplier that decays smoothly from 1.0, while our tau_pt is a static
+    // 1e-7: at the first accepted outer the cameras carry lam ~ 1e0..1e5
+    // (relative, equilibrated space) while the point half-step is essentially
+    // an UNDAMPED Newton jump. On thin-track scenes (ladybug: 48% of points
+    // have 2 observations) that jump commits the basin in the first few
+    // outers; the factor ablation (agent_rev/basin) shows the tau floor is
+    // the ONLY single factor that moves the ladybug endpoint. This flag
+    // couples the point damping to the camera damping: every attempt uses
+    // tau_eff >= c * lam_cam, so the point block sees the same decaying
+    // trust region as the cameras (c=1 == Caspar's uniform diag). Both
+    // lam_cam and tau are RELATIVE dampings (lam is an additive shift in the
+    // equilibrated camera space, tau multiplies diag(V)), so c is
+    // dimensionless. Reject escalations (lam x10) lift the point damping
+    // automatically; the existing streak ratchet still applies on top via
+    // the max. Unset/0 = off, bit-compat.
+    // OCA_TAU_LAM_K=<k>: WINDOWED coupling -- apply the uniform floor only
+    // while fewer than k outers have been ACCEPTED. The cross-restart study
+    // (agent_rev/basin §2) shows the ladybug-class basin is irreversibly
+    // committed in accepted outers 1-3; the uniform floor is only needed
+    // there. Left on permanently (k=0 = unlimited), the coupling re-creates
+    // the final-4585 reject storm it was meant to prevent: tau collapses to
+    // the floor WITH lambda after every recentre, re-probing the toxic point
+    // relaxation (measured: 4,667 rejects / 600 outers, endpoint +55% vs
+    // champion). With k set, outer k+1 onward is EXACTLY the shipped
+    // asymmetric policy. k=10 covers every measured commitment window.
+    static const double tau_lam_c = [](){
+      const char* e=getenv("OCA_TAU_LAM"); return e?std::atof(e):0.0; }();
+    static const int tau_lam_k = [](){
+      const char* e=getenv("OCA_TAU_LAM_K"); return e?std::atoi(e):0; }();
+    if(tau_lam_c>0.0 && (tau_lam_k<=0 || n_accept<tau_lam_k)){
+      const Scalar tl=(Scalar)tau_lam_c*lam_cam;
+      if(tl>tau_eff) tau_eff=tl;
+    }
     tau_used = tau_eff;
     if(tau_split){
       if(pf_obs_dirty){
