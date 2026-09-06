@@ -1243,6 +1243,48 @@ __global__ void MFPointFactorObs(const HT* __restrict__ Bo,
     Scalar v1[3]={(Scalar)Bo[6*o+3],(Scalar)Bo[6*o+4],(Scalar)Bo[6*o+5]}; MFGivens(Rp,v1); }
   for(int i=0;i<6;++i) R0f[6*p+i]=Rp[i];
 }
+// PER-POINT DAMPING (2026-09-05). The uniform floor tau>=c*lam is right for
+// thin, badly-conditioned tracks (near-parallel rays: a step along the ray
+// bisector is a near-null direction of the cost, so an undamped point half
+// flings the point to infinity while the TRUE COST BARELY MOVES -- which is
+// exactly why no menu widening, deeper CG or better scorer can ever see it)
+// and wrong for well-conditioned tracks, whose free relaxation is what gives
+// the asymmetric solver its large win on final-4585. The conflict is global
+// only because the knob is global, so: apply the floor per point.
+// `poff` gives each point's observation count for free (CSR offsets already
+// built for the factor sweep). maxobs<=0 => floor everyone (legacy).
+// GEOMETRIC GATE (2026-09-06). Observation COUNT is the wrong statistic: a
+// 2-view point at 30 degrees is fine, a 5-view point on a straight vehicle
+// track at 0.5 degrees is a flight risk. What matters is the CONDITIONING of
+// V_p, i.e. how nearly parallel the rays are. The tau-split factor already
+// computes R0f = qr(B_p) WITHOUT any damping, so the undamped point block's
+// conditioning is free: V_p = R0f^T R0f, and the diagonal of the triangular
+// factor gives cond(V_p)^(1/2) ~ max|r_ii| / min|r_ii|. Gate the floor on
+// (min/max) < condthr instead of on the track length. R0f layout is the same
+// packed upper triangle the solve uses: [r00, r01, r02, r11, r12, r22].
+__global__ void MFPointFactorTauSel(const Scalar* __restrict__ Cdiag,
+    const Scalar* __restrict__ R0f,const int* __restrict__ poff,
+    Scalar tau_base,Scalar tau_floor,int maxobs,Scalar condthr,int npt,
+    Scalar* __restrict__ Rf,int* __restrict__ ok){
+  int p=blockIdx.x*blockDim.x+threadIdx.x; if(p>=npt)return;
+  bool weak;
+  if(condthr>0.0){
+    const Scalar a=fabs(R0f[6*p+0]), b=fabs(R0f[6*p+3]), c=fabs(R0f[6*p+5]);
+    const Scalar mn=fmin(a,fmin(b,c)), mx=fmax(a,fmax(b,c));
+    weak = !(mn > condthr*mx);       // ill-conditioned (or degenerate) point
+  } else {
+    const int nobs_p = poff[p+1]-poff[p];
+    weak = (maxobs<=0 || nobs_p<=maxobs);
+  }
+  const Scalar tau = weak ? tau_floor : tau_base;
+  Scalar cd[3]={Cdiag[3*p],Cdiag[3*p+1],Cdiag[3*p+2]};
+  Scalar tr=cd[0]+cd[1]+cd[2], fl=tau*tr/3.0; if(!(fl>0.0)) fl=1e-32;
+  Scalar Rp[6]; for(int i=0;i<6;++i) Rp[i]=R0f[6*p+i];
+  for(int i=0;i<3;++i){ Scalar q=tau*cd[i]; if(!(q>1e-3*fl)) q=1e-3*fl;
+    Scalar v[3]={0,0,0}; v[i]=sqrt(q); MFGivens(Rp,v); }
+  ok[p]=((Rp[0]>0.0)&&(Rp[3]>0.0)&&(Rp[5]>0.0))?1:0;
+  for(int i=0;i<6;++i) Rf[6*p+i]=Rp[i];
+}
 __global__ void MFPointFactorTau(const Scalar* __restrict__ Cdiag,
     const Scalar* __restrict__ R0f,Scalar tau,int npt,
     Scalar* __restrict__ Rf,int* __restrict__ ok){
@@ -8501,7 +8543,8 @@ void PrintUsage(const char* prog) {
 
 // ---------------------------------------------------------------- s2.5/s2.6 driver
 struct MFStats { long matvecs=0; long negcurv=0; long cand_evals=0;
-                 long menu_gated=0; long menu_full=0; };
+                 long menu_gated=0; long menu_full=0;
+                 long doomed_probe=0; long doomed_wrong=0; };
 
 // ---- OCA_LEARN_POLICY: learned candidate-set controller (agent_rev/learn,
 // Exp 5-7). Chooses WHICH menu candidates get true-cost scoring; never
@@ -8864,6 +8907,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   Scalar lam_cam=lam0, lam_floor=lam0*std::pow((Scalar)10.0,(Scalar)(-lam_floor_dec));
   MFStats st; Scalar prev_bnorm=-1.0;
   int n_accept=0,n_reject=0,rej_streak=0;
+  bool tau_lam_off=false;   // OCA_TAU_LAM_AUTO latch (see the tau floor below)
+  int clean_streak=0;       // OCA_PRUNE_REARM: consecutive uncontested accepts
+  Scalar tau_lam_floor_cur=std::numeric_limits<Scalar>::infinity();  // ratchet state
   int last_win_sh=0;   // OCA_CAND_PRUNE: previous outer's winning shift
   Scalar last_rel=1.0; // relative progress of the last ACCEPTED outer
   // Early-stopping state (inert unless the caller enables the tolerances).
@@ -9197,9 +9243,72 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       const char* e=getenv("OCA_TAU_LAM"); return e?std::atof(e):0.0; }();
     static const int tau_lam_k = [](){
       const char* e=getenv("OCA_TAU_LAM_K"); return e?std::atoi(e):0; }();
-    if(tau_lam_c>0.0 && (tau_lam_k<=0 || n_accept<tau_lam_k)){
-      const Scalar tl=(Scalar)tau_lam_c*lam_cam;
-      if(tl>tau_eff) tau_eff=tl;
+    // OCA_TAU_LAM_AUTO=<r>: RUNTIME DISCRIMINATOR (2026-09-05). The uniform
+    // floor helps almost everywhere but is catastrophic on the final-4585
+    // class (+55%), and the basin study measured and REFUTED every a-priori
+    // separator it tried (obs/pt, 2-obs fraction, init cost/obs, pt/cam,
+    // obs/cam, outer-1 signature): that class is identifiable only by
+    // BEHAVIOUR. Its behavioural signature is unproductive damping -- the
+    // coupling re-probes a toxic point relaxation, so rejects pile up per
+    // accepted outer (4,667 rejects / 600 outers there, vs a handful on the
+    // ladybug class where the floor pays). So: keep the floor while it is
+    // productive, and retire it PERMANENTLY once the observed reject-to-
+    // accept ratio exceeds r (checked only after a warm-up of
+    // OCA_TAU_LAM_AUTO_MIN accepts, default 3, so the commitment window
+    // 1-3 is always covered). Latching is deliberate: re-enabling would
+    // re-enter the storm. r<=0 disables the discriminator.
+    static const double tau_lam_auto = [](){
+      const char* e=getenv("OCA_TAU_LAM_AUTO"); return e?std::atof(e):0.0; }();
+    static const int tau_lam_auto_min = [](){
+      const char* e=getenv("OCA_TAU_LAM_AUTO_MIN"); return e?std::atoi(e):3; }();
+    if(tau_lam_c>0.0 && tau_lam_auto>0.0 && !tau_lam_off &&
+       n_accept>=tau_lam_auto_min &&
+       (double)n_reject > tau_lam_auto*(double)n_accept){
+      tau_lam_off=true;
+      if(verbose) std::printf("  [tau-lam] auto-off at outer %d "
+                              "(rejects %d / accepts %d > %.2f)\n",
+                              k,n_reject,n_accept,tau_lam_auto);
+    }
+    // OCA_TAU_LAM_RATCHET=1 (2026-09-05): MONOTONE floor. Diagnosis of the
+    // final-4585 regression: with the plain coupling, tau collapses back DOWN
+    // together with lambda after every recentre, so the toxic point
+    // relaxation is re-probed again and again (4,667 rejects). The ladybug
+    // class, by contrast, only needs the floor to be HIGH EARLY -- once the
+    // basin is chosen (outers 1-3) it does not care. A floor that never rises
+    // back after it has decayed, i.e. tau_floor = min(tau_floor, c*lam),
+    // therefore gives the ladybugs their early uniform damping while making
+    // the final-4585 storm unreachable, because the floor cannot follow
+    // lambda back up. This tests whether the two regimes' requirements are
+    // genuinely incompatible or only appear so under a lambda-tracking floor.
+    static const bool tau_lam_ratchet = getenv("OCA_TAU_LAM_RATCHET")!=nullptr;
+    // OCA_TAU_LAM_ANNEAL=<gamma>: c_k = c*gamma^n_accept -- a one-parameter
+    // family interpolating smoothly between K=1 (gamma->0) and K=inf
+    // (gamma=1), so the dose-response can be measured instead of comparing
+    // two endpoints of a discrete window.
+    static const double tau_lam_anneal = [](){
+      const char* e=getenv("OCA_TAU_LAM_ANNEAL"); return e?std::atof(e):0.0; }();
+    // OCA_TAU_LAM_MAXOBS=<m>: apply the floor ONLY to points with <= m
+    // observations (thin tracks). 0 = every point (legacy global floor).
+    static const int tau_lam_maxobs = [](){
+      const char* e=getenv("OCA_TAU_LAM_MAXOBS"); return e?std::atoi(e):0; }();
+    // OCA_TAU_LAM_COND=<t>: gate the per-point floor on the CONDITIONING of
+    // the undamped point block (min/max of the R0f diagonal) instead of the
+    // track length. Takes precedence over MAXOBS when set.
+    static const double tau_lam_cond = [](){
+      const char* e=getenv("OCA_TAU_LAM_COND"); return e?std::atof(e):0.0; }();
+    Scalar tau_floor_now = 0.0;
+    if(tau_lam_c>0.0 && !tau_lam_off && (tau_lam_k<=0 || n_accept<tau_lam_k)){
+      Scalar tl=(Scalar)tau_lam_c*lam_cam;
+      if(tau_lam_anneal>0.0)
+        tl *= (Scalar)std::pow(tau_lam_anneal,(double)n_accept);
+      if(tau_lam_ratchet){
+        if(tl>tau_lam_floor_cur) tl=tau_lam_floor_cur;   // never rise again
+        tau_lam_floor_cur=tl;
+      }
+      tau_floor_now = tl;
+      // With per-point selection the floor is applied inside the factor
+      // kernel (thin tracks only); globally it just raises tau_eff.
+      if(tau_lam_maxobs<=0 && tau_lam_cond<=0.0 && tl>tau_eff) tau_eff=tl;
     }
     tau_used = tau_eff;
     if(tau_split){
@@ -9208,7 +9317,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         else        MFPointFactorObs<Scalar><<<GridSize(npt),256>>>(Bo,p.point_obs_offsets,p.point_obs_list,npt,R0f);
         pf_obs_dirty=false;
       }
-      MFPointFactorTau<<<GridSize(npt),256>>>(Cdiag,R0f,tau_eff,npt,Rf,okf);
+      if((tau_lam_maxobs>0 || tau_lam_cond>0.0) && tau_floor_now>tau_eff)
+        MFPointFactorTauSel<<<GridSize(npt),256>>>(Cdiag,R0f,p.point_obs_offsets,
+            tau_eff,tau_floor_now,tau_lam_maxobs,(Scalar)tau_lam_cond,npt,Rf,okf);
+      else
+        MFPointFactorTau<<<GridSize(npt),256>>>(Cdiag,R0f,tau_eff,npt,Rf,okf);
     }
     else if(mf_fp32) MFPointFactor<float><<<GridSize(npt),256>>>(Bo32,Cdiag,p.point_obs_offsets,p.point_obs_list,tau_eff,npt,Rf,okf);
     else        MFPointFactor<Scalar><<<GridSize(npt),256>>>(Bo,Cdiag,p.point_obs_offsets,p.point_obs_list,tau_eff,npt,Rf,okf);
@@ -9425,6 +9538,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     }
     // ---- candidate scoring by TRUE nonlinear cost (existing rule, unchanged) ----
     Scalar best_cost=cost; int best_sh=-1,best_ck=-1; bool have=false;
+    bool doomed_probe_failed=false;   // OCA_DOOMED neutrality accounting
     std::vector<Scalar> cbest_sh(L,std::numeric_limits<Scalar>::infinity());
     // OCA_RHO_LAMBDA: running model reduction per shift, from CG scalars alone
     // (phi drops 0.5*alpha_i*|r_i|^2 per step; |r^sigma|^2 = zeta^2 |r|^2).
@@ -9893,7 +10007,20 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     const bool prune_en = cand_prune || fast_opening;
     const int  cap_en   = (ckpt_open>0) ? ckpt_open
                                         : (fast_opening ? fast_opening_depth : 0);
-    const bool accel = (n_reject==0) && (last_rel > open_rel);
+    // OCA_PRUNE_REARM=<k> (2026-09-06): make the opening accelerator TWO-WAY.
+    // The legacy gate is one-way -- `n_reject==0` disarms it permanently at
+    // the first reject, so a scene with one early transient reject pays the
+    // full menu for the rest of the solve. But the menu's value is now
+    // measured to be concentrated exactly in the reject/storm regime (L=1 is
+    // equal-or-better at ~2x less wall on healthy scenes, and +35% worse on
+    // final-3068), so the right policy is: cheap while healthy, full during
+    // storms, cheap AGAIN once k consecutive clean accepts show the storm has
+    // passed. k<=0 keeps the legacy one-way behaviour (bit-compat).
+    static const int prune_rearm = [](){ const char* e=getenv("OCA_PRUNE_REARM");
+      return e?std::atoi(e):0; }();
+    const bool accel = ((n_reject==0) ||
+                        (prune_rearm>0 && clean_streak>=prune_rearm))
+                       && (last_rel > open_rel);
     // REVIEW: OCA_PRUNE_ALWAYS=1 lifts the opening-only guard so candidate
     // pruning runs for the WHOLE solve (Caspar evaluates exactly one candidate
     // per outer; MFREE evaluates ~11, measured 18% of wall on venice-1778).
@@ -9995,6 +10122,38 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       rr=rr_new;
       if(prof){cudaDeviceSynchronize();t_mv+=std::chrono::duration<double>(now()-t0).count();}
       while(ci_<ckpts_eff.size() && cg_it+1==ckpts_eff[ci_]){
+        // OCA_DOOMED=<mode>: DOOMED-ATTEMPT PROBE (2026-09-06). On storm
+        // scenes 79% of candidate evaluations land on attempts where NOTHING
+        // is accepted, and evaluation is ~45% of wall there -- roughly a
+        // third of storm wall is spent scoring steps that are all rejected.
+        // For an SPD system the CG iterate norms grow monotonically, so the
+        // MOST CONSERVATIVE candidate is (largest sigma, shallowest depth):
+        // the shortest step, hence the likeliest accept. Score it first at
+        // the first checkpoint of a RETRY; if even that fails to beat the
+        // current cost, the attempt is almost certainly doomed and the
+        // remaining candidates are skipped.
+        //   mode 1 = count only (log how often skipping would have been
+        //            trajectory-neutral, i.e. no later candidate was
+        //            accepted anyway) -- measure BEFORE switching on.
+        //   mode 2 = act on it.
+        // Candidate-SET change only; scoring inputs untouched.
+        static const int doomed_mode = [](){ const char* e=getenv("OCA_DOOMED");
+          return e?std::atoi(e):0; }();
+        bool doomed_skip=false;
+        if(doomed_mode>0 && rej_streak>0 && ci_==0 && L>1){
+          const Scalar cost_before=best_cost; const bool had=have;
+          Score(xs[L-1],L-1,cg_it+1);           // most conservative candidate
+          const bool probe_failed = !(have && best_cost<cost);
+          if(probe_failed){
+            ++st.doomed_probe; doomed_probe_failed=true;
+            if(doomed_mode>=2) doomed_skip=true;
+          }
+          (void)cost_before; (void)had;
+        }
+        if(doomed_skip){
+          last_ck_fired = cg_it+1; ci_=ckpts_eff.size();   // abandon this attempt
+          break;
+        }
         if(prune_now){
           Score(xs[0],0,cg_it+1);
           if(last_win_sh>0 && last_win_sh<L) Score(xs[last_win_sh],last_win_sh,cg_it+1);
@@ -10080,6 +10239,12 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
            learn_fac=std::numeric_limits<double>::quiet_NaN(),
            learn_predfull=0.0;   // OCA_LEARN_LOG capture (accept branch only)
     if(have && best_cost<cost){
+      // OCA_DOOMED accounting: the probe said "doomed" yet a later candidate
+      // WAS accepted -> skipping would NOT have been trajectory-neutral here.
+      if(doomed_probe_failed) ++st.doomed_wrong;
+      // OCA_PRUNE_REARM bookkeeping: an accept that needed no retries is a
+      // "clean" outer; any contested accept restarts the count.
+      if(rej_streak==0) ++clean_streak; else clean_streak=0;
       const Scalar cost_pre_accept = cost;
       DoRetract(d_best,s_new); CopyState(s,s_new,ncam,npt);
       cost=best_cost;
@@ -10183,7 +10348,33 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       accepted=true; ++n_accept; rej_streak=0;
     } else {
       if(rej_streak==0) lam_pre_streak=lam_cam;
-      lam_cam*=10.0; ++n_reject; ++rej_streak;
+      // OCA_RETRY_SPAN=1 (2026-09-06): ESCALATE BY THE MENU SPAN, not x10.
+      // A rejected attempt did not merely show that lambda is too small -- it
+      // scored the WHOLE menu, so it proved that damping up to
+      // lam*10^(L-1-grid_down) is insufficient. Escalating x10 therefore
+      // re-tests four of the five shifts the previous attempt already
+      // rejected, buying exactly ONE new decade per retry while re-paying the
+      // point factor and the full scoring pass. That redundancy is the
+      // measured cost driver: final-4585 runs ~8 rejects per accept and its
+      // per-outer cost is 10.5x Caspar's, the ratio tracking reject count
+      // across the whole benchmark. Jumping straight past the refuted range
+      // should reach the accepting damping in ~1-2 retries instead of ~8.
+      // The menu still spans grid_down decades BELOW the new centre, so a
+      // moderate overshoot is recoverable within the next attempt's own menu.
+      // OCA_RETRY_SPAN=<k>: use the span jump only from the k-th reject of a
+      // streak onward (k=1 = always). Measured: always-on cuts rejects 1.5-8x
+      // and wall with it, but overshoots on LOW-reject scenes -- venice-52
+      // (32 rejects total) lost 5.7% because a single, possibly marginal
+      // reject triggered a three-decade jump. A first reject is weak evidence
+      // (the menu may have been nearly acceptable); a second is strong (the
+      // whole neighbourhood has now been refuted twice). k=2 keeps the x10
+      // step for the first reject and skips the refuted range thereafter.
+      static const int retry_span = [](){ const char* e=getenv("OCA_RETRY_SPAN");
+        return e?std::atoi(e):0; }();
+      const bool span_now = retry_span>0 && (rej_streak+1)>=retry_span;
+      const double esc = span_now
+          ? std::pow(10.0,(double)std::max(1,L-1-grid_down)+1.0) : 10.0;
+      lam_cam*=(Scalar)esc; ++n_reject; ++rej_streak;
     }
     // OCA_LEARN_LOG: one record per attempt, after the accept/reject decision
     // and the lambda/tau updates (lam=pre-action damping, lam1=post-update).
@@ -10354,6 +10545,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   if(g_lp.on)
     std::printf("  MFCG learn-policy: mode %d, %ld menus (%ld flat / %ld decisive)\n",
                 g_lp.mode, g_lp.n_menus, g_lp.n_flat, g_lp.n_dec);
+  if(st.doomed_probe>0)
+    std::printf("  MFCG doomed-probe: fired %ld, of which %ld attempts were "
+                "accepted anyway (%.1f%% NOT neutral)\n",
+                st.doomed_probe, st.doomed_wrong,
+                100.0*st.doomed_wrong/(double)st.doomed_probe);
   std::printf("  MFCG: accepts=%d rejects=%d total_matvecs=%ld negcurv=%ld cand_evals=%ld "
               "mean_cg_per_outer=%.1f\n",
               n_accept,n_reject,st.matvecs,st.negcurv,st.cand_evals,
