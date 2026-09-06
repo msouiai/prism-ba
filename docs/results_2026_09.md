@@ -132,17 +132,65 @@ Caspar's stop mode, all 23: **16 cap-limited** (still descending at cutoff),
 The stall class is the robustness result — it is the failure our τ-ratchet and
 damping menu exist to survive.
 
-## 2. Speed vs Caspar
+## 2. Speed vs Caspar — RETRACTED AND REPLACED (2026-09-06)
 
-Iso-quality crossings (fast profile, 70 W): dubrovnik 7.6×, venice 3.7×,
-trafalgar 2.3×, final-13682 1.3× (a both-axes win on the budget card, versus
-0.4× on a 4090). Prism reaches Caspar's own endpoint faster than Caspar does
-on 10/23 scenes; on most of the rest Caspar's short wall is an early stall,
-not speed.
+**The previous crossing multiples (dubrovnik 7.6x, venice 3.7x, trafalgar
+2.3x) are withdrawn.** They were computed against fp32 Caspar endpoints (see
+the correction at the top of this file). Against the f64 build at its own
+default budget the honest picture is the opposite:
 
-**Hardware tilt.** Caspar is fp32-FLOPs-bound, Prism bandwidth-bound, so every
-margin roughly doubles moving from a 4090 to the 70 W card. Quality columns are
-machine-identical; only the time axis moves.
+| scene | Prism (cost / wall) | Caspar-f64@200 (cost / wall) | quality | wall |
+|---|---|---|---|---|
+| venice-52 | **2.5393e5** / 27.3 s | 2.6998e5 / 4.5 s | −5.9% | 6.1x slower |
+| ladybug-1197 | 3.6634e5 / 33.1 s | **3.6693e5** / 6.2 s | −0.2% | 5.4x slower |
+| final-3068 | **1.6983e6** / 121.7 s | 1.9747e6 / 3.4 s (stalls, iter 44) | −14.0% | 36x slower |
+| venice-1672 | **2.1536e6** / 310.5 s | 2.3040e6 / 61.5 s | −6.5% | 5.0x slower |
+| dubrovnik-135 | **4.6503e5** / 13.9 s | 4.7414e5 / ~6.7 s | −1.9% | ~2x slower |
+| final-4585 | **1.0725e7** / 1100 s | 1.1456e7 / ~35 s | −6.4% | 31x slower |
+
+**We win quality nearly everywhere and are 2-36x slower.** What survives of
+the speed story: Caspar **never reaches our endpoint** on any traced scene
+even at 10x its budget (crossings measured in both directions,
+`agent_rev/crossnew`), and the product-workload result of §3 (10.5% faster
+end-to-end mapping at equal map quality) is unaffected, because there the
+per-call problems are small and warm.
+
+### 2.1 Per-iteration cost (the structural reason)
+
+| scene | our ms/outer | Caspar ms/iter | ratio | our accepts / rejects |
+|---|---|---|---|---|
+| venice-1672 | 905 | 307 | 2.9x | 344 / 71 |
+| venice-52 | 98 | 22.5 | 4.3x | 280 / 13 |
+| trafalgar-257 | 100 | 16.3 | 6.1x | 338 / 0 |
+| dubrovnik-135 | 231 | 33.7 | 6.9x | 61 / 58 |
+| final-3068 | 568 | 76.8 | 7.4x | 215 / 67 |
+| ladybug-1197 | 295 | 30.9 | 9.6x | 113 / 318 |
+| final-4585 | 1833 | 175 | 10.5x | 600 / 4774 |
+
+We pay **3-10x per outer**, and the ratio tracks the reject count almost
+perfectly. Note we do NOT lose on iteration count -- on several scenes we use
+fewer outers than Caspar's 200 and still land lower. The disadvantage is
+entirely cost per outer: one assembly + one point factor + one shifted-CG
+sweep + up to 5 shifts x 5 checkpoints of true-cost scoring (2 observation
+passes each), against Caspar's one solve and one candidate.
+
+### 2.2 What the damping menu is actually for
+
+Measured post-tau-fix, single shift (L=1) vs the full 5-shift menu, N=3:
+
+| scene | L=1 cost vs L=5 | L=1 wall vs L=5 |
+|---|---|---|
+| venice-52 | −2.85% | 1.40x |
+| ladybug-1197 | −0.04% | **0.39x** |
+| trafalgar-257 | +0.00% | 1.25x |
+| dubrovnik-135 | +0.79% | 0.49x |
+| venice-1672 | +0.77% | 1.26x |
+| **final-3068** | **+35.28%** | 0.10x |
+
+**The menu is insurance, not improvement**: within ±1% on five of six scenes,
+sometimes at half the wall, and catastrophic to remove on the storm scene.
+State it that way -- it reduces the variance of a bimodal failure; it does not
+improve the typical answer.
 
 ## 3. Product workload (Fuchsberg/muell)
 
