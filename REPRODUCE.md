@@ -235,7 +235,33 @@ marginal-value-per-matvec stopping; per-attempt learned depth; cross-attempt
 Krylov reuse; the doomed-attempt lever (skipping hopeless attempts just makes
 the retry ladder add rungs); two-way menu re-arm.
 
+Also refuted, 2026-09-07: **iterating the alpha line search**
+(`OCA_ALPHA_ITER=k`, repeat the `{0.7,1,1.4}` pass while it keeps paying).
+Motivated by a real measurement -- the winning alpha sits at or past the grid
+boundary on 71-100% of the outers where alpha wins, so one pass is genuinely
+under-ranged -- and refuted anyway: **0W/5T/1L**, and the single clean loss
+(ladybug-598 +0.47%, deterministic over 3 reps, spread 0.01%) is on the scene
+with the *largest* alpha improvement tail (3.08x). The boundary is
+load-bearing: it acts as an implicit trust region. The flag stays in-tree
+defaulting to 1 (exactly the old behaviour).
+
 **The pattern across all of them:** changes to the *damping mechanism* survive;
 changes to *candidate scheduling* do not. Every scheduling idea that looked
 good offline was swamped by trajectory chaos in deployment. Weigh that prior
 before building anything model-shaped.
+
+**The deeper law, now with three independent confirmations.** Every mechanism
+that strictly improves the per-outer objective either does nothing or hurts
+the endpoint:
+
+| mechanism | local guarantee | endpoint |
+|---|---|---|
+| re-triangulation repair | per-point cost-gated; cannot raise the objective | **+15.1%** on final-4585 |
+| iterated alpha search | true-cost gated every round; cannot pick a worse step | **+0.47%** on ladybug-598 |
+| one-step supervised lambda | offline top-2 capture 0.72 | catastrophic deployed tails |
+
+The reason is structural: the accept gate is **already greedy-optimal**, so
+additional greediness cannot improve the greedy objective -- it can only change
+**basin selection**, which is uncorrelated with local descent. Before building
+anything that makes a step locally better, ask what it does to basin choice,
+because that is the only channel through which it can act.

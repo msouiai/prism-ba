@@ -10306,6 +10306,20 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       const Scalar bpd0=bpd_best, pred1=pred_best;
       Scalar s_cum=1.0;
       alpha_base=best_cost;   // diagnostic: what the menu alone achieved
+      // OCA_ALPHA_ITER=k: repeat the alpha pass while it keeps improving, up
+      // to k rounds. MEASURED 2026-09-07: the winning alpha sits at or past
+      // the {0.7,1,1.4} boundary on 71-100% of the outers where alpha wins --
+      // the grid only reaches 0.686 or 1.96 by compounding within one pass,
+      // then runs out. A line search that always stops at its boundary is
+      // under-ranged. Repeating is strictly better than widening the grid:
+      // it costs nothing when alpha is not paying (round 2 exits immediately),
+      // it adds no new tuning constants, and it cannot select a worse step
+      // because every round is gated on true cost. k=1 reproduces the old
+      // behaviour exactly.
+      static const int alpha_iter = [](){ const char* e=getenv("OCA_ALPHA_ITER");
+                                          return e ? std::max(1,atoi(e)) : 1; }();
+      for(int around=0; around<alpha_iter; ++around){
+      const Scalar round_base = best_cost;
       for(int a1=0;a1<3;++a1) for(int a2=0;a2<3;++a2){
         if(as[a1]==1.0&&as[a2]==1.0) continue;
         // cross = move one block at a time; corners remain reachable by
@@ -10327,6 +10341,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
             s_cum*=as[a1];
             pred_best=s_cum*bpd0-s_cum*s_cum*(bpd0-pred1); }
           std::swap(d_best,dfull); }   // REVIEW 2026-09-02: same swap as in Score
+      }
+      // Stop as soon as a whole pass buys nothing -- that is the line search
+      // having actually converged rather than having run out of grid.
+      if(!(best_cost < round_base)) break;
       }
       (void)base;
     }
