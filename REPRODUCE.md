@@ -154,11 +154,26 @@ four tuned damping knobs on six of seven scenes** — better on four, within
 0.22% on two — and gets there in 3–4× less wall on three of them. Prefer it
 unless you are on a storm-class problem.
 
-**The exception is absolute.** On final-4585 the damping stack is
-load-bearing: repair alone does not terminate inside 50 minutes, and
-`Config C + OCA_RETRI=5` ends **+15.1% worse** than Config C. Overwriting
-hard-won point positions with a memoryless geometric estimate destroys a
-solution the damping machinery worked to reach.
+**The exception.** On final-4585 the damping stack is load-bearing: repair
+alone does not terminate inside 50 minutes, and the repair costs quality
+rather than adding it.
+
+**CORRECTED 2026-09-07 — the size of that cost was overstated 3x.** The
+original "+15.1%" was measured with `OCA_FTOL_K=8`, which stopped the repair
+arm early on a flat patch at outer 27 while the control ran to 65. Re-measured
+with `OCA_FTOL_K=40` (both arms hitting the 600-outer cap, so neither is
+stopping-rule limited):
+
+| arm | FTOL_K=8 | FTOL_K=40, 600 outers |
+|---|---|---|
+| no repair | 6 660 346 | **6 422 700** |
+| repair + `OCA_RETRI_MAXDROP=0.10` | 7 549 351 | 6 514 124 (+1.42%) |
+| repair | 7 712 443 | 6 711 551 (**+4.50%**) |
+
+So the real cost is **+4.50%**, not +15.1%. The lesson generalises past this
+flag: **any A/B in which the two arms stop at different outer counts is
+partly measuring the stopping rule.** Check outer counts before believing an
+endpoint gap (§7 rule 8).
 
 **Recommendation:** repair by default; the damping stack for storm-class
 problems (many cameras, heavy reject streaks). The two mechanisms are
@@ -192,6 +207,12 @@ blindly: on final-4585 the combination is worse than either.
    wall to reach the baseline's endpoint, and the baseline's wall to reach
    yours (or "never").
 7. Serialise GPU work: wrap every run in `flock /tmp/prism_gpu.lock -c '...'`.
+8. **Record the outer count next to every endpoint, and distrust any gap
+   between arms that stopped at different counts.** `OCA_FTOL_K=8` inflated a
+   measured penalty 3x (+4.50% reported as +15.1%) by cutting one arm off at
+   outer 27 while the other ran to 65. A stopping rule tuned offline interacts
+   with whatever the intervention does to the trajectory, so it is never a
+   neutral part of the harness.
 
 ## 8. Open problems worth your time
 

@@ -9917,7 +9917,30 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           else { lo=std::min(lo,v); hi=std::max(hi,v); }
         }
         if(fin && (hi-lo)<=menu_gate*std::max(std::fabs(hi),1e-300)){
-          Score(xs[0],0,depth); ++st.menu_gated; return;
+          Score(xs[0],0,depth); ++st.menu_gated;
+          // OCA_MENU_GATE_FALLBACK=1: the gate's premise is that when the
+          // shift predictions agree the candidates are interchangeable. That
+          // is true for CHOOSING among them, but it silently discards the
+          // menu's other job -- being the fallback when the seed step fails.
+          //
+          // MEASURED (dubrovnik-135, 64 rejected attempts): the split is
+          // perfectly bimodal. Every retry-0 attempt scored exactly ONE shift
+          // (the gate firing at lambda ~1e-6, far below the spectrum of S);
+          // every retry>=1 attempt scored all five. So 29 of 64 rejects -- 45%
+          // -- happened on attempts where the gate had removed the fallback,
+          // and each cost a FULL re-solve of the sweep to escalate lambda and
+          // rediscover the menu.
+          //
+          // The fallback is nearly free: the multi-shift sweep already computed
+          // every xs[l]; only the true-cost scoring was skipped. So keep the
+          // gate's saving when it is right (seed improves -> return, zero extra
+          // cost) and pay 4 scorings, instead of a whole re-solve, when it is
+          // wrong. This is a candidate-SET change -- no score is altered -- and
+          // is conditioned only on information already in hand.
+          static const bool gate_fb = [](){ const char* e=getenv("OCA_MENU_GATE_FALLBACK");
+                                            return e && atoi(e)!=0; }();
+          if(!(gate_fb && !(have && best_cost<cost))) return;
+          // Seed did not improve: the gate was wrong here. Score the rest.
         }
       }
       // ---- OCA_LEARN_POLICY hook (Exp 5-7): choose the candidate SET.
@@ -10560,6 +10583,36 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     // redoes the point factor / rhs / equilibration / CG at the escalated
     // lam and tau_eff. Give up after max_inner_retry attempts so a genuinely
     // stuck state still advances k and the run terminates.
+    // OCA_MENU_LOG on a FAILED attempt. This is the case that matters and it
+    // was invisible: the retry `continue` below fires before the per-outer log,
+    // so every rejected attempt's menu went unrecorded. A reject means no
+    // candidate out of L shifts x depths beat the current cost -- which should
+    // be near-impossible, since as sigma grows the step shrinks toward zero and
+    // the cost toward the current one. If the menu is MONOTONE DECREASING in
+    // shift index at a reject, the grid is truncated: the solve wants more
+    // damping than sigma_L = lam*10^(L-1-grid_down) can offer, and the retry
+    // ladder is paying a full re-solve for a decade the menu could have covered.
+    if(!accepted){
+      static const bool menu_log_r = [](){ const char* e=getenv("OCA_MENU_LOG");
+                                           return e && atoi(e)!=0; }();
+      if(menu_log_r && verbose){
+        double mn=1e300,mx=-1e300; int nfin=0, argmin=-1;
+        for(int l=0;l<L;++l){ double v=(double)cbest_sh[l];
+          if(std::isfinite(v)){ ++nfin; if(v<mn){mn=v; argmin=l;} mx=std::max(mx,v); } }
+        // monotone decreasing in l == "the biggest shift was the best, and we
+        // still failed" == the grid ceiling is binding.
+        bool mono=true;
+        for(int l=1;l<L;++l){ const double a=(double)cbest_sh[l-1],b=(double)cbest_sh[l];
+          if(std::isfinite(a)&&std::isfinite(b)&&!(b<=a)) mono=false; }
+        std::printf("      [menuREJ] it %3d retry %d lam=%.3e cost=%.10e nfin=%d "
+                    "argmin=%d ceiling=%d mono=%d sh=[",
+                    k+1,retries,(double)lam_cam,(double)cost,nfin,argmin,
+                    (argmin==L-1)?1:0,mono?1:0);
+        for(int l=0;l<L;++l){ const double v=(double)cbest_sh[l];
+          std::printf("%s%.10e", l?",":"", std::isfinite(v)?v:-1.0); }
+        std::printf("]\n");
+      }
+    }
     if(!accepted && retries<max_inner_retry){
       ++retries; need_assembly=false;
       if(verbose)
