@@ -113,7 +113,13 @@ and the A-vs-B comparison; those are self-contained.
 | venice-1672 | −2.1% | −3.0% |
 | dubrovnik-135 | −2.6% | −1.9% |
 | ladybug family | +0.02…+0.27% | +0.20…+0.93% |
-| **record** | **10W / 10T / 3L**, worst +0.27% | ~10W / 9T / 4L, worst +0.93% |
+| **record** | **10W / 10T / 3L**, worst +0.27%, Σδ −29.2 | **9W / 10T / 4L**, worst +0.92%, **Σδ −66.7** |
+
+Config B is the **recommended default**: it is the only configuration that
+gets both storm scenes (final-4585 −43.8% AND final-3068 −14.1%), removes 2.3x
+the total residual of A, and all four of its losses are below 1%. Config A has
+a tighter tail (worst +0.27%) and suits worst-case-sensitive deployment. Both
+are single pre-registered configs — no per-scene flags.
 
 **Speed, stated honestly:** we are **2–36× slower** than f64 Caspar at its
 default budget and win quality nearly everywhere; it never reaches our endpoint
