@@ -2843,7 +2843,12 @@ __global__ void KernelRetriangulate(const int* __restrict__ cam_idx,
     const Scalar* __restrict__ R, const Scalar* __restrict__ t,
     const Scalar* __restrict__ f, const Scalar* __restrict__ k1,
     const Scalar* __restrict__ k2, Scalar* __restrict__ X, int npt,
-    int* __restrict__ nfixed) {
+    int* __restrict__ nfixed,
+    // Forensics (OCA_RETRI_LOG). stat[0]=sum |dx|/depth over reset points,
+    // stat[1]=sum of their own cost DECREASE, stat[2]=max |dx|/depth.
+    // cnt[0..3] bucket reset points by |dx|/depth (>1e-3,1e-2,1e-1,1);
+    // cnt[4..7] by observation count (2, 3, 4-6, >=7). Null pointers disable.
+    double* __restrict__ stat, int* __restrict__ cnt) {
   int p = blockIdx.x * blockDim.x + threadIdx.x; if (p >= npt) return;
   const int s = poff[p], e = poff[p+1];
   if (e - s < 2) return;                       // need >=2 rays
@@ -2891,6 +2896,7 @@ __global__ void KernelRetriangulate(const int* __restrict__ cam_idx,
   if (!(isfinite(xnew[0]) && isfinite(xnew[1]) && isfinite(xnew[2]))) return;
   // Accept only if this point's own reprojection cost improves.
   Scalar cold = 0, cnew = 0;
+  Scalar sum_depth = 0; int n_depth = 0;   // mean |Pz| of the OLD point, for scale
   for (int k = s; k < e; ++k) {
     const int o = plist[k], c = cam_idx[o];
     const Scalar* Rc = R + 9*c;
@@ -2900,6 +2906,7 @@ __global__ void KernelRetriangulate(const int* __restrict__ cam_idx,
       Scalar Py = Rc[3]*Xp[0]+Rc[4]*Xp[1]+Rc[5]*Xp[2] + t[3*c+1];
       Scalar Pz = Rc[6]*Xp[0]+Rc[7]*Xp[1]+Rc[8]*Xp[2] + t[3*c+2];
       if (!(fabs(Pz) > 1e-12)) { if (which) return; else continue; }
+      if (!which) { sum_depth += fabs(Pz); ++n_depth; }
       Scalar xp = -Px/Pz, yp = -Py/Pz, r2 = xp*xp+yp*yp;
       Scalar dist = 1.0 + k1[c]*r2 + k2[c]*r2*r2;
       Scalar rx = f[c]*dist*xp - uv[2*o], ry = f[c]*dist*yp - uv[2*o+1];
@@ -2907,6 +2914,35 @@ __global__ void KernelRetriangulate(const int* __restrict__ cam_idx,
     }
   }
   if (cnew < cold) {
+    if (stat) {
+      // How far does the "repair" actually move the point, relative to its own
+      // depth, and how much cost does that buy? A large displacement bought by
+      // an epsilon of cost means the move is travelling a near-null direction
+      // of the objective -- the same degeneracy that lets points fling out in
+      // the first place, just walked in the other direction.
+      const Scalar dx = sqrt((xnew[0]-X[3*p+0])*(xnew[0]-X[3*p+0])
+                           + (xnew[1]-X[3*p+1])*(xnew[1]-X[3*p+1])
+                           + (xnew[2]-X[3*p+2])*(xnew[2]-X[3*p+2]));
+      const Scalar depth = (n_depth>0 && sum_depth>0) ? sum_depth/n_depth : (Scalar)1.0;
+      const double rel = (double)(dx/depth);
+      atomicAdd(stat+0, rel);
+      atomicAdd(stat+1, (double)(cold-cnew));
+      // stat[2] = max rel, via a CAS loop on the double
+      { unsigned long long* addr=(unsigned long long*)(stat+2);
+        unsigned long long old=*addr, assumed;
+        do { assumed=old;
+             if (__longlong_as_double((long long)assumed) >= rel) break;
+             old=atomicCAS(addr,assumed,(unsigned long long)__double_as_longlong(rel));
+        } while (assumed!=old); }
+      if (cnt) {
+        if (rel>1e-3) atomicAdd(cnt+0,1);
+        if (rel>1e-2) atomicAdd(cnt+1,1);
+        if (rel>1e-1) atomicAdd(cnt+2,1);
+        if (rel>1.0 ) atomicAdd(cnt+3,1);
+        const int nob=e-s;
+        atomicAdd(cnt + (nob<=2?4 : nob==3?5 : nob<=6?6 : 7), 1);
+      }
+    }
     X[3*p+0]=xnew[0]; X[3*p+1]=xnew[1]; X[3*p+2]=xnew[2];
     atomicAdd(nfixed, 1);
   }
@@ -10688,10 +10724,23 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       static int* d_nfix=nullptr;
       if(!d_nfix) CUDA_CHECK(cudaMalloc((void**)&d_nfix,sizeof(int)));
       CUDA_CHECK(cudaMemset(d_nfix,0,sizeof(int)));
+      // OCA_RETRI_LOG=1: forensics on what the repair actually does to the
+      // state. The objective cannot rise here, so if the endpoint gets worse
+      // (final-4585: +15.1%) the damage must travel through the state, not
+      // the cost -- these numbers say how far the state moves per unit of
+      // cost bought, and which points move.
+      static const bool retri_log = [](){ const char* e=getenv("OCA_RETRI_LOG");
+                                          return e && atoi(e)!=0; }();
+      static double* d_rstat=nullptr; static int* d_rcnt=nullptr;
+      if(retri_log && !d_rstat){ CUDA_CHECK(cudaMalloc((void**)&d_rstat,3*sizeof(double)));
+                                 CUDA_CHECK(cudaMalloc((void**)&d_rcnt,8*sizeof(int))); }
+      if(retri_log){ CUDA_CHECK(cudaMemset(d_rstat,0,3*sizeof(double)));
+                     CUDA_CHECK(cudaMemset(d_rcnt,0,8*sizeof(int))); }
       const Scalar c_pre = cost;
       KernelRetriangulate<<<GridSize(npt),256>>>(p.cam_idx,p.pt_idx,p.uv,
           p.point_obs_offsets,p.point_obs_list,s.R,s.t,
-          INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),s.X,npt,d_nfix);
+          INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),s.X,npt,d_nfix,
+          retri_log?d_rstat:nullptr, retri_log?d_rcnt:nullptr);
       const Scalar c_post = ComputeCost(p,s,rk,rk_a2);
       int hfix=0; CUDA_CHECK(cudaMemcpy(&hfix,d_nfix,sizeof(int),cudaMemcpyDeviceToHost));
       // Per-point gating cannot raise any point's own cost, but the global
@@ -10703,6 +10752,17 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           std::printf("  [retri] outer %d: %d points reset, cost %.6e -> %.6e (%+.3f%%)\n",
                       k,hfix,(double)c_pre,(double)cost,
                       100.0*((double)cost-(double)c_pre)/(double)c_pre);
+        if(retri_log && verbose && hfix>0){
+          double h_stat[3]={0,0,0}; int h_cnt[8]={0,0,0,0,0,0,0,0};
+          CUDA_CHECK(cudaMemcpy(h_stat,d_rstat,3*sizeof(double),cudaMemcpyDeviceToHost));
+          CUDA_CHECK(cudaMemcpy(h_cnt,d_rcnt,8*sizeof(int),cudaMemcpyDeviceToHost));
+          std::printf("      [retriF] outer %d nfix=%d mean_rel=%.6e max_rel=%.6e "
+                      "dcost=%.6e cost_per_move=%.6e big=[%d,%d,%d,%d] obs=[%d,%d,%d,%d]\n",
+                      k,hfix,h_stat[0]/std::max(1,hfix),h_stat[2],h_stat[1],
+                      h_stat[1]/std::max(1e-300,h_stat[0]),
+                      h_cnt[0],h_cnt[1],h_cnt[2],h_cnt[3],
+                      h_cnt[4],h_cnt[5],h_cnt[6],h_cnt[7]);
+        }
       }
     }
     // OCA_RI_AT=<k>: LATE resection-intersection. Fires once, after outer k,
