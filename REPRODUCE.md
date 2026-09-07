@@ -84,6 +84,11 @@ env $QUALITY OCA_TAU_LAM=1 OCA_TAU_LAM_RATCHET=1 \
 **Config B — "lowest total residual":** add
 `OCA_TAU_LAM_COND=0.2 OCA_RETRY_SPAN=3`.
 
+**Config R — "parameter-free":** `$QUALITY` plus `OCA_RETRI=5` and **none** of
+the four damping flags. Reproduce this one first — it is the simplest thing in
+the repo that works, and on six of seven scenes it matches or beats A and B
+(§6b). It does not survive final-4585.
+
 Note there is **no `OCA_BLOCKEQ`**: the diagonal (Jacobi) preconditioner is the
 pre-registered arm. The block-congruence preconditioner is a basin selector —
 far better on some scenes, catastrophic on others — and selecting it per scene
@@ -98,6 +103,7 @@ after seeing results is exactly the methodological error §7 rule 4 forbids.
 | `OCA_TAU_LAM_COND=t` | apply the floor only to points whose undamped block is ill-conditioned (min/max of the `R0f` diagonal `< t`) | Track **length** is the wrong statistic — a 2-view point at 30° is safe, a 5-view point on a straight vehicle track at 0.5° is not. Free: `R0f` is the undamped factor the τ-split already computes. |
 | `OCA_RETRY_SPAN=k` | from the k-th reject of a streak, escalate λ by the **menu span** not ×10 | A rejected attempt scored the whole menu, so it refuted damping up to λ·10². Escalating ×10 re-tests 4 of 5 already-refuted shifts. Cuts rejects 1.5–8×. |
 | `OCA_STREAK_CKPT=8` | cap CG depth during reject streaks | Streak sweeps must seed at the worst-conditioned shift so the forcing test never fires, yet streak-ending accepts win at depth ≤8 in 91–94%. Verified identical endpoint at −18.6% wall on dubrovnik-356. |
+| `OCA_RETRI=k` | every `k` accepted outers, **re-triangulate every point** in closed form from the current cameras (DLT normal equations `Σ(I − dᵢdᵢᵀ)x = Σ(I − dᵢdᵢᵀ)cᵢ`, 3×3 Cholesky), keeping the reset only if that point's own reprojection cost improves | The damping flags *prevent* points from being flung out; this *repairs* the ones that already were, and needs no threshold, no signal and no per-scene decision. On six of seven scenes it matches or beats the whole four-flag damping stack — see §6b. Cost is one extra scatter+solve per fired outer, ~1% of wall. |
 
 ## 6. Numbers to reproduce (70 W RTX 2000 Ada, N=3 medians)
 
@@ -127,6 +133,40 @@ even at 10× budget. Per outer iteration we cost 3–10× Caspar's per-iteration
 cost, and that ratio tracks the reject count. We do **not** lose on iteration
 count.
 
+## 6b. Config R — the parameter-free alternative (reproduce this first)
+
+Add **only** `OCA_RETRI=5` to `$QUALITY`, with **none** of the four damping
+flags. One mechanism, no thresholds, nothing to tune per scene. N=3 medians,
+same frozen binary and profile as the Config C column:
+
+| scene | plain | Config R (repair) | Δ vs plain | Δ vs Config C | wall C → R |
+|---|---|---|---|---|---|
+| venice-52 | 260 409 | 241 684 | **−7.19%** | **−5.21%** | 32.2 → 28.0 s |
+| dubrovnik-135 | 483 865 | 458 738 | **−5.19%** | **−1.35%** | 15.2 → **3.7 s** |
+| ladybug-1197 | 377 389 | 368 096 | **−2.46%** | +0.13% | 33.6 → **9.7 s** |
+| ladybug-598 | 181 403 | 179 842 | **−0.86%** | **−0.27%** | 2.7 → 2.9 s |
+| final-3068 | 1 690 831 | 1 677 853 | **−0.77%** | **−1.23%** | 100 → 188 s |
+| ladybug-1469 | 431 819 | 429 514 | **−0.53%** | +0.22% | 31.2 → **10.9 s** |
+| final-4585 | 6 722 008 (1/3 within 3000 s) | **DNF 0/3** | — | — | 511 s → ∞ |
+
+Read this table twice. **One parameter-free geometric pass matches or beats
+four tuned damping knobs on six of seven scenes** — better on four, within
+0.22% on two — and gets there in 3–4× less wall on three of them. Prefer it
+unless you are on a storm-class problem.
+
+**The exception is absolute.** On final-4585 the damping stack is
+load-bearing: repair alone does not terminate inside 50 minutes, and
+`Config C + OCA_RETRI=5` ends **+15.1% worse** than Config C. Overwriting
+hard-won point positions with a memoryless geometric estimate destroys a
+solution the damping machinery worked to reach.
+
+**Recommendation:** repair by default; the damping stack for storm-class
+problems (many cameras, heavy reject streaks). The two mechanisms are
+complements, not substitutes — thin-track scenes have points that were
+*displaced* and want them *repaired*; storm scenes have points that were
+*under-damped during the search* and want them *damped*. Do not stack them
+blindly: on final-4585 the combination is worse than either.
+
 ## 7. Protocol — these rules were each learned by getting burned
 
 1. **N ≥ 3 per verdict cell, N ≥ 5 for any tail/worst-case claim.** N=3 has
@@ -155,16 +195,19 @@ count.
 
 ## 8. Open problems worth your time
 
-1. **Why does final-3068 prefer a *global* floor** while every other scene
+1. **Why does the repair destroy final-4585** (+15.1% on top of Config C, and
+   the plain solver + repair does not terminate at all) when it is a strict
+   local improvement at the moment it fires? The pass cannot raise the
+   objective — it is gated per point on that point's own reprojection cost —
+   yet the endpoint worsens. This is the purest instance of the project's
+   central law (local improvement and final quality are near-uncorrelated) and
+   the cleanest available experiment on basin selection: the intervention is
+   known, dated, and localised to specific points.
+2. **Why does final-3068 prefer a *global* floor** while every other scene
    prefers the conditioning-gated one? It implies its flight-risk points are
    well-conditioned, which contradicts the mechanism everywhere else. We have
    forensics for why scenes fail *without* the floor and none for why one fails
    *with* it. This is the biggest hole.
-2. **Re-triangulation repair (untested).** On a ladybug endpoint, reset the
-   ~200 gap-carrying points by closed-form midpoint/DLT from the current
-   cameras and run the finisher. If the endpoint recovers, a periodic
-   "re-triangulate degenerate points" pass is a regime-free fix needing no
-   signal, no threshold and no per-scene decision.
 3. **Damp only the weak direction.** The augmented-Givens factor accepts
    arbitrary rows, so appending one row `√μ_p·uᵀ` (u = the weak eigenvector, or
    for 2-view points the ray bisector, free from geometry) damps *only* the
@@ -174,6 +217,10 @@ count.
 4. **Cheirality / depth-bound guard on candidates** — a feasibility
    constraint, not a scoring change, that would catch a point fling at the
    moment it happens on any scene.
+5. **Repair without the reset.** The repair works by *discarding* a point's
+   accumulated position. A gentler version — blend toward the DLT estimate, or
+   apply it only to points whose `R0f` block is ill-conditioned — might keep
+   the six-scene win and lose the final-4585 catastrophe. Untested.
 
 ## 9. Things already refuted — do not spend GPU on these
 

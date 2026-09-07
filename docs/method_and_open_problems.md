@@ -46,6 +46,21 @@ relative multiplier.
   spans two decades below and two above the current λ. Shift-invariance holds
   because **τ is frozen within an outer iteration** — that is what makes
   `S(τ)` one fixed operator that the σ's shift.
+  *Prior art — cite it, do not claim it.* "One Krylov subspace serves the whole
+  damping ladder" is not ours. It is the multi-shift literature (Frommer &
+  Glässner 1998), and it was independently published for LM inverse problems by
+  **Lin, O'Malley & Vesselinov, WRR 52 (2016), doi:10.1002/2016WR019028**, who
+  recycle a Golub–Kahan–Lanczos/LSQR subspace across damping parameters on
+  exactly the same observation ("the damping parameter is independent of the
+  generated Krylov subspace"). We tested their mechanism: LSMR menu-sharing is
+  implemented in the CPU port with an exact rectangular Schur factor (gate
+  3.6e-15) and **loses to multi-shift CG per iteration** (venice-52: 1.265e6 @
+  109 s vs 2.392e5 @ 20 s), with no κ(A)-vs-κ(A)² payoff at depths ≤128. What
+  is ours to claim is downstream of the sharing: the matrix-free GPU Schur
+  application, true-nonlinear-cost scoring over a (shift × depth) menu instead
+  of a retry ladder, a **shift-preserving** preconditioner (naive
+  preconditioning destroys the shift-invariance the whole scheme rests on), and
+  the τ/λ damping-asymmetry result in §7.
 - **Candidate scoring.** Iterates are snapshotted at CG depths
   {8,16,32,64,128}; each (shift, depth) candidate is evaluated by the **true
   nonlinear cost** (2 full observation passes). The winner sets the step and
@@ -237,7 +252,49 @@ so re-solving only the point half yields a *different valid candidate*, not
 step is a legal candidate and the true-cost gate decides — but the report
 should not claim it is equivalent to an unfloored solve.
 
+### 7.5 The repair result — and what it does to §7
+
+Measured after §7.3, and it reframes the whole section. A **parameter-free
+geometric repair** (`OCA_RETRI=5`: every 5 accepted outers, re-triangulate each
+point in closed form from the current cameras, keep the reset only if that
+point's own reprojection cost improves) was run *alone*, with none of the four
+damping flags. N=3, same frozen binary and profile as the Config C ledger:
+
+| scene | vs plain | vs Config C (4 tuned knobs) |
+|---|---|---|
+| venice-52 | **−7.19%** | **−5.21%** |
+| dubrovnik-135 | **−5.19%** | **−1.35%** |
+| ladybug-1197 | **−2.46%** | +0.13% |
+| ladybug-598 | **−0.86%** | **−0.27%** |
+| final-3068 | **−0.77%** | **−1.23%** |
+| ladybug-1469 | **−0.53%** | +0.22% |
+| final-4585 | **DNF (0/3 in 3000 s)** | — |
+
+**One mechanism with no thresholds matches or beats the entire damping stack on
+six of seven scenes**, at 3–4× less wall on three of them. That is the strongest
+argument in the repo for the §7 mechanism being *correct* — the fix works from
+the other end. It also means the four knobs are largely buying what one
+geometric pass buys for free, which is the honest thing to say in a paper.
+
+Two consequences for §7.4:
+
+1. The τ decision may not need to be made at all on most scenes. If displaced
+   points can simply be repaired, "which τ" matters only where repair fails.
+2. **Where repair fails, it fails hard, and that is now the sharpest open
+   problem in the project.** On final-4585 repair alone does not terminate, and
+   `Config C + OCA_RETRI=5` ends **+15.1% worse** than Config C. The repair
+   *cannot raise the objective at the moment it fires* — it is gated per point
+   on that point's own cost — yet the endpoint worsens by 15%. This is the
+   cleanest experiment on basin selection we have: the intervention is known,
+   dated, localised to identified points, and monotone-improving locally. If
+   any single measurement in this project can be turned into a theorem about
+   why local improvement and final quality decouple, it is this one.
+
 Secondary open items, in priority order:
+0. Instrument the final-4585 repair: which points are reset, at which outer,
+   how far they move, and what the trajectory does in the 5 outers after. Every
+   other basin experiment we have run confounds the intervention with the
+   search; this one does not.
 1. Product workload under the new config (muell end-to-end + the 22-dump GBA
    sweep). The mechanism is about thin-track points and street/rig scenes are
    exactly that regime; this is also the result class that has survived every

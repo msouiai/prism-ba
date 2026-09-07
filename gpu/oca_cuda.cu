@@ -2824,6 +2824,93 @@ __global__ void MFMenuPUpdate(MSArgs a, const Scalar* __restrict__ r, int nl, in
   a.ps[l][i] = __fma_rn(a.znext[l], r[i], t); // cublas Daxpy fma
 }
 
+// RE-TRIANGULATION REPAIR (2026-09-07, idea #10 of the feedback list).
+// The damping story says an undamped point half-step can fling a thin-track
+// point out of the scene, and that a Newton-type step cannot pull it back
+// (motion along the ray bisector is a near-null direction of the cost). If
+// that is right, a BOUNDED CLOSED-FORM reset should recover it where a
+// gradient method cannot: re-triangulate the point from its current cameras
+// by the linear DLT/midpoint solution of the ray system, and keep the result
+// only if the point's own reprojection cost improves.
+//
+// This is a mechanism fix with NO signal, NO threshold and NO per-scene
+// decision: it is a projection back onto the feasible set, gated per point by
+// its own cost. Points whose triangulation is well conditioned barely move.
+__global__ void KernelRetriangulate(const int* __restrict__ cam_idx,
+    const int* __restrict__ pt_idx, const Scalar* __restrict__ uv,
+    const int* __restrict__ poff, const int* __restrict__ plist,
+    const Scalar* __restrict__ R, const Scalar* __restrict__ t,
+    const Scalar* __restrict__ f, const Scalar* __restrict__ k1,
+    const Scalar* __restrict__ k2, Scalar* __restrict__ X, int npt,
+    int* __restrict__ nfixed) {
+  int p = blockIdx.x * blockDim.x + threadIdx.x; if (p >= npt) return;
+  const int s = poff[p], e = poff[p+1];
+  if (e - s < 2) return;                       // need >=2 rays
+  // Normal equations of the ray system: sum_i (I - d_i d_i^T) x = sum_i (I - d_i d_i^T) c_i
+  // with c_i the camera centre and d_i the unit viewing direction.
+  Scalar A[9]={0,0,0,0,0,0,0,0,0}, b[3]={0,0,0};
+  for (int k = s; k < e; ++k) {
+    const int o = plist[k], c = cam_idx[o];
+    const Scalar* Rc = R + 9*c;
+    // undistort approximately: invert the radial model by one fixed-point step
+    Scalar xn = uv[2*o]/f[c], yn = uv[2*o+1]/f[c];
+    Scalar r2 = xn*xn + yn*yn;
+    Scalar sc = 1.0 + k1[c]*r2 + k2[c]*r2*r2;
+    if (sc > 1e-12) { xn /= sc; yn /= sc; }
+    // BAL convention: project with p = -X/Z, so the ray direction in camera
+    // frame is (-xn, -yn, 1) normalised; rotate to world by R^T.
+    Scalar dc[3] = {-xn, -yn, (Scalar)1.0};
+    Scalar d[3];
+    for (int i = 0; i < 3; ++i) d[i] = Rc[i]*dc[0] + Rc[3+i]*dc[1] + Rc[6+i]*dc[2];
+    Scalar nrm = sqrt(d[0]*d[0]+d[1]*d[1]+d[2]*d[2]); if (!(nrm>1e-12)) continue;
+    d[0]/=nrm; d[1]/=nrm; d[2]/=nrm;
+    // camera centre c = -R^T t
+    Scalar cc[3];
+    for (int i = 0; i < 3; ++i) cc[i] = -(Rc[i]*t[3*c+0] + Rc[3+i]*t[3*c+1] + Rc[6+i]*t[3*c+2]);
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        const Scalar m = (i==j ? (Scalar)1.0 : (Scalar)0.0) - d[i]*d[j];
+        A[3*i+j] += m;
+        b[i]     += m * cc[j];
+      }
+    }
+  }
+  // Solve the 3x3 SPD system by Cholesky; bail out if it is not usable.
+  Scalar L[9]={0,0,0,0,0,0,0,0,0};
+  for (int i = 0; i < 3; ++i)
+    for (int j = 0; j <= i; ++j) {
+      Scalar sum = (Scalar)0.5*(A[3*i+j]+A[3*j+i]);
+      for (int q = 0; q < j; ++q) sum -= L[3*i+q]*L[3*j+q];
+      if (i==j) { if (!(sum > 1e-12)) return; L[3*i+j] = sqrt(sum); }
+      else       L[3*i+j] = sum / L[3*j+j];
+    }
+  Scalar y[3], xnew[3];
+  for (int i = 0; i < 3; ++i) { Scalar v=b[i]; for (int q=0;q<i;++q) v-=L[3*i+q]*y[q]; y[i]=v/L[3*i+i]; }
+  for (int i = 2; i >= 0; --i) { Scalar v=y[i]; for (int q=i+1;q<3;++q) v-=L[3*q+i]*xnew[q]; xnew[i]=v/L[3*i+i]; }
+  if (!(isfinite(xnew[0]) && isfinite(xnew[1]) && isfinite(xnew[2]))) return;
+  // Accept only if this point's own reprojection cost improves.
+  Scalar cold = 0, cnew = 0;
+  for (int k = s; k < e; ++k) {
+    const int o = plist[k], c = cam_idx[o];
+    const Scalar* Rc = R + 9*c;
+    for (int which = 0; which < 2; ++which) {
+      const Scalar* Xp = which ? xnew : (X + 3*p);
+      Scalar Px = Rc[0]*Xp[0]+Rc[1]*Xp[1]+Rc[2]*Xp[2] + t[3*c];
+      Scalar Py = Rc[3]*Xp[0]+Rc[4]*Xp[1]+Rc[5]*Xp[2] + t[3*c+1];
+      Scalar Pz = Rc[6]*Xp[0]+Rc[7]*Xp[1]+Rc[8]*Xp[2] + t[3*c+2];
+      if (!(fabs(Pz) > 1e-12)) { if (which) return; else continue; }
+      Scalar xp = -Px/Pz, yp = -Py/Pz, r2 = xp*xp+yp*yp;
+      Scalar dist = 1.0 + k1[c]*r2 + k2[c]*r2*r2;
+      Scalar rx = f[c]*dist*xp - uv[2*o], ry = f[c]*dist*yp - uv[2*o+1];
+      (which ? cnew : cold) += rx*rx + ry*ry;
+    }
+  }
+  if (cnew < cold) {
+    X[3*p+0]=xnew[0]; X[3*p+1]=xnew[1]; X[3*p+2]=xnew[2];
+    atomicAdd(nfixed, 1);
+  }
+}
+
 // H_gn must be a valid, distinct (n x n) buffer (never nullptr / aliased to H) --
 // the kernel scatters into both every observation, so aliasing would corrupt H
 // with Gauss-Newton-only contributions. Callers that don't need H_gn still pass a
@@ -10517,6 +10604,35 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       jrows.push_back(buf); }
     ++k;   // AUDIT 2026-08-22: advanced here, not in the for-header, so an
            // inner retry above can `continue` without spending an iteration.
+    // OCA_RETRI=<k>: RE-TRIANGULATION REPAIR every k accepted outers (and
+    // once at the end). Closed-form DLT reset of each point from its current
+    // cameras, accepted per point only if that point's own reprojection cost
+    // improves -- a projection back onto the feasible set, not a search step.
+    // Tests the prediction that a fling is recoverable by geometry but not by
+    // a Newton step. Cost: one O(nobs) kernel, no extra assembly.
+    static const int retri_every = [](){ const char* e=getenv("OCA_RETRI");
+      return e?std::atoi(e):0; }();
+    if(retri_every>0 && accepted && (n_accept%retri_every)==0){
+      static int* d_nfix=nullptr;
+      if(!d_nfix) CUDA_CHECK(cudaMalloc((void**)&d_nfix,sizeof(int)));
+      CUDA_CHECK(cudaMemset(d_nfix,0,sizeof(int)));
+      const Scalar c_pre = cost;
+      KernelRetriangulate<<<GridSize(npt),256>>>(p.cam_idx,p.pt_idx,p.uv,
+          p.point_obs_offsets,p.point_obs_list,s.R,s.t,
+          INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),s.X,npt,d_nfix);
+      const Scalar c_post = ComputeCost(p,s,rk,rk_a2);
+      int hfix=0; CUDA_CHECK(cudaMemcpy(&hfix,d_nfix,sizeof(int),cudaMemcpyDeviceToHost));
+      // Per-point gating cannot raise any point's own cost, but the global
+      // objective is the sum of exactly those terms, so it cannot rise
+      // either; guard anyway and report.
+      if(std::isfinite((double)c_post) && c_post<=cost){
+        cost=c_post; need_assembly=true;
+        if(verbose && hfix>0)
+          std::printf("  [retri] outer %d: %d points reset, cost %.6e -> %.6e (%+.3f%%)\n",
+                      k,hfix,(double)c_pre,(double)cost,
+                      100.0*((double)cost-(double)c_pre)/(double)c_pre);
+      }
+    }
     // OCA_RI_AT=<k>: LATE resection-intersection. Fires once, after outer k,
     // when the basin is already committed (rollouts: greedy/horizon
     // disagreement vanishes past ~5 outers). RI keeps its own true-cost
