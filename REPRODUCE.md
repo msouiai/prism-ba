@@ -207,7 +207,18 @@ blindly: on final-4585 the combination is worse than either.
    wall to reach the baseline's endpoint, and the baseline's wall to reach
    yours (or "never").
 7. Serialise GPU work: wrap every run in `flock /tmp/prism_gpu.lock -c '...'`.
-8. **Record the outer count next to every endpoint, and distrust any gap
+8. **A flag that never executes is still not inert if it allocates.**
+   `OCA_RETRI_MAXDROP` was verified never to fire on ladybug-1469
+   (`REFUSED=0`) and still moved the endpoint −0.084% against a 0.016% spread;
+   two more scenes moved likewise. Cause: the extra `cudaMalloc` for its
+   snapshot buffer shifts every later allocation, reordering atomic
+   accumulations in the reduction kernels. Different rounding, amplified by
+   basin sensitivity. So an A/B whose treatment allocates extra memory is
+   **not** a clean comparison, and "the code path never ran" does not prove
+   neutrality. Allocate unconditionally (both arms) when you need a real
+   control, and judge such deltas against the scene's spread, never as exact
+   equality.
+9. **Record the outer count next to every endpoint, and distrust any gap
    between arms that stopped at different counts.** `OCA_FTOL_K=8` inflated a
    measured penalty 3x (+4.50% reported as +15.1%) by cutting one arm off at
    outer 27 while the other ran to 65. A stopping rule tuned offline interacts
@@ -255,6 +266,25 @@ capture 0.72 → +846% deployed worst case); learned forcing sequences;
 marginal-value-per-matvec stopping; per-attempt learned depth; cross-attempt
 Krylov reuse; the doomed-attempt lever (skipping hopeless attempts just makes
 the retry ladder add rungs); two-way menu re-arm.
+
+Also refuted, 2026-09-07: **the menu-gate fallback**
+(`OCA_MENU_GATE_FALLBACK`, score the remaining shifts when the gated seed
+candidate fails instead of paying a full re-solve). The *mechanism* behind it
+is real and verified: `OCA_MENU_GATE=1e-2` — which is in the recommended
+config — collapses the menu to a single shift, and on dubrovnik-135's 64
+rejected attempts the split is perfectly bimodal (every retry-0 attempt scored
+1 shift at lambda~1e-6, every retry>=1 scored all 5), so **45% of rejects
+happen with the menu switched off**. Restoring the missing candidates
+nonetheless rescues none of them: 10-problem ledger **0W/9T/1L**, total
+rejects **193 -> 196**. A promising single-run smoke test (56->49 rejects) did
+not survive N=3 (54->60).
+
+The conclusion that matters is the negative one: **gated rejects are genuine.**
+At the lambda the solver is standing on, no candidate across four decades of
+damping improves the cost — so the reject rate is a **lambda-policy problem,
+not a menu problem**, and the multi-shift machinery is not being cheated.
+(Related: the grid ceiling binds on only 34% of full-menu rejects, so widening
+the grid is also a minority fix.)
 
 Also refuted, 2026-09-07: **iterating the alpha line search**
 (`OCA_ALPHA_ITER=k`, repeat the `{0.7,1,1.4}` pass while it keeps paying).
