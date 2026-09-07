@@ -10736,6 +10736,29 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
                                  CUDA_CHECK(cudaMalloc((void**)&d_rcnt,8*sizeof(int))); }
       if(retri_log){ CUDA_CHECK(cudaMemset(d_rstat,0,3*sizeof(double)));
                      CUDA_CHECK(cudaMemset(d_rcnt,0,8*sizeof(int))); }
+      // OCA_RETRI_MAXDROP=<frac>: REFUSE a firing that improves the objective
+      // by more than <frac>. Counter-intuitive, and it is the whole point.
+      // MEASURED on final-4585: the outer-5 firing resets 35% of the cloud and
+      // cuts the cost 36.8% -- it is not repairing outliers, it is discarding
+      // the state LM has built and re-initialising from DLT. The head start is
+      // consumed within four outers and the run ends +12.6% worse. Two further
+      // signatures confirm it is a reset: the repair arm becomes ~1e5x more
+      // reproducible than the control (the pass overwrites accumulated
+      // stochastic state with a deterministic function of the cameras), and
+      // the remaining 29 firings touch 1-2 points because the cloud is already
+      // at its DLT fixed point.
+      // The magnitudes separate cleanly -- helpful firings peak at 3.5%
+      // (venice-52) and 1.7% (ladybug-598); the harmful one is 36.8%. NOTE the
+      // discriminator is the COST DROP, not the fraction of points reset:
+      // venice-52 resets 53% of its points (more than final-4585's 35%) and
+      // helps. Fires only in the basin-commitment window in practice.
+      static const double retri_maxdrop = [](){ const char* e=getenv("OCA_RETRI_MAXDROP");
+                                                return e?atof(e):0.0; }();
+      static Scalar* d_Xsave=nullptr;
+      if(retri_maxdrop>0.0){
+        if(!d_Xsave) CUDA_CHECK(cudaMalloc((void**)&d_Xsave,(size_t)3*npt*sizeof(Scalar)));
+        CUDA_CHECK(cudaMemcpy(d_Xsave,s.X,(size_t)3*npt*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+      }
       const Scalar c_pre = cost;
       KernelRetriangulate<<<GridSize(npt),256>>>(p.cam_idx,p.pt_idx,p.uv,
           p.point_obs_offsets,p.point_obs_list,s.R,s.t,
@@ -10746,6 +10769,15 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       // Per-point gating cannot raise any point's own cost, but the global
       // objective is the sum of exactly those terms, so it cannot rise
       // either; guard anyway and report.
+      const bool too_big = retri_maxdrop>0.0 && std::isfinite((double)c_post) &&
+                           ((double)c_pre-(double)c_post) > retri_maxdrop*(double)c_pre;
+      if(too_big){
+        CUDA_CHECK(cudaMemcpy(s.X,d_Xsave,(size_t)3*npt*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+        if(verbose)
+          std::printf("  [retri] outer %d: REFUSED -- would drop cost %.3f%% (> %.1f%%), "
+                      "that is a re-initialisation, not a repair\n",
+                      k,100.0*((double)c_pre-(double)c_post)/(double)c_pre,100.0*retri_maxdrop);
+      } else
       if(std::isfinite((double)c_post) && c_post<=cost){
         cost=c_post; need_assembly=true;
         if(verbose && hfix>0)
