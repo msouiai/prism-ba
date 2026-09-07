@@ -173,7 +173,25 @@ stopping-rule limited):
 So the real cost is **+4.50%**, not +15.1%. The lesson generalises past this
 flag: **any A/B in which the two arms stop at different outer counts is
 partly measuring the stopping rule.** Check outer counts before believing an
-endpoint gap (§7 rule 8).
+endpoint gap (§7 rule 9).
+
+**`OCA_RETRI_MAXDROP` is a diagnostic, not a recommendation — do not ship it.**
+It confirmed the re-initialisation story (the outer-5 firing on final-4585
+resets 35% of the cloud for a 36.8% cost cut) but fails as a rule:
+
+| scene | outer-5 drop | refusing it |
+|---|---|---|
+| final-4585 | 36.8% | helps (+4.50% -> +1.42%) but still loses to repair-off |
+| **final-3068** | **13.9%** | **hurts (+0.235%)** — that firing was beneficial |
+| venice-52 | 3.5% | never fires |
+| ladybug-598 | 1.7% | never fires |
+
+The harmful/helpful boundary therefore lies between **13.9% and 36.8%** — a
+factor of 2.6, not the order of magnitude that a 10% threshold assumed. The
+threshold was set before final-3068 was measured, and is wrong. A drop-size
+discriminator may still exist, but it is not cleanly separable at any value
+tested, and on final-4585 even a correct refusal does not beat simply leaving
+the repair off.
 
 **Recommendation:** repair by default; the damping stack for storm-class
 problems (many cameras, heavy reject streaks). The two mechanisms are
