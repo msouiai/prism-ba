@@ -10594,6 +10594,37 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       std::printf("  MFCG it %3d cost=%.6e lam=%.3e tau=%.2e cg_it=%d shift=%d ckpt=%d alpha=%d %s mv=%ld\n",
                   k+1,(double)cost,(double)lam_cam,(double)tau_win,cg_it,best_sh,best_ck,alpha_win,
                   accepted?"acc":"REJ",st.matvecs);
+    // OCA_MENU_LOG=1: dump the SHAPE of the damping menu, not just its argmin.
+    // cbest_sh[l] (the best cost over depths at shift l) was already computed
+    // and then thrown away -- 24 of 25 exact fp64 evaluations discarded per
+    // outer. What this exposes, measured 2026-09-07 over six scenes:
+    //   * the shift menu is FLAT (worst/best < 1.05) on 69-97% of outers, so
+    //     the argmin is usually an arbitrary pick over a plateau;
+    //   * the tail is not flat at all (p90 up to 672x, max 2.3e11x) -- that is
+    //     what the menu actually buys: insurance, not improvement;
+    //   * `best` is often BELOW every cbest_sh entry, i.e. the winner was not
+    //     one of the L shift candidates but an auxiliary (span-min, Aitken
+    //     depth-inf, alpha variants): 4-53% of outers, highest on ladybug.
+    // NOTE: no "gain" is printed -- `cost` has already been updated by the
+    // accept path here, so cost-best_cost is 0 on every accepted outer.
+    // Reconstruct the gain in the parser from consecutive cost lines.
+    // Diagnostic only: reads state, changes nothing. Endpoint verified inside
+    // the N=3 rep spread on ladybug-598/1197/1469 and dubrovnik-135.
+    static const bool menu_log = [](){ const char* e=getenv("OCA_MENU_LOG");
+                                       return e && atoi(e)!=0; }();
+    if(menu_log && verbose){
+      double mn=1e300, mx=-1e300; int nfin=0;
+      for(int l=0;l<L;++l){ double v=(double)cbest_sh[l];
+        if(std::isfinite(v)){ ++nfin; mn=std::min(mn,v); mx=std::max(mx,v); } }
+      std::printf("      [menu] it %3d nfin=%d best=%.10e spread=%.6e edge=%d "
+                  "auxwin=%d sh=[", k+1,nfin,(double)best_cost,
+                  (nfin>1?mx-mn:0.0),(best_sh==0||best_sh==L-1)?1:0,
+                  (nfin>0 && (double)best_cost < mn*(1.0-1e-12))?1:0);
+      for(int l=0;l<L;++l){
+        const double v=(double)cbest_sh[l];
+        std::printf("%s%.10e", l?",":"", std::isfinite(v)?v:-1.0); }
+      std::printf("]\n");
+    }
     { char buf[512];
       std::snprintf(buf,sizeof buf,
         "{\"outer\":%d,\"cost\":%.10f,\"lam_cam\":%.6e,\"cg_iters\":%d,\"eta\":%.4e,"
