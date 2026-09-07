@@ -42,6 +42,7 @@
 #include <deque>
 #include <fstream>
 #include <limits>
+#include <map>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -9627,6 +9628,13 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     Scalar best_cost=cost; int best_sh=-1,best_ck=-1; bool have=false;
     bool doomed_probe_failed=false;   // OCA_DOOMED neutrality accounting
     std::vector<Scalar> cbest_sh(L,std::numeric_limits<Scalar>::infinity());
+    // OCA_MENU_LOG companion: the transpose of cbest_sh. cbest_sh answers "how
+    // much does the SHIFT choice matter" (measured: almost never); this answers
+    // the same question for the DEPTH axis, which cbest_sh hides because it is
+    // already a min over depths.
+    std::map<int,Scalar> cbest_ck;
+    Scalar alpha_base=std::numeric_limits<Scalar>::quiet_NaN();  // best cost before the alpha grid
+    Scalar alpha_a1=1.0, alpha_a2=1.0;                            // winning scale factors
     // OCA_RHO_LAMBDA: running model reduction per shift, from CG scalars alone
     // (phi drops 0.5*alpha_i*|r_i|^2 per step; |r^sigma|^2 = zeta^2 |r|^2).
     // Validated in the CPU port (mfree_cpu.h): rho-gated lambda control gives
@@ -9773,6 +9781,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           std::isfinite((double)c)?1:0);
       }
       if(sh>=0 && sh<L && c<cbest_sh[sh]) cbest_sh[sh]=c;
+      { auto it=cbest_ck.find(ck);
+        if(it==cbest_ck.end()) cbest_ck.emplace(ck,c);
+        else if(c<it->second) it->second=c; }
       // ORDER-INDEPENDENT tie-break. With a strict `<` the winner of an exact
       // tie is whichever shift happened to be scored FIRST, so any change to
       // scoring order silently changes best_sh -> the lambda update -> the
@@ -10294,6 +10305,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       // s compounds across winning combos exactly like the step itself.
       const Scalar bpd0=bpd_best, pred1=pred_best;
       Scalar s_cum=1.0;
+      alpha_base=best_cost;   // diagnostic: what the menu alone achieved
       for(int a1=0;a1<3;++a1) for(int a2=0;a2<3;++a2){
         if(as[a1]==1.0&&as[a2]==1.0) continue;
         // cross = move one block at a time; corners remain reachable by
@@ -10307,6 +10319,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
             "\"a2\":%.2f,\"cost\":%.10e}\n",
             k,learn_att_id,(double)as[a1],(double)as[a2],(double)c);
         if(c<best_cost){ best_cost=c; alpha_win=1;
+          // The grid compounds: on improvement d_best BECOMES the scaled step,
+          // so the next combo scales an already-scaled step. Record the
+          // cumulative factor, not the last one applied.
+          alpha_a1*=as[a1]; alpha_a2*=as[a2];
           if(rho_mode){
             s_cum*=as[a1];
             pred_best=s_cum*bpd0-s_cum*s_cum*(bpd0-pred1); }
@@ -10617,12 +10633,19 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       for(int l=0;l<L;++l){ double v=(double)cbest_sh[l];
         if(std::isfinite(v)){ ++nfin; mn=std::min(mn,v); mx=std::max(mx,v); } }
       std::printf("      [menu] it %3d nfin=%d best=%.10e spread=%.6e edge=%d "
-                  "auxwin=%d sh=[", k+1,nfin,(double)best_cost,
+                  "auxwin=%d abase=%.10e a1=%.4f a2=%.4f sh=[",
+                  k+1,nfin,(double)best_cost,
                   (nfin>1?mx-mn:0.0),(best_sh==0||best_sh==L-1)?1:0,
-                  (nfin>0 && (double)best_cost < mn*(1.0-1e-12))?1:0);
+                  (nfin>0 && (double)best_cost < mn*(1.0-1e-12))?1:0,
+                  (double)alpha_base,(double)alpha_a1,(double)alpha_a2);
       for(int l=0;l<L;++l){
         const double v=(double)cbest_sh[l];
         std::printf("%s%.10e", l?",":"", std::isfinite(v)?v:-1.0); }
+      std::printf("] ck=[");
+      { bool first=true;
+        for(const auto& kv : cbest_ck){
+          std::printf("%s%d:%.10e", first?"":",", kv.first, (double)kv.second);
+          first=false; } }
       std::printf("]\n");
     }
     { char buf[512];
