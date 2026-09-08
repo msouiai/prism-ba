@@ -200,6 +200,48 @@ complements, not substitutes — thin-track scenes have points that were
 *under-damped during the search* and want them *damped*. Do not stack them
 blindly: on final-4585 the combination is worse than either.
 
+## 6c. The full ledger — 51 problems, three families (2026-09-08)
+
+Single pre-registered Config R throughout, N=3, both solvers on their own
+**solve** clock with data loading excluded for each.
+
+**BAL, 24 problems:** **11W / 6T / 6L (+1 DNF)**, worst loss **+1.13%**,
+Σδ −69.0%. Wins: all three trafalgar (−0.17 to −0.50%), all four venice
+(venice-52 −7.12%), dubrovnik-135 −3.25%, **dubrovnik-356 −38.20%**,
+final-3068 −15.20%, ladybug-598 −0.07%. Losses: ladybug-49/810/1197/1469/1723
+(+0.07 to +1.13%) and dubrovnik-173 (+1.04%). final-4585 DNFs under Config R —
+the honest cost of a single configuration; Config C solves it, but reporting
+that would be best-of-arms.
+
+**muell, 22 production GBA snapshots** (24→493 cameras, 30K→314K obs): every
+one a **quality tie** (median delta −0.0000%), **median 31× less wall**.
+
+**fuchsberg, 5 dumps** (526→8,788 cameras, 1.08M→**16.75M obs**, the largest
+problems here): ties within **+0.077%**, **median 12.1× less wall**, and the
+ratio is flat from 3M obs upward (11.9 / 10.7 / 12.5 / 12.1×).
+
+### The catch: wall ratio and descent rate disagree, and both are real
+
+| | muell | fuchsberg |
+|---|---|---|
+| total wall (Caspar/Prism) | **31×** | **12.1×** |
+| time to a 1% gap | 1.08× | **0.54×** |
+| time to a 0.1% gap | **2.62×** | 1.01× |
+
+**Caspar reaches coarse accuracy faster; we reach tight accuracy faster; and
+our rate advantage erodes with scale** (decisive at 1.08M obs, marginal at
+3.21M, absent at 14.3M). Its huge total walls are mostly spent *after* it
+stops improving — on fuchs_126 it reaches a 0.1% gap in 1.2 s and then spends
+~15 s crawling to 0.03%.
+
+**RETRACTED: the iso-quality speedups reported before 2026-09-08.** Figures
+like "7.1× on muell" and "10.1× on fuchs_126" divided Caspar's **total budget
+wall** by our time-to-that-cost, which credits us for its final crawl instead
+of measuring descent. Report the pair — total wall AND the descent-rate table
+— never one alone. Also note total-wall ratios depend on the baseline's
+budget: Caspar's 2000-iteration default is wasteful on warm problems, which
+is most of muell's 31×.
+
 ## 7. Protocol — these rules were each learned by getting burned
 
 1. **N ≥ 3 per verdict cell, N ≥ 5 for any tail/worst-case claim.** N=3 has
@@ -245,6 +287,16 @@ blindly: on final-4585 the combination is worse than either.
 
 ## 8. Open problems worth your time
 
+0. **THE ACCURACY FLOOR — the highest-value open problem.** Every remaining
+   loss in the project is the same phenomenon: we descend fast, then settle
+   just above the optimum on problems where the baseline converges cleanly.
+   Four of five ladybug scenes lose by **+0.07% to +1.13%**, dubrovnik-173 by
+   +1.04%, and fuchs_230 by +0.050% — all far outside their own spreads
+   (0.001–0.06%). One mechanism causes every loss on the 51-problem ledger.
+   Fixing it turns 11W/6L into something much stronger and converts the
+   large-fuchsberg ties into wins. Related: the descent-rate crossover in §6c
+   says the same thing from the other side — our advantage is *late* descent,
+   so whatever stops us short is what caps the whole method.
 1. **Why does the repair destroy final-4585** (+15.1% on top of Config C, and
    the plain solver + repair does not terminate at all) when it is a strict
    local improvement at the moment it fires? The pass cannot raise the
