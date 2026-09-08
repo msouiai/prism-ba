@@ -9978,7 +9978,18 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       // with a tail to 2.3e11x. Dropping to one candidate forfeits that, and
       // TR's own reject-and-shrink is the principled substitute. Whether that
       // substitution holds is exactly what this tests.
-      if(trust_on && trust_solo && tr_delta>0.0){
+      // OCA_TRUST_OUTERS=K: TR-solo selection only for the first K outers,
+      // the normal menu path after. Night data 2026-09-08: pure TR-solo helps
+      // exactly one scene (lb-1197 +0.505->+0.365%) and hurts or detonates
+      // elsewhere (lb-1723 8.8x, cost DESCENDING throughout -- so the menu's
+      // value there is breadth choosing a better basin, not reject insurance).
+      // The floor evidence says basin commitment happens in outers 1-8, so
+      // gate TR to the commitment window and return the menu's breadth for
+      // the rest of the solve. K<=0 = no gate (TR everywhere, old behaviour).
+      static const int trust_outers = [](){ const char* e=getenv("OCA_TRUST_OUTERS");
+                                            return e?std::atoi(e):0; }();
+      if(trust_on && trust_solo && tr_delta>0.0 &&
+         (trust_outers<=0 || k<trust_outers)){
         int pick=-1;
         for(int l=0;l<L;++l){
           Scalar sn=0; cublasDnrm2(blas,n_c,xs[l],1,&sn);
