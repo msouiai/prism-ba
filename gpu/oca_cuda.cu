@@ -9257,6 +9257,41 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // behaviour exactly (max_inner_retry is forced to 0 at the call site).
   bool need_assembly=true; int retries=0;
   bool pf_obs_dirty=true;   // GAP-4090 F5: R0f stale whenever assembly reran
+  // ---- OCA_TRUST: explicit trust region over the shift menu -------------
+  // The LM shift and the trust-region radius are the same knob from opposite
+  // ends: the solution of min m(p) s.t. |p| <= Delta satisfies (S+sigma I)p=-g
+  // with |p(sigma)| monotone DECREASING in sigma. So one multi-shift sweep
+  // already samples the trust-region path at L points, and the per-shift step
+  // norms (xnp[]) are already computed. That inverts the usual economics:
+  // exact TR (More-Sorensen) is avoided because each secular-equation step
+  // needs a fresh factorisation, and Steihaug-Toint is the cheap fallback that
+  // stops at the first boundary crossing. Multi-shift gives L exact shifted
+  // solves per sweep, so near-exact TR costs about what truncated CG costs.
+  // (Closest relative: GLTR, Gould/Lucidi/Roma/Toint 1999.)
+  //
+  // Why here, measured 2026-09-08: the accuracy floor is entirely an OPENING
+  // problem. Warm-started from Caspar's optimum we descend BELOW it on 4/5
+  // clean scenes, yet from our own start we land 0.07-1.08% above; handing
+  // over after only 3-8 Caspar iterations flips every scene from loss to win.
+  // Our accept rule is a true-cost argmin over 25 candidates -- maximally
+  // greedy -- and the project's central law says extra greediness can only
+  // move basin selection. A radius that starts conservative and grows only on
+  // demonstrated model fidelity is the direct counter. It also makes explicit
+  // the trust region the alpha grid's {0.7,1.4} boundary was providing by
+  // accident (iterating past that boundary measurably hurt endpoints).
+  //
+  // This is a FEASIBILITY constraint on the candidate set plus a state
+  // variable -- scores are never altered -- so it sits on the safe side of
+  // the selection-perturbation law.
+  static const bool trust_on = [](){ const char* e=getenv("OCA_TRUST");
+                                     return e && atoi(e)!=0; }();
+  static const double trust_d0 = [](){ const char* e=getenv("OCA_TRUST_D0");
+                                       return e?atof(e):1.0; }();
+  static const bool trust_solo = [](){ const char* e=getenv("OCA_TRUST_SOLO");
+                                       return e && atoi(e)!=0; }();
+  double tr_delta = -1.0;      // <0 = not yet initialised (set at outer 1)
+  long tr_blocked = 0;         // candidates refused by the radius
+  bool tr_at_bound = false;    // winning step sat on the boundary
   for(int k=0;k<max_iter;){
    if(need_assembly){
     if (g_bal_ptr && std::find(g_dump_iters.begin(), g_dump_iters.end(), k) != g_dump_iters.end())
@@ -9664,6 +9699,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     Scalar best_cost=cost; int best_sh=-1,best_ck=-1; bool have=false;
     bool doomed_probe_failed=false;   // OCA_DOOMED neutrality accounting
     std::vector<Scalar> cbest_sh(L,std::numeric_limits<Scalar>::infinity());
+    double tr_win_norm=0.0;   // OCA_TRUST: scaled camera-norm of the winner
     // OCA_MENU_LOG companion: the transpose of cbest_sh. cbest_sh answers "how
     // much does the SHIFT choice matter" (measured: almost never); this answers
     // the same question for the DEPTH axis, which cbest_sh hides because it is
@@ -9816,6 +9852,18 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           (sh>=0&&sh<L)?(double)preds[sh]:0.0,(double)c,(double)xn,
           std::isfinite((double)c)?1:0);
       }
+      // OCA_TRUST feasibility test. Applied per CANDIDATE (not per shift) so
+      // it covers the depth axis too: a shallow iterate at a small sigma can
+      // be longer than a deep one at a large sigma. Norm is over the camera
+      // block in the CG's scaled space, which is the space the shifts act in.
+      // KNOWN LIMITATION: the back-substituted point half is not counted, so
+      // the region is on cameras only. Extending it to the full step is the
+      // principled route to the tau-lambda coupling that OCA_TAU_LAM does by
+      // hand -- but it needs a point-half norm per candidate, so not yet.
+      if(trust_on && tr_delta>0.0){
+        Scalar sn=0; cublasDnrm2(blas,n_c,x_scaled,1,&sn);
+        if(std::isfinite((double)sn) && (double)sn > tr_delta){ ++tr_blocked; return; }
+      }
       if(sh>=0 && sh<L && c<cbest_sh[sh]) cbest_sh[sh]=c;
       { auto it=cbest_ck.find(ck);
         if(it==cbest_ck.end()) cbest_ck.emplace(ck,c);
@@ -9829,6 +9877,8 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       // implicitly, and makes the result independent of evaluation order.
       if(c<best_cost || (have && c==best_cost && sh>=0 && sh<best_sh)){
         best_cost=c; best_sh=sh; best_ck=ck; have=true;
+        if(trust_on){ Scalar sn=0; cublasDnrm2(blas,n_c,x_scaled,1,&sn);
+                      tr_win_norm=(double)sn; }
         if(rho_mode && sh>=0 && sh<L) pred_best=preds[sh];
         if(rho_mode && alpha_rho){
           Scalar bd=0; cublasDdot(blas,n_c,bprime,1,x_scaled,1,&bd);
@@ -9908,6 +9958,36 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           const int l=std::min(fsh0,L-1);
           Score(xs[l],l,depth); return;
         }
+      }
+      // OCA_TRUST_SOLO: the trust region as a REPLACEMENT for the menu, not a
+      // filter on it. This is where multi-shift actually pays for TR.
+      //
+      // Classic TR must iterate to find sigma(Delta) because each trial needs
+      // a fresh solve. We already have L exact shifted solves from one sweep,
+      // and xnp[l] = |x(sigma_l)| is computed from CG scalars at zero cost --
+      // so the TR-correct step is IDENTIFIABLE WITHOUT SCORING ANYTHING. Pick
+      // the largest step inside the radius (norms decrease with shift index),
+      // score that ONE candidate for the rho test, and skip the other four.
+      //
+      // Candidate scoring is 27-45% of wall at 25 candidates x 2 observation
+      // passes. This makes it 1 per checkpoint instead of 5, so ~5x less
+      // scoring. My first TR prototype kept all 25 and merely filtered them,
+      // which could only ever be slower -- it was (13.2s vs 12.3s).
+      //
+      // The menu's measured value is insurance: flat on 69-97% of outers but
+      // with a tail to 2.3e11x. Dropping to one candidate forfeits that, and
+      // TR's own reject-and-shrink is the principled substitute. Whether that
+      // substitution holds is exactly what this tests.
+      if(trust_on && trust_solo && tr_delta>0.0){
+        int pick=-1;
+        for(int l=0;l<L;++l){
+          Scalar sn=0; cublasDnrm2(blas,n_c,xs[l],1,&sn);
+          if(std::isfinite((double)sn) && (double)sn<=tr_delta){ pick=l; break; }
+        }
+        if(pick<0) pick=L-1;          // even the most damped exceeds Delta
+        Score(xs[pick],pick,depth);
+        ++st.menu_gated;
+        return;
       }
       if(menu_gate>0.0 && L>1 && rho_mode){
         double p0=(double)preds[0], lo=p0, hi=p0; bool fin=std::isfinite(p0);
@@ -10467,6 +10547,26 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         // storms bank permanently (that was the lam=inf mechanism).
         const Scalar rel = act / std::max(cost_pre_accept, (Scalar)1e-300);
         if(rel > (Scalar)1e-4) fac = std::min(fac, (Scalar)0.5);
+        // OCA_TRUST radius update, standard 0.25/0.75 rules. Initialised at
+        // the FIRST accepted step to trust_d0 x its own norm, so outer 1 is
+        // unconstrained and every later outer is: the measured commitment
+        // window is 3-8 outers, so constraining from outer 2 covers it.
+        // Expansion requires the winner to have SAT ON the boundary -- growing
+        // a radius the step did not need is how TR implementations silently
+        // become plain LM.
+        if(trust_on && tr_win_norm>0.0){
+          if(tr_delta<0.0){
+            tr_delta = trust_d0 * tr_win_norm;
+          } else {
+            const bool at_bound = tr_win_norm > 0.9*tr_delta;
+            if((double)rho < 0.25)                 tr_delta *= 0.25;
+            else if((double)rho > 0.75 && at_bound) tr_delta *= 2.0;
+            if(tr_delta < 1e-12) tr_delta = 1e-12;
+          }
+          if(verbose && k<12)
+            std::printf("      [trust] outer %d rho=%.3f |p|=%.4e delta=%.4e blocked=%ld\n",
+                        k+1,(double)rho,tr_win_norm,tr_delta,tr_blocked);
+        }
         if(learn_f){ learn_rho=(double)rho; learn_fac=(double)fac;
                      learn_predfull=(double)pred_full; }
         // OCA_STREAK_GM=1 (math review 2026-09-02, proposal 4): rebasing a
