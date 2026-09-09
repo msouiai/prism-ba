@@ -213,7 +213,7 @@ restart protocol is NOT the handover mechanism — self-handover from our own
 outer-5 state reproduces the cold endpoint; and 3–8 Caspar iterations flip
 every affected scene, bounding what the fix is worth.)
 
-**Config S = Config R + `OCA_TAU_LAM=10 OCA_TAU_LAM_ANNEAL=0.8`** — the point
+**Config S = Config R + `OCA_TAU_LAM=10 OCA_TAU_LAM_ANNEAL=0.8 OCA_RETRY_SPAN=3`** — the point
 floor starts at 30·λ and anneals ×0.8 per accepted outer, so the opening is
 Caspar-conservative and the finisher inherits an uncommitted map. N=3 vs
 Config R, same frozen binary:
@@ -245,6 +245,21 @@ dose-dependence remains (c=30 better on lb-1723/du-173, c=10 elsewhere); both
 doses cap the worst floor loss below +0.25%. Walls: the conservative opening
 costs rejects on floor scenes (lb-1197 27 s vs 8.7 s cold); final-3068
 S10=184 s. final-4585 still DNFs under S — storm class keeps Config C.
+
+**Why S's first percentages are slow — decomposed (2026-09-09).** Not
+iterations: to a 0.5% gap S needs FEWER steps than Caspar (23 vs 67 outers,
+lb-1197). It is cost per iteration: a structural 2–4× (25 candidates × 2
+observation passes; visible cleanly on lb-810, 46–98 ms vs 26 ms) which
+**reject amplification inflates to ~8×** inside the anneal window (lb-1197:
+415 rejects at c=10, ms/outer 57→247). The rejects are intrinsic to the
+mechanism — thin-only flooring (`MAXOBS=4`) does NOT reduce them (408 vs
+415), so they come from the very points the floor must hold still; a faster
+anneal (γ=0.7) trades them for quality. `OCA_RETRY_SPAN=3` is the one free
+lever: −23% rejects at identical quality (N=3), hence its inclusion in S.
+Descent-rate consequence: S's crossover vs Caspar moves from ~1% (Config R)
+to ~0.2% gap — the explicit price of the basin — while S reaches depths
+Caspar never does (its converged endpoint sits above S's on the floor
+scenes). R remains the speed profile; S the quality profile.
 
 ## 6c. The full ledger — 51 problems, three families (2026-09-08)
 
