@@ -10504,6 +10504,31 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       DoRetract(d_best,s_new);
       best_cost=ComputeCost(p,s_new,rk,rk_a2);
     }
+    // OCA_LADDER=1: ARC_qK-style ladder walk before declaring a reject.
+    // With a wide grid (OCA_NSHIFTS=13 -> sigma up to lam*1e10) the sweep has
+    // ALREADY computed iterates for every rung; the scoring window usually
+    // covers only the lower shifts (menu gate / flat menus). A reject at this
+    // point refuted only the SCORED rungs at this tau -- the upper rungs are
+    // legal, untested candidates at the same tau, and each costs ONE true-cost
+    // evaluation instead of the full re-solve the retry ladder pays (point
+    // factor + sweep + full menu). Dussault-Orban's ARC_qK does exactly this:
+    // "an unsuccessful step turns attention to the next shift, which was
+    // already computed." Only when the ladder is exhausted does the classic
+    // lambda-escalation retry fire. Candidate-SET change; scores untouched.
+    static const bool ladder_on = [](){ const char* e=getenv("OCA_LADDER");
+                                        return e && atoi(e)!=0; }();
+    if(ladder_on && !(have && best_cost<cost)){
+      const int dlast = ckpts_eff.empty()? 0 : ckpts_eff.back();
+      int walked=0;
+      for(int l=0;l<L;++l){
+        if(std::isfinite((double)cbest_sh[l])) continue;   // already scored
+        Score(xs[l],l,dlast); ++walked;
+        if(have && best_cost<cost) break;                  // rung accepted
+      }
+      if(verbose && walked)
+        std::printf("      [ladder] outer %d walked %d unscored rung(s) -> %s\n",
+                    k+1,walked,(have&&best_cost<cost)?"rescued":"exhausted");
+    }
     // ---- accept / reject (existing rule) ----
     bool accepted=false;
     double learn_rho=std::numeric_limits<double>::quiet_NaN(),
