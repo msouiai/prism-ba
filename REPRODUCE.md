@@ -213,7 +213,7 @@ restart protocol is NOT the handover mechanism — self-handover from our own
 outer-5 state reproduces the cold endpoint; and 3–8 Caspar iterations flip
 every affected scene, bounding what the fix is worth.)
 
-**Config S = Config R + `OCA_TAU_LAM=30 OCA_TAU_LAM_ANNEAL=0.8`** — the point
+**Config S = Config R + `OCA_TAU_LAM=10 OCA_TAU_LAM_ANNEAL=0.8`** — the point
 floor starts at 30·λ and anneals ×0.8 per accepted outer, so the opening is
 Caspar-conservative and the finisher inherits an uncommitted map. N=3 vs
 Config R, same frozen binary:
@@ -234,6 +234,17 @@ floor scenes (lb-1197: 346, wall 8.7→28 s) — the price of the conservative
 opening. final-4585 still DNFs (same caveat as R: storm class wants Config C).
 Refinement (c=10, thin-only MAXOBS=4) under N=3 confirmation at time of
 writing — see `agent_rev/slack2/`.
+
+**Dose-response (all N=3).** c=30 and c=10 both close the floor; c=10 is the
+candidate. Final table under c=10: lb-49 **−0.002%**, lb-810 +0.010%, lb-1197
+**−0.073%**, lb-1469 **−0.019%**, lb-1723 +0.125% (vs a CRASHED Caspar ref,
+exit=2, its answers vary ±0.33%), du-173 **−0.024%**, traf-257 **−0.594%**,
+venice-52/du-135 unchanged, final-3068 −14.97%. **Every clean-reference loss
+is ≤ +0.01%** — five former losses are now wins over converged Caspar. Mild
+dose-dependence remains (c=30 better on lb-1723/du-173, c=10 elsewhere); both
+doses cap the worst floor loss below +0.25%. Walls: the conservative opening
+costs rejects on floor scenes (lb-1197 27 s vs 8.7 s cold); final-3068
+S10=184 s. final-4585 still DNFs under S — storm class keeps Config C.
 
 ## 6c. The full ledger — 51 problems, three families (2026-09-08)
 
