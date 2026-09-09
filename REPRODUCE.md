@@ -200,6 +200,41 @@ complements, not substitutes — thin-track scenes have points that were
 *under-damped during the search* and want them *damped*. Do not stack them
 blindly: on final-4585 the combination is worse than either.
 
+## 6b². CONFIG S — the accuracy-floor fix (2026-09-09)
+
+The systematic +0.07..+1.13% losses (four ladybug scenes, dubrovnik-173) are
+one mechanism, now measured directly (`agent_rev/statediff/`): at outer 5 our
+state is indistinguishable from Caspar's in distance-to-optimum, but our cost
+advantage concentrates **monotonically on thin tracks** (−63% on 2-obs
+observations, lb-1197). The static τ=1e-7 point damping lets the opening
+over-fit fragile points against immature cameras, committing the basin;
+Caspar's uniform relative damping leaves slack exactly there. (Controls: the
+restart protocol is NOT the handover mechanism — self-handover from our own
+outer-5 state reproduces the cold endpoint; and 3–8 Caspar iterations flip
+every affected scene, bounding what the fix is worth.)
+
+**Config S = Config R + `OCA_TAU_LAM=30 OCA_TAU_LAM_ANNEAL=0.8`** — the point
+floor starts at 30·λ and anneals ×0.8 per accepted outer, so the opening is
+Caspar-conservative and the finisher inherits an uncommitted map. N=3 vs
+Config R, same frozen binary:
+
+| scene | R | S |
+|---|---|---|
+| ladybug-1723 | +0.957% | **+0.016%** |
+| dubrovnik-173 | +1.041% | **−0.105%** (beats converged Caspar) |
+| ladybug-1469 | +1.111% | **+0.230%** |
+| ladybug-1197 | +0.506% | **+0.187%** |
+| ladybug-810 | +0.362% | **+0.008%** |
+| trafalgar-257 | −0.493% | **−0.594%** |
+| venice-52 / dubrovnik-135 / ladybug-49 | — | ties |
+| final-3068 | −16.06% | −15.15% (gives back 0.9pp of a 16pp win) |
+
+**6W/3T/1L; worst former loss +1.11% → +0.23%.** Costs: rejects rise on the
+floor scenes (lb-1197: 346, wall 8.7→28 s) — the price of the conservative
+opening. final-4585 still DNFs (same caveat as R: storm class wants Config C).
+Refinement (c=10, thin-only MAXOBS=4) under N=3 confirmation at time of
+writing — see `agent_rev/slack2/`.
+
 ## 6c. The full ledger — 51 problems, three families (2026-09-08)
 
 Single pre-registered Config R throughout, N=3, both solvers on their own
