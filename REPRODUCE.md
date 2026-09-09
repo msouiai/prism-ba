@@ -246,6 +246,15 @@ doses cap the worst floor loss below +0.25%. Walls: the conservative opening
 costs rejects on floor scenes (lb-1197 27 s vs 8.7 s cold); final-3068
 S10=184 s. final-4585 still DNFs under S — storm class keeps Config C.
 
+**FULL 24-BAL LEDGER UNDER CONFIG S (2026-09-09, N=3): 13W / 10T / 1L, zero
+DNF, worst loss +0.093% (ladybug-1469), Σδ −97.8%.** final-4585 — DNF under R
+and under S-without-span — **finishes at −24.2%** (spread 0.000%): the span
+escalation (`OCA_RETRY_SPAN=3`) breaks its reject cascade. final-3068 −15.2%,
+dubrovnik-356 −38.3%, floor scenes confirmed (lb-1197 −0.14%, du-173 −0.05%).
+venice-1778 +0.44% is inside its 0.80% spread (tie; N=5 before quoting).
+Config S is therefore the single-config recommendation for quality; R remains
+the low-wall option.
+
 **Why S's first percentages are slow — decomposed (2026-09-09).** Not
 iterations: to a 0.5% gap S needs FEWER steps than Caspar (23 vs 67 outers,
 lb-1197). It is cost per iteration: a structural 2–4× (25 candidates × 2
