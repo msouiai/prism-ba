@@ -65,8 +65,8 @@ Caspar unless stated.
   that motivates measuring states, not tuning parameters.
 
 ## 5. The fix and its price
-- Config S table (11 scenes, N=3): five wins over converged Caspar, every
-  clean loss <= +0.01%; final-3068 keeps -15%; final-4585 keeps Config C.
+- Config S table (11 scenes, N=3): five wins over converged Caspar, worst
+  clean loss +0.14% (lb-1723; the rest <= +0.01%); final-3068 keeps -15%; final-4585 keeps Config C.
 - The price, decomposed: iterations FEWER than Caspar (23 vs 67 to 0.5%);
   per-outer 2-4x structural (scoring) amplified ~8x by anneal-window rejects;
   rejects INTRINSIC (thin-only floor does not remove them); SPAN=3 the one
@@ -107,5 +107,7 @@ Caspar unless stated.
 
 ## Open experiments feeding this draft
 - [ ] Full 24-BAL under S; [ ] muell/fuchsberg walls under S;
-- [ ] wide-grid reps (final-3068, S-middle profile, final-4585 rescue);
-- [ ] final-13682; [ ] lb-1723 clean reference; [ ] S+C composition.
+- [ ] wide-grid reps (final-3068, S-middle profile); [x] final-4585 rescue: REFUTED (2 reps DNF, ~1900 rejects — even sigma=lam*1e10 fails on storm outers);
+- [x] final-13682: EXCEEDS 16GB VRAM here (OOM at assembly; ran on 24GB 4090 historically); Caspar@2000 itself crashes exit=2 at this scale, @200 = 2.405e7/337s is the only clean baseline this card produces.
+- [x] lb-1723 clean reference: Caspar clean at budgets 100-400 (best 447363@400), CRASHES >=800 (diag 4e8-2e9). Config S = +0.135% vs clean ref -> headline corrected to 'worst clean loss +0.14%'.
+- [ ] S+C composition.
