@@ -252,8 +252,14 @@ and under S-without-span — **finishes at −24.2%** (spread 0.000%): the span
 escalation (`OCA_RETRY_SPAN=3`) breaks its reject cascade. final-3068 −15.2%,
 dubrovnik-356 −38.3%, floor scenes confirmed (lb-1197 −0.14%, du-173 −0.05%).
 venice-1778 +0.44% is inside its 0.80% spread (tie; N=5 before quoting).
-Config S is therefore the single-config recommendation for quality; R remains
-the low-wall option.
+Config S is the quality recommendation: it wins or ties 23/24 with no DNF.
+Two honest amendments from the follow-up phases (all N>=2): (a) on final-4585
+Config C remains deeper (C −32.7% vs S −24.2%; and C+anneal REFUTED at
+−10.1% — the anneal fights the ratchet); (b) S's reject tax bites large warm
+production snapshots (muell146 wall 8.8→42.8 s at tied quality), so R stays
+the production profile. Also confirmed at N=3: R+`OCA_NSHIFTS=13` deepens
+final-3068 to −17.4% (sp 0.02%); the S+wide "middle profile" is refuted
+(wrecks dubrovnik-173 +1.27%).
 
 **Why S's first percentages are slow — decomposed (2026-09-09).** Not
 iterations: to a 0.5% gap S needs FEWER steps than Caspar (23 vs 67 outers,

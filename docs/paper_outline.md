@@ -73,9 +73,7 @@ Caspar unless stated.
   free lever (-23%).
 - Descent-rate crossover moves 1% -> 0.2% gap: the explicit cost of the
   basin. Profiles: R = speed (crossover 1%, production walls 7-31x under
-  Caspar's converged budget), S = quality (floor closed). [Wide-grid middle
-  profile if reps confirm: N=1 shows 3.3x wall cut at +0.19pp, and
-  final-3068 -15.2 -> -17.3%.]
+  Caspar's converged budget), S = quality (floor closed). Wide-grid: R+NSHIFTS=13 confirmed -17.4% on final-3068 (N=3); S+wide middle profile REFUTED (du-173 +1.27%).
 
 ## 6. Trust region done right and wrong (the TR section)
 - TR-as-selection (GLTR-lite over the menu): helps exactly one scene,
@@ -107,7 +105,7 @@ Caspar unless stated.
 
 ## Open experiments feeding this draft
 - [ ] Full 24-BAL under S; [ ] muell/fuchsberg walls under S;
-- [ ] wide-grid reps (final-3068, S-middle profile); [x] final-4585 rescue: REFUTED (2 reps DNF, ~1900 rejects — even sigma=lam*1e10 fails on storm outers);
+- [x] wide-grid reps: final-3068 CONFIRMED -17.4%; S-middle REFUTED. [x] final-4585 rescue: REFUTED (2 reps DNF, ~1900 rejects — even sigma=lam*1e10 fails on storm outers);
 - [x] final-13682: EXCEEDS 16GB VRAM here (OOM at assembly; ran on 24GB 4090 historically); Caspar@2000 itself crashes exit=2 at this scale, @200 = 2.405e7/337s is the only clean baseline this card produces.
 - [x] lb-1723 clean reference: Caspar clean at budgets 100-400 (best 447363@400), CRASHES >=800 (diag 4e8-2e9). Config S = +0.135% vs clean ref -> headline corrected to 'worst clean loss +0.14%'.
-- [ ] S+C composition.
+- [x] S+C composition REFUTED (10.30e6 vs C's 7.71e6 on final-4585; anneal fights ratchet). [x] Full 24-BAL under S: 13W/10T/1L, no DNF, worst +0.093%. [x] production walls under S: tax real on large warm snapshots (muell146 5x); R stays production profile.
