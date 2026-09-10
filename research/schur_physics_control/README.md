@@ -4,6 +4,11 @@ Research checked through **10 September 2026**. Recommendation: first investigat
 
 The frozen eta2 configuration remains the incumbent. **Implementation follow-up completed:** [results, target timings and curvature diagnostics](RESULTS.md), [reproduction commands](RUNNING.md). The original review below supplied the hypotheses; the new experiments did not produce a replacement for eta2. The original implementation and configuration are unchanged. Claims of novelty remain open; most of the underlying mathematical tools already have substantial prior art.
 
+**Largest-scene extension:** [Final13682 results](LARGEST_RESULTS.md). All 12
+fixed-target runs hit, with eta2/rank16 tied and no coarse activation. A
+separate capped curvature probe does not show the extreme Final3068 pattern
+at its sampled endpoint.
+
 ## What the measurements actually motivate
 
 The latest [Schur preconditioner experiment](https://github.com/msouiai/prism-ba/blob/07d9179/research/schur_preconditioner/RESULTS.md) is the starting point:

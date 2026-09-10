@@ -5,6 +5,10 @@ earns promotion.** The useful new finding is a measurable mismatch between
 the Gauss–Newton model and true directional curvature at Final3068 stalls.
 Longer stopping windows and a simple gradient relaxation do not solve it.
 
+Follow-up: [the Final13682 extension](LARGEST_RESULTS.md) ties at two historical
+quality targets; the coarse correction remains inactive throughout that
+short test. A separate curvature probe supplies a more benign contrast.
+
 This implements the bounded sequence in [PROTOCOL.md](PROTOCOL.md), with
 explicit amendments for the nonlinear screen and terminal probes. Code lives
 on `research/schur-physics-experiments`; the original solver, frozen source and
