@@ -31,7 +31,7 @@ for c in curves:
     assert all(b['seconds']>=a['seconds'] for a,b in zip(c['points'],c['points'][1:]))
 (ROOT/'largest_curves.json').write_text(json.dumps(curves,indent=2)+'\n')
 with (ROOT/'largest_curves.csv').open('w') as f:
-    writer=csv.DictWriter(f,fieldnames=['algorithm','cohort','iteration','seconds','cost','event']);writer.writeheader()
+    writer=csv.DictWriter(f,fieldnames=['algorithm','cohort','iteration','seconds','cost','event'],lineterminator='\n');writer.writeheader()
     for c in curves:
         for p in c['points']:writer.writerow(dict(algorithm=c['name'],cohort=c['kind'],**p))
 plt.rcParams.update({'font.size':11,'axes.spines.top':False,'axes.spines.right':False,'savefig.dpi':180})
@@ -66,4 +66,6 @@ fig.text(.5,.005,'One timestamped run per arm. The coarse correction never activ
 fig.tight_layout(rect=(0,.055,1,1))
 for ext in ['png','pdf','svg']:fig.savefig(out/f'final13682_coarse_iterations.{ext}',bbox_inches='tight')
 plt.close(fig)
+for svg in out.glob('final13682_coarse_*.svg'):
+    svg.write_text('\n'.join(line.rstrip() for line in svg.read_text().splitlines())+'\n')
 print(json.dumps([{'algorithm':c['name'],'last':c['points'][-1],'offset':c.get('csv_to_native_offset'),'coarse_active':c.get('coarse_active')} for c in curves],indent=2))
