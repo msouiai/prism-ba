@@ -50,9 +50,12 @@ Families/sizes used here: `ladybug` (49, 598, 810, 1197, 1469, 1723),
 `trafalgar` (126, 201, 257), `dubrovnik` (88, 135, 173, 356), `venice`
 (52, 89, 1672, 1778), `final` (93, 1936, 3068, 4585, 13682).
 Decompress to plain `.txt`; the CLI reads the standard BAL format.
-(`venice-52-noisy`, `muellcontainer-90` and `insta360-3086` are local
-derivatives — skip them if you only have public data; the ledger is still
-meaningful on the remaining 20.)
+(The explicit list above enumerates **22 public files** (21 distinct public
+scenes + final-13682 which needs >16GB VRAM); `venice-52-noisy`,
+`muellcontainer-90` and `insta360-3086` are local derivatives, giving the 24
+scenes the ledgers use. An earlier "20 public/23 total" phrasing here was
+wrong — caught by the Codex reproduction, see
+docs/performance_investigation.md.)
 
 ## 3. The objective — get this identical or nothing else matters
 
@@ -324,7 +327,11 @@ is most of muell's 31×.
    twice produced claims that N=5 overturned. Judge a cell against **its own
    measured spread**, not a flat threshold: venice-52 has ~0.2% run-to-run
    spread, ladybug-1197's branch noise is 12.7% median / 81.5% p95, while
-   venice-52-noisy and final-93 are ~0.00%.
+   venice-52-noisy and final-93 are ~0.00%. **final-3068 is high-variance in
+   BOTH cost and wall** (same binary/config: 1,697,732 @ 114.8 s vs
+   1,687,398 @ 218.0 s — Codex repro), so never characterize this build as
+   near-deterministic in general; determinism is scene- and config-specific
+   (e.g. final-4585 under fixed configs reproduces to 8 digits).
 2. **Verify the baseline's build configuration in the same session as the
    numbers.** Our benchmark compared fp64 Prism against an **fp32** baseline
    for months. Assert the baseline's reported initial cost against your own
