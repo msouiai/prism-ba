@@ -2,7 +2,7 @@
 
 Research checked through **10 September 2026**. Recommendation: first investigate a small global correction to the existing camera-block preconditioner. In parallel, use an energy/stationarity diagnostic to identify damping-induced stalls. An exact projected family of coupled damping systems is a higher-risk route back to a useful menu.
 
-The frozen eta2 configuration remains the incumbent. This report adds research and deterministic CPU algebra checks, **not a new solver or a measured BA speedup**. The original implementation and configuration are unchanged. Claims of novelty remain open; most of the underlying mathematical tools already have substantial prior art.
+The frozen eta2 configuration remains the incumbent. **Implementation follow-up completed:** [results, target timings and curvature diagnostics](RESULTS.md), [reproduction commands](RUNNING.md). The original review below supplied the hypotheses; the new experiments did not produce a replacement for eta2. The original implementation and configuration are unchanged. Claims of novelty remain open; most of the underlying mathematical tools already have substantial prior art.
 
 ## What the measurements actually motivate
 
