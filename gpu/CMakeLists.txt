@@ -47,4 +47,12 @@ target_link_libraries(oca_cuda PRIVATE ${CUSOLVER_LIB} ${CUBLAS_LIB} cudart)
 # Gate: the core library must reproduce the CLI (see run_core_gate.sh).
 add_executable(test_oca_core test_oca_core.cc)
 target_link_libraries(test_oca_core PRIVATE oca_core)
+
+# Opt-in kernel gate; includes the implementation to test both kernel paths.
+add_executable(test_rhs_diag EXCLUDE_FROM_ALL test_rhs_diag.cu)
+set_target_properties(test_rhs_diag PROPERTIES
+    CUDA_ARCHITECTURES "${OCA_CUDA_ARCHITECTURES}"
+    CUDA_SEPARABLE_COMPILATION ON)
+target_compile_options(test_rhs_diag PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-O3>)
+target_link_libraries(test_rhs_diag PRIVATE ${CUSOLVER_LIB} ${CUBLAS_LIB} cudart)
 endif()  # PROJECT_IS_TOP_LEVEL
