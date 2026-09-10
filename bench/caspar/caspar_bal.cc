@@ -3,11 +3,11 @@
 //   R_colmap = diag(1,-1,-1) * AA(aa),  t_colmap = diag(1,-1,-1) * t_bal,
 //   pixel = (u, -v), camera = SIMPLE_RADIAL [f, k1] + pp (0,0), k2 dropped
 //   (measured |k2/k1| ~ 2e-7 on the BAL sets used).
-// Solver params follow the Caspar paper: initial trust region (diag_init) 100,
-// CG tolerance 1e-3; everything else at generated defaults.
+// Default settings mirror COLMAP; optional "paper" selects a different profile.
 #include "solver.h"
 #include "solver_params.h"
 #include <cmath>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -79,12 +79,14 @@ int main(int argc, char** argv) {
   params.solver_iter_max = max_iter > 0 ? max_iter : 200;
   params.pcg_iter_max = 20;
   params.diag_init = 1.0;
+  params.diag_scaling_down = 0.333333;
   params.pcg_rel_error_exit = 1e-4;
   if (argc > 3 && std::string(argv[3]) == "paper") {
     params.diag_init = 100.0;
     params.pcg_rel_error_exit = 1e-3;
   }
 
+  const auto setup_start = std::chrono::steady_clock::now();
   caspar::GraphSolver solver(
       params,
       /*PinholeCalib*/0, /*PinholeFocal*/0, /*PinholePose*/0, /*PinholePP*/0,
@@ -122,9 +124,43 @@ int main(int argc, char** argv) {
   solver.SetSimpleRadialSplitFixedPrincipalPointPrincipalPointDataFromStackedHost(ppc.data(), 0, nobs);
   solver.finish_indices();
 
+  cudaDeviceSynchronize();
+  const auto solve_start = std::chrono::steady_clock::now();
+  const double setup_seconds = std::chrono::duration<double>(solve_start - setup_start).count();
   const caspar::SolveResult r = solver.solve(/*print_progress=*/true,
-                                             /*verbose_logging=*/false);
-  std::printf("RESULT exit=%d iters=%d final_score=%.10e runtime=%.3f\n",
+                                             /*verbose_logging=*/true);
+  std::printf("RESULT exit=%d iters=%d final_score=%.17g runtime=%.9f\n",
               static_cast<int>(r.exit_reason), r.iteration_count, r.final_score, r.runtime);
+  std::printf("INITIAL score=%.17g setup_seconds=%.9f\n", r.initial_score, setup_seconds);
+  double previous_score = r.initial_score;
+  for (const auto& it : r.iterations) {
+    std::printf("TRACE iter=%d cost=%.17g seconds=%.9f accepted=%d pcg=%d\n",
+                it.solver_iter, it.score_best, it.dt_tot,
+                static_cast<int>(it.score_best < previous_score), it.pcg_iter);
+    previous_score = it.score_best;
+  }
+  // Independent CPU objective at the returned state, outside solver timing.
+  solver.GetPointNodesToStackedHost(pts.data(), 0, npt);
+  solver.GetSimpleRadialPoseNodesToStackedHost(pose.data(), 0, ncam);
+  solver.GetSimpleRadialFocalAndExtraNodesToStackedHost(fae.data(), 0, ncam);
+  long double checked_score = 0;
+  for (int i = 0; i < nobs; ++i) {
+    const double* q = pose.data() + 7 * ocam[i];
+    const double* p = pts.data() + 3 * opt[i];
+    const double x=q[0], y=q[1], z=q[2], w=q[3];
+    const double px=(1-2*(y*y+z*z))*p[0]+2*(x*y-z*w)*p[1]+2*(x*z+y*w)*p[2]+q[4];
+    const double py=2*(x*y+z*w)*p[0]+(1-2*(x*x+z*z))*p[1]+2*(y*z-x*w)*p[2]+q[5];
+    const double pz=2*(x*z-y*w)*p[0]+2*(y*z+x*w)*p[1]+(1-2*(x*x+y*y))*p[2]+q[6];
+    const double u=px/pz, v=py/pz;
+    const double scale=fae[2*ocam[i]]*(1+fae[2*ocam[i]+1]*(u*u+v*v));
+    const double du=scale*u-ou[i], dv=scale*v+ov[i];
+    checked_score += 0.5L*(static_cast<long double>(du)*du+static_cast<long double>(dv)*dv);
+  }
+  std::printf("CHECK final_score=%.17g\n", static_cast<double>(checked_score));
+  if (!std::isfinite(static_cast<double>(checked_score)) ||
+      std::abs(static_cast<double>(checked_score)-r.final_score) > 1e-6*std::max(1.0, r.final_score)) {
+    std::fprintf(stderr, "Final objective check failed\n");
+    return 2;
+  }
   return 0;
 }
