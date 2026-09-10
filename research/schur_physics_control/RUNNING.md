@@ -13,6 +13,29 @@ fingerprints identify the measured builds; a different compiler/toolchain or
 atomic ordering can change trajectories, so regenerated BAL states need not
 be byte-identical to the recorded captures.
 
+## Largest-scene initialization noise
+
+The protocol and scope are in [NOISE_PROTOCOL.md](NOISE_PROTOCOL.md). After
+building the solver below, run the bounded 12-run screen with a fresh output
+directory. NumPy performs the perturbations; no extra solver build is needed.
+
+```bash
+PRISM_NOISE_OUT=/tmp/prism-noise-repeat OPENBLAS_NUM_THREADS=1 python3 research/schur_physics_control/run_noisy_largest.py
+python3 research/schur_physics_control/plot_noisy_largest.py --data /tmp/prism-noise-repeat
+```
+
+The generator needs about 1.5 GiB of free `/dev/shm` for one temporary BAL file,
+plus several GiB of host RAM. It verifies the observation prefix and reads back
+every parameter before either solver sees that input. The temporary file is
+automatically removed; raw logs, hashes and seed/amplitude metadata remain in
+the output directory. `--resume` retains completed solves after a harness
+interruption. It never silently repeats an existing log.
+
+To reproduce just the recorded figures without GPU work, extract
+`evidence/noise-raw.tar.xz` into a fresh directory and pass it to
+`plot_noisy_largest.py --data`. The PNG/PDF/SVG files are under
+`figures/convergence/final13682_initialization_noise.*`.
+
 ## Read results without running a solver
 
 Extract the compact raw archive to a new directory, then recompute the ledger:

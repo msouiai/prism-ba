@@ -9,6 +9,11 @@ fixed-target runs hit, with eta2/rank16 tied and no coarse activation. A
 separate capped curvature probe does not show the extreme Final3068 pattern
 at its sampled endpoint.
 
+**Initialization-noise extension:** [protocol](NOISE_PROTOCOL.md),
+[results and noisy convergence curves](NOISE_RESULTS.md). This separate cohort
+perturbs camera poses and points while preserving all observations and initial
+intrinsics; it does not replace the clean-scene target ledger above.
+
 ## What the measurements actually motivate
 
 The latest [Schur preconditioner experiment](https://github.com/msouiai/prism-ba/blob/07d9179/research/schur_preconditioner/RESULTS.md) is the starting point:
