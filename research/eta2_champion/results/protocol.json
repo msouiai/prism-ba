@@ -1,0 +1,161 @@
+{
+  "selection": {
+    "created_utc": "2026-09-10T11:57:41.060467+00:00",
+    "scenes": {
+      "ladybug-539": "https://grail.cs.washington.edu/projects/bal/data/ladybug/problem-539-65220-pre.txt.bz2",
+      "trafalgar-138": "https://grail.cs.washington.edu/projects/bal/data/trafalgar/problem-138-44033-pre.txt.bz2",
+      "final-394": "https://grail.cs.washington.edu/projects/bal/data/final/problem-394-100368-pre.txt.bz2"
+    },
+    "selection": "Three previously unmeasured local BAL instances in three familiar dataset families, chosen before downloading or running; correlated family data, not independent capture domains. Sizes bound storage and runtime. No tuning.",
+    "reps": 3,
+    "quality_multipliers": [
+      1.005,
+      1.01,
+      1.02
+    ],
+    "primary_multiplier": 1.01,
+    "timing_arms": [
+      "champion",
+      "caspar32",
+      "caspar64",
+      "ceres_lm",
+      "ceres_dogleg"
+    ],
+    "ablation_arms": [
+      "off",
+      "x4_floor",
+      "champion"
+    ],
+    "ablation_scope": "all three scenes at primary target, including inactive controls; no outcome-driven scene substitution",
+    "calibration": "N3 guard-off Prism and Caspar FP64, 15 native seconds/600 outers, minimum independently audited endpoint, then freeze all targets before timing; calibration excluded from timings",
+    "native_caps": {
+      "ladybug-539": 5,
+      "trafalgar-138": 5,
+      "final-394": 8
+    },
+    "audit_relative_tolerance": 1e-06,
+    "cpu_threads": 8,
+    "initial_lambda": 0.1,
+    "precision": "original FP64 observations and common SIMPLE_RADIAL objective k2 fixed zero, independent FP64 exported-state audit",
+    "timers": "native solve including Prism local setup; external graph setup separately recorded; process wall includes loading/export excluded from native. CPU and GPU solvers serialized with local GPU lock.",
+    "curvature_criterion": "Curvature size must improve time at equal hit rate by >=1.10x on at least two guard-active instances and avoid >1.10x slowdown on any; otherwise no promotion or extra novelty claim. If fewer than two active instances, evidence insufficient.",
+    "limitations": [
+      "Three new instances do not establish universal fastest",
+      "Ceres is CPU baseline, not evidence versus all GPU solvers",
+      "Existing Caspar snapshots are pinned implementations, not assertion of latest upstream"
+    ]
+  },
+  "scenes": {
+    "ladybug-539": {
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "dims": [
+        539,
+        65220,
+        277273
+      ],
+      "bytes": 15937111,
+      "url": "https://grail.cs.washington.edu/projects/bal/data/ladybug/problem-539-65220-pre.txt.bz2"
+    },
+    "trafalgar-138": {
+      "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+      "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+      "dims": [
+        138,
+        44033,
+        165899
+      ],
+      "bytes": 9688572,
+      "url": "https://grail.cs.washington.edu/projects/bal/data/trafalgar/problem-138-44033-pre.txt.bz2"
+    },
+    "final-394": {
+      "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+      "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+      "dims": [
+        394,
+        100368,
+        534408
+      ],
+      "bytes": 28794426,
+      "url": "https://grail.cs.washington.edu/projects/bal/data/final/problem-394-100368-pre.txt.bz2"
+    }
+  },
+  "champion": {
+    "label": "sustained-eta2-lambda0.1",
+    "status": "best tested global configuration on six-scene fixed-target panel; defaults unchanged",
+    "binary": "/tmp/prism-rl-actor/build/prism-tr",
+    "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+    "initial_lambda": 0.1,
+    "flags": {
+      "OCA_ATTR_RADIUS": "1",
+      "OCA_ATTR_RESCUE": "1",
+      "OCA_ATTR_STRICT": "1",
+      "OCA_BACKTRACK_REARM": "1",
+      "OCA_CAMERA_TR": "0",
+      "OCA_CG_STOP": "0",
+      "OCA_CLASSICAL_LM": "1",
+      "OCA_COMPACT_FRAGMENTS": "2",
+      "OCA_DEMAND_MENU": "0",
+      "OCA_DIAG_NORM": "1",
+      "OCA_FORCE_UNSHARED": "1",
+      "OCA_FTOL": "1e-5",
+      "OCA_FTOL_K": "8",
+      "OCA_GRID_DOWN": "2",
+      "OCA_MENU_BACKTRACK": "8",
+      "OCA_MENU_GATE": "1e-2",
+      "OCA_MULTI_RHS": "1",
+      "OCA_NSHIFTS": "1",
+      "OCA_PCG": "1",
+      "OCA_POINT_SAFEGUARD": "1",
+      "OCA_RETRY_CACHE": "1",
+      "OCA_RHO_LAMBDA": "1",
+      "OCA_RHO_SHIFT": "1",
+      "OCA_SCHUR_NUMERIC_GUARD": "1",
+      "OCA_SWITCH_RESTART": "0",
+      "OCA_TR_RECURRENCE": "0",
+      "OCA_RLA_FIXED_ETA": "2"
+    },
+    "cli": [
+      "--algo",
+      "mfree_shifted_cg",
+      "--dof9",
+      "--zero_k2",
+      "--lam0",
+      "0.1",
+      "--max_iter",
+      "600"
+    ],
+    "evidence": "/tmp/prism-rl-sustained/verdict.json",
+    "limitations": [
+      "Muell lambda10 + eta2 is a counterexample",
+      "Largest tighter-target gain is only1.035x",
+      "Not a learned RL improvement"
+    ]
+  },
+  "runner_sha256": "8e0fab54f397c82cecf4715391526c5d868c24a2f70d3d3a069e9ada9740ba52",
+  "host": "2237c6528e79",
+  "binaries": {
+    "champion": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+    "off": "055f8fa06a9830573bd4350cac081ffd7774e328a79b1c362da6232049a334dc",
+    "x4_floor": "055f8fa06a9830573bd4350cac081ffd7774e328a79b1c362da6232049a334dc",
+    "control_zero": "055f8fa06a9830573bd4350cac081ffd7774e328a79b1c362da6232049a334dc",
+    "legacy_off": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+    "legacy_control_off": "055f8fa06a9830573bd4350cac081ffd7774e328a79b1c362da6232049a334dc",
+    "caspar32": "de038488e929a8fad674d1096c5f61619f3039e6409a81670dab0df7dffe0919",
+    "caspar64": "6ca81c85112005b024df4972b0ec16c3819838999a876513e148c58ed8f35eb2",
+    "ceres_lm": "4664a2ddece1e54db34fb5574f1c80ceb49d7f860c7f47d2ab20f4c857824761",
+    "ceres_dogleg": "4664a2ddece1e54db34fb5574f1c80ceb49d7f860c7f47d2ab20f4c857824761"
+  },
+  "registered": "2026-09-10T12:05:21.632067+00:00",
+  "gpu": "NVIDIA RTX 2000 Ada Generation, 580.126.09",
+  "ceres_version": "2.2.0",
+  "ceres_profiles": {
+    "ceres_lm": "ITERATIVE_SCHUR/SCHUR_JACOBI, radius10000, eight threads",
+    "ceres_dogleg": "SPARSE_SCHUR/SuiteSparse, radius10000, eight threads"
+  },
+  "cap_rule": "A target qualifies only when reached inside native cap; Ceres may finish a current iteration beyond cap, which is retained and classified as late.",
+  "cap_limits": "600 accepted iterations for Prism versus 600 attempted for external solvers; native cap primary.",
+  "precision_buffer": "Caspar FP32 native stop is 0.999 times registered target, with original-observation FP64 endpoint audit. This is conservative and disclosed.",
+  "state_policy": "Every endpoint independently audited; generated state compressed losslessly then raw export removed after decompressed SHA check.",
+  "comparison_rule": "Median/min-max only for 3/3 hits; retain misses, endpoint gaps, cap hits and invalid audits. No aggregate over a changing subset."
+}
