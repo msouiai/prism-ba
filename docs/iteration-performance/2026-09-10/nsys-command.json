@@ -1,0 +1,37 @@
+{
+  "command": [
+    "flock",
+    "/tmp/prism_gpu.lock",
+    "/opt/nvidia/nsight-compute/2025.1.1/host/target-linux-x64/nsys",
+    "profile",
+    "--sample=none",
+    "--cpuctxsw=none",
+    "--trace=cuda",
+    "-o",
+    "/tmp/prism-performance-gates/S-15-nsys",
+    "/tmp/prism-performance-gates/build/oca_cuda",
+    "--problem",
+    "/workspace/bal/ladybug-1197.txt",
+    "--algo",
+    "mfree_shifted_cg",
+    "--dof9",
+    "--zero_k2",
+    "--max_iter",
+    "15"
+  ],
+  "env": {
+    "OCA_FORCE_UNSHARED": "1",
+    "OCA_RHO_LAMBDA": "1",
+    "OCA_GRID_DOWN": "2",
+    "OCA_RHO_SHIFT": "1",
+    "OCA_ALPHA_RHO": "1",
+    "OCA_MENU_GATE": "1e-2",
+    "OCA_FTOL": "1e-5",
+    "OCA_FTOL_K": "8",
+    "OCA_NSHIFTS": "5",
+    "OCA_RETRI": "5",
+    "OCA_TAU_LAM": "10",
+    "OCA_TAU_LAM_ANNEAL": "0.8",
+    "OCA_RETRY_SPAN": "3"
+  }
+}

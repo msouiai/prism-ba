@@ -1,0 +1,42 @@
+{
+  "binary": "/tmp/prism-performance-gates/build/oca_cuda",
+  "binary_sha256": "2de7794adffa892fc30c40e97c285150e963553d4721707cea8e5db87388f991",
+  "inputs": {
+    "ladybug-1197": {
+      "sha256": "a90724a99631cc61a050583e08c7fc028601c04c197fba7461566a69d87c920d",
+      "initial_cost": 45428699.329908
+    }
+  },
+  "common": {
+    "OCA_FORCE_UNSHARED": "1",
+    "OCA_RHO_LAMBDA": "1",
+    "OCA_GRID_DOWN": "2",
+    "OCA_RHO_SHIFT": "1",
+    "OCA_ALPHA_RHO": "1",
+    "OCA_MENU_GATE": "1e-2",
+    "OCA_FTOL": "1e-5",
+    "OCA_FTOL_K": "8",
+    "OCA_NSHIFTS": "5"
+  },
+  "configs": {
+    "S": {
+      "OCA_RETRI": "5",
+      "OCA_TAU_LAM": "10",
+      "OCA_TAU_LAM_ANNEAL": "0.8",
+      "OCA_RETRY_SPAN": "3"
+    }
+  },
+  "arms": {
+    "reference": {},
+    "optimized": {
+      "OCA_RETRY_CACHE": "1",
+      "OCA_MULTI_RHS": "1",
+      "OCA_DIAG_NORM": "1"
+    }
+  },
+  "reps": 3,
+  "max_iter": 15,
+  "timeout": 900,
+  "trace": false,
+  "gpu": "NVIDIA RTX 2000 Ada Generation, 580.126.09"
+}
