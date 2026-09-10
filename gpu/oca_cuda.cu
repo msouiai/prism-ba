@@ -9363,6 +9363,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   bool factor_cached=false;
   Scalar cached_tau=0,cached_floor=0,cached_pred_pt=0;
   long factor_builds=0,factor_reuses=0;
+  long cache_cold=0,cache_tau_miss=0,cache_floor_miss=0,cache_ineligible=0;
+  const bool retry_cache_trace = [](){ const char* e=getenv("OCA_RETRY_CACHE_TRACE");
+    return e && atoi(e)!=0; }();
   for(int k=0;k<max_iter;){
    if(need_assembly){
     if (g_bal_ptr && std::find(g_dump_iters.begin(), g_dump_iters.end(), k) != g_dump_iters.end())
@@ -9550,6 +9553,22 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
                               !(poly_env && atoi(poly_env)>0);
     const bool reuse_factor=cache_eligible && factor_cached &&
                            tau_eff==cached_tau && selected_floor==cached_floor;
+    // Compare BOTH parts of the point-factor key. A ratcheted floor alone
+    // does not make a retry reusable: the independent streak tau can rise.
+    const char* cache_reason = reuse_factor ? "hit" :
+      !cache_eligible ? "ineligible" : !factor_cached ? "assembly" :
+      tau_eff!=cached_tau ? "tau" : "selected_floor";
+    if(retry_cache && !reuse_factor){
+      if(!cache_eligible) ++cache_ineligible;
+      else if(!factor_cached) ++cache_cold;
+      else if(tau_eff!=cached_tau) ++cache_tau_miss;
+      else ++cache_floor_miss;
+    }
+    if(retry_cache_trace)
+      std::printf("  [retry-cache-attempt] outer=%d accepted=%d retry=%d "
+                  "lambda=%.17g tau=%.17g selected_floor=%.17g reuse=%d reason=%s\n",
+                  k+1,n_accept,retries,(double)lam_cam,(double)tau_eff,
+                  (double)selected_floor,(int)reuse_factor,cache_reason);
     Scalar pred_pt=cached_pred_pt;
     if(reuse_factor){ ++factor_reuses; }
     else {
@@ -11138,7 +11157,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
               (double)st.matvecs/std::max<int>(1,(int)log.costs.size()-1));
   if(prof) std::printf("  [PROFILE] assembly=%.3fs pointfactor+rhs=%.3fs krylov=%.3fs candidates=%.3fs\n",
                        t_asm,t_fac,t_mv,t_cand);
-  if(retry_cache) std::printf("  [retry-cache] builds=%ld reuses=%ld\n",factor_builds,factor_reuses);
+  if(retry_cache) std::printf("  [retry-cache] builds=%ld reuses=%ld cold=%ld "
+      "tau_miss=%ld selected_floor_miss=%ld ineligible=%ld\n",
+      factor_builds,factor_reuses,cache_cold,cache_tau_miss,cache_floor_miss,cache_ineligible);
   if(prof) std::printf("  [PROFILE] alpha=%.3fs alpha_evals=%ld scored_evals=%ld (menu+alpha)\n",
                        t_alpha,alpha_evals,st.cand_evals+alpha_evals);
   if(!jsonpath.empty()){
