@@ -1,0 +1,48 @@
+{
+  "binary": "/workspace/prism-adaptive/frozen",
+  "binary_sha256": "d5f2fb802f3471377c3c2c5eb689d07acab667648fd8e5211625f3dd59ab9a73",
+  "common": {
+    "OCA_FORCE_UNSHARED": "1",
+    "OCA_RHO_LAMBDA": "1",
+    "OCA_GRID_DOWN": "2",
+    "OCA_RHO_SHIFT": "1",
+    "OCA_ALPHA_RHO": "1",
+    "OCA_MENU_GATE": "1e-2",
+    "OCA_FTOL": "1e-5",
+    "OCA_FTOL_K": "8",
+    "OCA_TAU_LAM": "1",
+    "OCA_TAU_LAM_RATCHET": "1"
+  },
+  "execution": {
+    "OCA_RETRY_CACHE": "1",
+    "OCA_MULTI_RHS": "1",
+    "OCA_DIAG_NORM": "1"
+  },
+  "arms": {
+    "single": {
+      "OCA_NSHIFTS": "1",
+      "OCA_MENU_BACKTRACK": "8"
+    },
+    "multi": {
+      "OCA_NSHIFTS": "5",
+      "OCA_MENU_BACKTRACK": "8"
+    },
+    "adaptive": {
+      "OCA_NSHIFTS": "5",
+      "OCA_MENU_BACKTRACK": "8",
+      "OCA_ADAPTIVE_MENU": "1"
+    }
+  },
+  "scenes": [
+    "venice-52",
+    "ladybug-1197"
+  ],
+  "reps": 3,
+  "max_iter": 600,
+  "timeout": 3600,
+  "data_sha256": {
+    "venice-52": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+    "ladybug-1197": "a90724a99631cc61a050583e08c7fc028601c04c197fba7461566a69d87c920d"
+  },
+  "gpu": "NVIDIA RTX 2000 Ada Generation, 580.126.09\n"
+}
