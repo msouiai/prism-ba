@@ -1,0 +1,37 @@
+{
+  "commands": [
+    [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-schur/research/eta2_champion/source/headers",
+      "/tmp/prism-ba-schur/research/schur_preconditioner/build/capture.cu",
+      "-o",
+      "/tmp/prism-ba-schur/research/schur_preconditioner/build/capture",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    [
+      "nvcc",
+      "-O3",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/tmp/prism-ba-schur/research/schur_preconditioner/build",
+      "/tmp/prism-ba-schur/research/schur_preconditioner/fixed.cu",
+      "-o",
+      "/tmp/prism-ba-schur/research/schur_preconditioner/build/fixed",
+      "-lcublas"
+    ]
+  ],
+  "files": {
+    "reference.cuh": "e5d732b180532e0270332d38281f52774314f6530e66ab47d0d4515a30926f41",
+    "capture.cu": "271f4d986d5ea1652b4bc0bd8c60b1b9527800d01f76518e1a47a4c817702e85",
+    "build-0.log": "7b373dfcc9cbf154f77f882e79c05881a1cc052d463530e04a0dd7a0b5042c99",
+    "capture": "f3fef8771e103afc8058858cba8b7c5edd4f7db9bd3f95934fd63055aa40a362",
+    "build-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fixed": "8f424fad536f0fe7b96d5022355e8b7452f15194d859b0dd6cb6d85880dadbeb"
+  }
+}

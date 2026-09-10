@@ -1,0 +1,20 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-schur/research/schur_preconditioner/build/solver_headers",
+    "/tmp/prism-ba-schur/research/schur_preconditioner/build/solver.cu",
+    "-o",
+    "/tmp/prism-ba-schur/research/schur_preconditioner/build/prism-gram",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "source_sha256": "6ae0ae65a0efe9c1033044f969f15d2000fc1fc898723a6dbb5bb3cf1333b390",
+  "pcg_header_sha256": "a7566d5813e560a9164c32443b0460f90a2039b32d529b373b022165ea154807",
+  "gram_sha256": "bbc8ea86e8969e8e06a670d8011e48f2935bf3d23319e63c09abd38f0803aacc",
+  "binary_sha256": "cbc995ead8b33ca3c29399778fa83e1a68618f743d0b33f7b9d28f4485e424a3"
+}

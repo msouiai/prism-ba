@@ -1,0 +1,42 @@
+--- a/source/prism_eta2.cu
++++ b/source/prism_eta2.cu
+@@ -9628,9 +9628,17 @@
+   long factor_builds=0,factor_reuses=0;
+   if(rld.enabled && (!classical_lm || !attr_radius || !attr_strict || !numeric_guard ||
+       !attr_rescue || L!=1 || CD!=9 || shared_intr || mf_fp32 || rk || block_eq ||
+-      !pcg || pcg->reuse || pcg->schur || demand_mode || camera_tr || g_lp.on ||
++      !pcg || pcg->reuse || (pcg->schur&&!pcg->gram) || demand_mode || camera_tr || g_lp.on ||
+       adaptive_menu || hyst_track || jit_on || fast_opening || ri_open || score_stride_env!=1))
+     throw std::runtime_error("RLD requires frozen coupled guarded LM, fresh Hcc PCG, full L2 scoring");
++  if(pcg && pcg->gram){
++    if(!rld.enabled || rld.fixed_eta!=2 || rld.actor || rld.collect || rld.controller ||
++       rld.policy || rld.episode || compact_mode!=2 || getenv("OCA_RLD_ACTION") ||
++       getenv("OCA_RLD_OPENING") || getenv("OCA_RLD_SAVE") || getenv("OCA_RLD_LOAD") ||
++       getenv("OCA_REPLAY_SAVE") || getenv("OCA_REPLAY_LOAD"))
++      throw std::runtime_error("Gram PCG research gate requires fixed eta2, compact2 and no policy/replay");
++    std::printf("PCG_GRAM enabled=1 fresh_schur_blocks=1\n");
++  }
+   const char* replay_save=rld.enabled?getenv("OCA_RLD_SAVE"):getenv("OCA_REPLAY_SAVE");
+   const char* replay_load=rld.enabled?getenv("OCA_RLD_LOAD"):getenv("OCA_REPLAY_LOAD");
+   const char* replay_at=rld.enabled?getenv("OCA_RLD_AT"):getenv("OCA_REPLAY_AT");
+--- a/source/headers/pcg_camera.cuh
++++ b/source/headers/pcg_camera.cuh
+@@ -1,14 +1,15 @@
+ #pragma once
++#include "gram.cuh"
+ __global__ void PcgNormalize(int nc,const double*H,const double*E,double sig,double*B){int c=blockIdx.x*blockDim.x+threadIdx.x;if(c<nc)for(int i=0;i<9;++i)for(int j=0;j<9;++j)B[81ul*c+9*i+j]=H[81ul*c+9*i+j]*E[9*c+i]*E[9*c+j]+(i==j?sig:0);}
+ __global__ void PcgDiagDrift(int nc,const double*H,const double*E,double sig,const double*old,int*bad){int c=blockIdx.x*blockDim.x+threadIdx.x;if(c<nc)for(int i=0;i<9;++i){double d=H[81ul*c+10*i]*E[9*c+i]*E[9*c+i]+sig,o=old[9*c+i];if(!(d>.5*o&&d<2*o))atomicExch(bad,1);}}
+ __global__ void PcgSaveDiag(int nc,const double*B,double*d){int c=blockIdx.x*blockDim.x+threadIdx.x;if(c<nc)for(int i=0;i<9;++i)d[9*c+i]=B[81ul*c+10*i];}
+ __global__ void PcgReferenceDiag(int nc,const double*H,const double*E,double sig,double*d){int c=blockIdx.x*blockDim.x+threadIdx.x;if(c<nc)for(int i=0;i<9;++i)d[9*c+i]=H[81ul*c+10*i]*E[9*c+i]*E[9*c+i]+sig;}
+ struct PrismPcg{
+- int nc,n,last_outer=-1,last_depth=0;double*B,*z,*tmp,*diag;int*bad;double rz=0;bool reuse,schur;
+- PrismPcg(int cams):nc(cams),n(9*cams),reuse(getenv("OCA_PCG_REUSE")!=nullptr),schur(getenv("OCA_PCG_SCHUR")!=nullptr){CUDA_CHECK(cudaMalloc(&B,81ul*nc*8));for(double**p:{&z,&tmp,&diag})CUDA_CHECK(cudaMalloc(p,n*8ul));CUDA_CHECK(cudaMalloc(&bad,4));}
++ int nc,n,last_outer=-1,last_depth=0;double*B,*z,*tmp,*diag;int*bad;double rz=0;bool reuse,schur,gram;
++ PrismPcg(int cams):nc(cams),n(9*cams),reuse(getenv("OCA_PCG_REUSE")!=nullptr),schur(getenv("OCA_PCG_SCHUR")!=nullptr),gram(getenv("OCA_PCG_GRAM")&&atoi(getenv("OCA_PCG_GRAM"))!=0){schur=schur||gram;CUDA_CHECK(cudaMalloc(&B,81ul*nc*8));for(double**p:{&z,&tmp,&diag})CUDA_CHECK(cudaMalloc(p,n*8ul));CUDA_CHECK(cudaMalloc(&bad,4));}
+  ~PrismPcg(){for(double*p:{B,z,tmp,diag})cudaFree(p);cudaFree(bad);}
+  void Prepare(const double*H,const double*E,double sig,int outer,int retry,const float*W,const int*pt,const int*off,const double*R,int no){bool rebuild=!reuse||last_outer<0||retry||last_depth>64;int drift=0;if(!rebuild){CUDA_CHECK(cudaMemset(bad,0,4));PcgDiagDrift<<<(nc+255)/256,256>>>(nc,H,E,sig,diag,bad);CUDA_CHECK(cudaMemcpy(&drift,bad,4,cudaMemcpyDeviceToHost));rebuild=drift;}
+- if(rebuild){if(schur){CUDA_CHECK(cudaMemset(B,0,81ul*nc*8));MFBlockSchurCM<9,float><<<nc,32>>>(W,pt,off,R,no,B);MFBlockAddHcc<9><<<(nc+255)/256,256>>>(H,nc,B);}PcgNormalize<<<(nc+255)/256,256>>>(nc,schur?B:H,E,sig,B);PcgReferenceDiag<<<(nc+255)/256,256>>>(nc,H,E,sig,diag);MFBlockChol<9><<<(nc+255)/256,256>>>(B,nc,1e-10,nullptr);last_outer=outer;}
++ if(rebuild){if(schur){CUDA_CHECK(cudaMemset(B,0,81ul*nc*8));if(gram)SchurGram<9,float><<<nc,32>>>(W,pt,off,R,no,B);else MFBlockSchurCM<9,float><<<nc,32>>>(W,pt,off,R,no,B);MFBlockAddHcc<9><<<(nc+255)/256,256>>>(H,nc,B);}PcgNormalize<<<(nc+255)/256,256>>>(nc,schur?B:H,E,sig,B);PcgReferenceDiag<<<(nc+255)/256,256>>>(nc,H,E,sig,diag);MFBlockChol<9><<<(nc+255)/256,256>>>(B,nc,1e-10,nullptr);last_outer=outer;}
+  printf("PCG_PREP o=%d rebuild=%d drift=%d previous_depth=%d\n",outer,(int)rebuild,drift,last_depth);
+  }
+  void Apply(const double*r){MFBlockSolve<9><<<(nc+255)/256,256>>>(B,r,nc,0,tmp);MFBlockSolve<9><<<(nc+255)/256,256>>>(B,tmp,nc,1,z);}
