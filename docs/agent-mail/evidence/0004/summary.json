@@ -1,0 +1,30 @@
+{
+  "duplicate_state_paths": 132,
+  "duplicate_logical_bytes_replaced": 2887037064,
+  "noisy_root_inputs_compacted": 2,
+  "root_input_bytes_saved": 2776941914,
+  "noisy_workspace_inputs_compacted": 3,
+  "workspace_input_bytes_saved": 4163940710,
+  "sustained_files_relocated": 448,
+  "sustained_bytes_relocated": 2659670009,
+  "root_free_bytes": 5847134208,
+  "checks": [
+    {
+      "directory": "/tmp",
+      "bytes": 16777216,
+      "write_fsync_close_readback": "passed"
+    },
+    {
+      "directory": "/workspace/collab",
+      "bytes": 16777216,
+      "write_fsync_close_readback": "passed"
+    }
+  ],
+  "unique_endpoint_states_discarded": 0,
+  "notes": [
+    "Workspace df reports backing-cluster capacity, not this volume quota.",
+    "Duplicate immutable states retain readable original paths via relative symlinks.",
+    "Compacted noisy inputs must be restored using their adjacent compressed_inputs/restore.py before a rerun.",
+    "Most compact historical archives do not contain endpoint states; their hashes alone are not backups."
+  ]
+}
