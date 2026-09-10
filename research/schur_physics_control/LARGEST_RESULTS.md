@@ -5,6 +5,9 @@ because its correction never activates in this short largest-scene test.**
 This is evidence about the tested prefix, not a refutation of coarse methods
 on every large or poorly conditioned BA problem.
 
+[Convergence curves](LARGEST_CURVES.md) now show timestamped display traces
+and clearly labeled historical Caspar references, in full and close-up views.
+
 The scene has **13,682 cameras, 4,456,117 points and 28,987,644 observations**.
 Both arms use the same previously measured `prism-coarse` binary and frozen
 eta2 flags; only `OCA_COARSE_RANK=0/16` changes. No recompilation or retuning.
