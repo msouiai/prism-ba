@@ -1,0 +1,615 @@
+% Standalone LaTeX source. No external figures, fonts, or bibliography files.
+% Compile: latexmk -pdf -interaction=nonstopmode -halt-on-error BA_Research_Agent_Brief.tex
+% Alternative: run pdflatex twice on this file.
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{mathpazo}
+\usepackage[scaled=0.92]{helvet}
+\usepackage{inconsolata}
+\usepackage[a4paper,left=22mm,right=22mm,top=22mm,bottom=21mm,headheight=14pt,headsep=7mm]{geometry}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{microtype}
+\usepackage{etoolbox}
+\usepackage[table]{xcolor}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage{titlesec,fancyhdr,lastpage}
+\usepackage[most]{tcolorbox}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{bookmark}
+\definecolor{ink}{HTML}{162D43}
+\definecolor{accent}{HTML}{16746D}
+\definecolor{muted}{HTML}{556472}
+\definecolor{pale}{HTML}{EEF4F5}
+\definecolor{linegray}{HTML}{D5DEE3}
+\hypersetup{colorlinks=true,linkcolor=accent,citecolor=accent,urlcolor=accent,
+  pdftitle={Bundle Adjustment: Research Directions and Agent Experiment Brief},
+  pdfauthor={Prepared for Mo},pdfsubject={Eight research hypotheses, experiments, safeguards, and prior art},
+  pdfkeywords={bundle adjustment, OCA, nonlinear optimization, research experiments, Schur complement}}
+\urlstyle{same}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\sffamily\footnotesize\color{muted}BUNDLE ADJUSTMENT\quad /\quad RESEARCH BRIEF}
+\fancyhead[R]{\sffamily\footnotesize\color{muted}11 SEPTEMBER 2026}
+\fancyfoot[L]{\sffamily\footnotesize\color{muted}Agent handoff\;\textperiodcentered\; Research hypotheses, not established results}
+\fancyfoot[R]{\sffamily\footnotesize\color{muted}\thepage\,/\,\pageref*{LastPage}}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\linespread{1.00}
+\setlength{\emergencystretch}{2em}
+\raggedbottom
+\titleformat{\section}{\sffamily\Large\bfseries\color{ink}}{}{0pt}{}
+\titleformat{\subsection}{\sffamily\normalsize\bfseries\color{ink}}{}{0pt}{}
+\titlespacing*{\section}{0pt}{0pt}{11pt}
+\titlespacing*{\subsection}{0pt}{8pt}{3pt}
+\setlist[enumerate]{leftmargin=1.6em,itemsep=3pt,topsep=3pt,parsep=0pt}
+\setlist[itemize]{leftmargin=1.4em,itemsep=2pt,topsep=3pt,parsep=0pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\SO}{\mathrm{SO}}
+\newcommand{\Sim}{\mathrm{Sim}}
+\newcommand{\Retr}{\operatorname{Retr}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\kicker}[1]{{\sffamily\small\bfseries\color{accent}#1}\par}
+\newcommand{\pagehead}[2]{\clearpage\phantomsection\addcontentsline{toc}{section}{#1}\kicker{#2}\section*{#1}}
+\newtcolorbox{briefbox}[1]{enhanced,breakable,colback=pale,colframe=pale,
+  boxrule=0pt,arc=1.5mm,left=3mm,right=3mm,top=2mm,bottom=2mm,
+  borderline west={2pt}{0pt}{accent},title={#1},coltitle=ink,
+  fonttitle=\sffamily\bfseries,colbacktitle=pale,attach title to upper={\par\smallskip}}
+\newcommand{\stoprule}[1]{\par\textbf{Stop or reframe when:} #1\par}
+\newcommand{\novelty}[1]{\par\textbf{Possible contribution:} #1\par}
+
+\AtBeginDocument{%
+  \setlength{\abovedisplayskip}{8pt plus 2pt minus 2pt}%
+  \setlength{\belowdisplayskip}{8pt plus 2pt minus 2pt}%
+  \setlength{\abovedisplayshortskip}{3pt plus 2pt}%
+  \setlength{\belowdisplayshortskip}{6pt plus 2pt minus 2pt}%
+}
+\patchcmd{\thebibliography}{\section*{\refname}}{}{}{}
+\begin{document}
+\thispagestyle{fancy}
+\pdfbookmark[0]{Research direction and priorities}{overview}
+\vspace*{3mm}
+\kicker{RESEARCH PROGRAM\quad /\quad AGENT-READY EXPERIMENTS}
+{\sffamily\fontsize{29}{33}\selectfont\bfseries\color{ink}Bundle Adjustment\par}
+\vspace{3mm}
+{\sffamily\fontsize{17}{21}\selectfont\color{ink}Beyond damping heuristics\par}
+\vspace{3mm}
+{\large Eight directions in nonlinear geometry, multiscale optimization, spectral filtering, and computation allocation.\par}
+\vspace{4mm}
+\begin{briefbox}{The central research question}
+What makes the current BA step wrong---numerical inaccuracy, excessive or insufficient regularization, nonlinear model error, or weak collective geometry---and what is the cheapest computation that addresses that failure?
+\end{briefbox}
+
+This brief turns the preceding research discussion into independently executable agent tasks. It builds on the reported OCA-style infrastructure: multiple damping candidates, factorization reuse, recursion-depth search, structured camera/point damping, and true nonlinear cost evaluation. The implementation and earlier performance claims have \textbf{not} been independently reproduced here.
+
+\textbf{Novelty status.} Every proposed extension is a hypothesis. The references establish relevant prior art, not that these combinations are new. Agents must inspect the closest methods and run a discriminating experiment before making novelty or performance claims.
+
+\subsection*{Recommended order}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\linewidth}{@{}p{9mm}Yp{42mm}@{}}
+\toprule
+\textbf{ID} & \textbf{Research direction} & \textbf{Recommended role}\\
+\midrule
+T1 & Projection-aware model-error control & Instrument first\\
+T2 & Curved updates versus OCA depth & First prototype\\
+T3 & Nonlinear point relaxation before ranking & First prototype\\
+T4 & Nonlinear collective/coarse corrections & Main ambitious branch\\
+T5 & Observability-aware robust continuation & Robustness branch\\
+T6 & Temporary depth-tube smoothing & Higher-risk exploration\\
+T7 & Spectral interpretation of OCA search & OCA-specific branch\\
+T8 & Learning which computation to perform & Only after useful traces\\
+\bottomrule
+\end{tabularx}
+
+\vspace{3mm}
+\textbf{Start here.} Freeze the current best solver, implement the shared diagnostics, then run T1. Use the evidence to choose T2/T3 for model-limited cases or T4 for collective geometric failures. Investigate T7 in parallel when the aim is an OCA-specific contribution.
+
+\textbf{Handoff contents.} A common mathematical contract; eight research tasks; benchmark and logging requirements; a ready-to-use master instruction; and linked primary references. No results in this document should be represented as newly measured experiments.
+
+\pagehead{Mathematical and implementation contract}{FOUNDATION\quad /\quad READ BEFORE CHANGING THE SOLVER}
+Let $\theta=(c,X)$ contain camera states and landmarks. With fixed intrinsics, a typical state has $6N_c+3N_p$ local degrees of freedom before gauge constraints. For whitened residuals,
+\begin{equation}
+ F(\theta)=\tfrac12\norm{r(\theta)}^2,\qquad
+ r_{ip}(\theta)=L_{ip}\bigl(\pi_i(R_iX_p+t_i)-u_{ip}\bigr).
+\end{equation}
+Here $L_{ip}^{\mathsf T}L_{ip}$ is the observation precision. Robust variants must state their loss, weight convention, and final target objective explicitly. The formulas below first concern ordinary least squares or frozen nonnegative robust weights.
+
+\subsection*{Linearization, damping, and elimination}
+Use the actual local update map of the implementation:
+\begin{equation}
+ r(\Retr_\theta(\delta))\approx r+J\delta,\quad
+ H=J^{\mathsf T}J,\quad b=-J^{\mathsf T}r,\quad
+ A=H+D,\quad A\delta=b.
+\end{equation}
+$D\succeq0$ denotes step damping, not a new reconstruction prior. When $D$ is block diagonal between cameras and points,
+\begin{equation}
+ S=H_{cc}+D_c-H_{cX}(H_{XX}+D_X)^{-1}H_{Xc}.
+\end{equation}
+Inverses in formulas mean linear solves. Never explicitly invert the full matrix. Extra regularizers with camera--point cross terms must be included in all affected blocks before elimination.
+
+\subsection*{Do not conflate three different errors}
+\textbf{Numerical solve error:} failure to solve the intended damped system, measured by a suitably scaled $\norm{A\delta-b}$. A direct factorization may already make this error very small.
+
+\textbf{Regularization/filter bias:} the difference between a damped or finite-depth step and the undamped GN solution. For the illustrative OCA recursion
+\begin{equation}
+ u_{-1}=0,\qquad (H+D)u_k=b+Du_{k-1},
+ \label{eq:oca}
+\end{equation}
+increasing depth changes the effective spectral response. It does \emph{not} merely refine the original equation $(H+D)u=b$. Record the residual of the actual recursion equation separately from $\norm{Hu_k-b}$.
+
+\textbf{Nonlinear model defect:} the discrepancy
+\begin{equation}
+ e(\delta)=r(\Retr_\theta(\delta))-r-J\delta.
+ \label{eq:defect}
+\end{equation}
+Small linear residual does not imply small nonlinear model defect.
+
+\subsection*{Correctness checks and baseline provenance}
+Fix the same physical gauge in every solver, including scale where appropriate. Separate genuine unobservable modes from near-degeneracy. With nonnegative GN weights, $H\succeq0$; if the full damped system is positive definite, its exact Schur complement is positive definite. Investigate numerical or assembly failures before claiming negative objective curvature. Square-root BA is a useful numerical reference~\cite{sqrtba}.
+
+Previously reported baseline flags were \code{-{}-algo oca\_round2 -{}-relpt -{}-marquardt\_pt -{}-tau\_pt 3e-3 -{}-alpha\_grid}. Verify the current repository rather than assuming these remain the best configuration. The originating OCA paper concerns image-sequence alignment for cryo-electron tomography; the present perspective-BA implementation is an adaptation~\cite{oca}.
+
+\pagehead{T1. Control projection nonlinearity directly}{FIRST EXPERIMENT\quad /\quad GEOMETRY-AWARE TRUST REGION}
+\textbf{Hypothesis.} Fractional depth change predicts an important class of bad BA steps more directly than a global damping value or parameter-space step norm. A geometry-aware step regularizer may preserve useful lateral motion while restricting dangerous depth motion.
+
+\subsection*{Mathematical starting point}
+For normalized pinhole projection $\pi(q)=(x/z,y/z)^{\mathsf T}$ and $q=(x,y,z)$, let $\gamma=\Delta z/z$. If $z\ne0$ and $z+\Delta z\ne0$, direct algebra gives
+\begin{align}
+ \pi(q+\Delta q)-\pi(q)&=\frac{J_\pi(q)\Delta q}{1+\gamma},\\
+ e_\pi&=-\frac{\gamma}{1+\gamma}J_\pi(q)\Delta q.
+\end{align}
+Thus, for $|\gamma|\le\eta<1$,
+\begin{equation}
+ \norm{e_\pi}\le\frac{\eta}{1-\eta}\norm{J_\pi(q)\Delta q}.
+\end{equation}
+These identities are elementary derivations, not a novelty claim. They also hold with a consistent minus sign in the projection convention.
+
+\subsection*{Minimal agent experiment}
+\begin{enumerate}
+\item Instrument each existing candidate. Record signed fractional depth changes, upper quantiles of their magnitudes, proximity to a camera plane, and the actual model defect in Equation~\eqref{eq:defect}. Compare their predictive power against damping, step norm, and linear residual.
+\item Separate perspective error from the error in linearizing camera-space coordinates. Use exact $\Delta q=q(\Retr_\theta(\delta))-q(\theta)$ to verify the identity; use the first-order $\Delta q$ only for a prospective step controller.
+\item If predictive signal exists, add a temporary quadratic step penalty
+\begin{equation}
+ \tfrac{\mu}{2}\sum_{(i,p)} w^{d}_{ip}
+ \left(\frac{a_{ip}^{\mathsf T}\delta}{z_{ip}}\right)^2,
+ \qquad a_{ip}=\nabla_\delta z_{ip}(\Retr_\theta(\delta))\big|_0.
+\end{equation}
+Each term touches one camera and one point, preserving BA sparsity but adding cross-block contributions. Freeze its weights for each factorization.
+\item Compare against structured damping, scalar damping, shorter steps, and an inverse-depth parameterization using the same reprojection objective. Add radial distortion only after the pinhole result is understood.
+\end{enumerate}
+
+\textbf{Safeguards.} This is not a complete bound for joint rotation--point updates or distorted projection. Reject invalid trial geometry using exact projection. Handle already near-zero depths explicitly instead of hiding them behind an arbitrary denominator floor.
+
+\textbf{Prior art and positioning.} Parallax-based BA is an essential geometric-parameterization comparison~\cite{parallax}. Its changed objective must not be presented as an identical-objective solver baseline without qualification.
+\novelty{A validated BA-specific model-error indicator and selective step controller, rather than another global damping schedule.}
+\stoprule{Fractional depth change adds little predictive information, or improvements disappear against a matched-cost global step restriction.}
+
+\pagehead{T2. Spend cached solves on curved updates}{FIRST PROTOTYPE\quad /\quad MODEL ERROR VERSUS SPECTRAL BIAS}
+\textbf{Hypothesis.} Once the damped solve is accurate, some rejected steps need a better nonlinear path, not more OCA depth. A controller can allocate a cached solve to the failure mechanism actually present.
+
+\subsection*{Minimal curved-step construction}
+At a fixed linearization and fixed damping $D$, solve
+\begin{equation}
+ Av=b,\qquad
+ r_{vv}=\left.\frac{d^2}{dt^2}r(\Retr_\theta(tv))\right|_{t=0},\qquad
+ Aa=-J^{\mathsf T}r_{vv}.
+\end{equation}
+Evaluate the trial curve
+\begin{equation}
+ \theta_{\mathrm{trial}}(t)=\Retr_\theta\left(tv+\tfrac12t^2a\right).
+\end{equation}
+This is a geodesic-acceleration-style correction in the chosen local chart. With the matrix unchanged, the point-block and Schur factors can be reused with a new right-hand side. A change of damping, weights, Jacobian, or state invalidates that numerical-factorization reuse.
+
+\subsection*{Minimal agent experiment}
+\begin{enumerate}
+\item Validate directional derivatives on small problems. An initial finite-difference check is
+\begin{equation}
+ r_{vv}\approx\frac{r(\Retr_\theta(hv))-2r(\theta)+r(\Retr_\theta(-hv))}{h^2}.
+\end{equation}
+Sweep $h$ and compare with automatic differentiation or analytic derivatives. Do not use a fixed untested $h$ across arbitrary state scales.
+\item At saved iterates, compare equal-time budgets allocated to more OCA depth, one curved correction, a new damping candidate, and a fresh linearization. Include derivative and trial-cost evaluation time.
+\item Evaluate a small safeguarded set of curve parameters $t$. Monitor the scaled correction ratio $\norm{a}_M/(\norm{v}_M+\epsilon)$, with a fixed state-unit metric $M$, as well as true objective decrease and cheirality.
+\item Build a deterministic decision rule before a learned one. Keep numerical solve residual, GN/filter residual, and nonlinear model defect as separate features. Use ordinary LM plus geodesic acceleration as a direct baseline.
+\end{enumerate}
+
+\textbf{Prior art and positioning.} Geodesic acceleration is established~\cite{geodesic}. The July 2026 RNC-LM preprint already constructs higher-order curves through repeated solves with the same LM matrix~\cite{rnclm}. Higher-order corrections and factorization reuse alone are not a new contribution. For robust losses, start with fixed weights and evaluate acceptance on the true robust objective; do not silently differentiate a changing weight rule as ordinary least squares.
+
+\novelty{A BA-specific diagnosis and compute-allocation rule distinguishing numerical error, OCA filter bias, and nonlinear path error, with reproducible time-to-target gains.}
+\stoprule{The hybrid does not improve on ordinary LM with the same curved correction, or derivative overhead outweighs reduced factorization/relinearization work.}
+
+\pagehead{T3. Relax landmarks before ranking camera steps}{FIRST PROTOTYPE\quad /\quad NONLINEAR ELIMINATION OF FAST VARIABLES}
+\textbf{Hypothesis.} Some camera proposals appear poor because their linear point updates are inadequate. Cheap nonlinear point relaxation before candidate ranking may expose useful camera motion that the current search rejects.
+
+\subsection*{Mathematical starting point}
+With cameras fixed, point subproblems are independent in ordinary BA:
+\begin{equation}
+ F(c,X)=\sum_p F_p(c,X_p),\qquad
+ \phi(c)=\sum_p\min_{X_p} F_p(c,X_p).
+\end{equation}
+For a smooth locally minimizing branch $X^*(c)$ with invertible positive-definite point Hessian, implicit differentiation gives
+\begin{equation}
+ \nabla^2\phi=F_{cc}-F_{cX}F_{XX}^{-1}F_{Xc},
+\end{equation}
+evaluated along that stationary branch. This is a \emph{nonlinear} reduced objective. It is not identical to one GN Schur elimination at an arbitrary current point state. Multiple local point minima or singular point Hessians invalidate a naive smooth-branch interpretation.
+
+\subsection*{Minimal agent experiment}
+For each frozen outer state, generate exactly the same camera candidate set and compare four variants:
+\begin{enumerate}
+\item Standard linear point back-substitution and ordinary candidate ranking.
+\item Point polishing only after a camera candidate is accepted.
+\item One to three safeguarded point steps for every candidate \emph{before} ranking, with an equal additional-work budget.
+\item Selective pre-ranking polishing using track model defect, poor depth conditioning, or large camera-induced point motion as the priority signal.
+\end{enumerate}
+Keep an immutable parent state. Each candidate owns its own point state; never let evaluations contaminate another candidate. Accept the combined camera--point state and evaluate its complete unchanged objective, not just the subset that was polished.
+
+\textbf{Measurements.} Record the fraction of changed candidate winners, reduction attributable to point relaxation, point stationarity, candidate-rank prediction quality, added point-solver cost, time-to-target, and valid geometric reconstruction. On tiny instances, use a tightly solved nonlinear point reference to measure approximation error.
+
+\textbf{Prior art and positioning.} Ceres inner iterations already implement a nonlinear simplified-variable-projection idea~\cite{ceres}. PoVar studies scalable variable projection in an initialization-free, object-space/projective formulation~\cite{povar}; it is relevant prior art, but not automatically an identical-objective baseline. A few unconverged point steps must be described as \emph{inexact nonlinear elimination}, not exact variable projection.
+
+\novelty{Candidate-aware, adaptively budgeted nonlinear landmark elimination, supported by evidence that changing candidate ranking---rather than just final polishing---causes the benefit.}
+\stoprule{Pre-ranking relaxation rarely changes the winner, or after-acceptance polishing achieves the same benefit at lower cost. In that case, retain it only as an engineering optimization.}
+
+\pagehead{T4. Optimize collective geometric modes}{MAIN AMBITIOUS BRANCH\quad /\quad NONLINEAR COARSE CORRECTIONS}
+\textbf{Hypothesis.} Weakly coupled reconstruction regions can require coordinated transformations that ordinary local BA resolves inefficiently. A small nonlinear coarse problem can target these modes directly.
+
+\subsection*{A concrete collective transformation}
+Represent camera $i$ by center $C_i$ and world-to-camera rotation $R_i$. Assign each camera and landmark to one cluster. For cluster transform $(s,Q,t)\in\Sim(3)$, with $s>0$,
+\begin{equation}
+ X'_p=sQX_p+t,\qquad C'_i=sQC_i+t,\qquad R'_i=R_iQ^{\mathsf T}.
+\end{equation}
+For a camera and point in the same cluster,
+\begin{equation}
+ R'_i(X'_p-C'_i)=sR_i(X_p-C_i).
+\end{equation}
+Hence its central pinhole projection is unchanged. Cross-cluster observations drive relative alignment. This is a direct invariance calculation, not an assertion that a clustered method is new. Additional metric sensors or priors may break the similarity freedom.
+
+\subsection*{Minimal agent experiment}
+\begin{enumerate}
+\item Generate three internally well-conditioned camera--point clusters with a controllable number and geometry of bridge tracks. Apply different similarity perturbations to the clusters.
+\item First use the known generating clusters. Solve a coarse problem with one similarity per cluster on \emph{all original observations}, fixing the global gauge. Then return to ordinary BA.
+\item Compare ordinary BA, a linear coarse correction in the same collective basis, and the nonlinear coarse correction. Match the overall work budget.
+\item Only after the controlled result succeeds, investigate cluster selection from current weighted geometry: coupling strength, weak generalized modes, and parallax, rather than raw shared-track counts alone.
+\end{enumerate}
+
+\textbf{Implementation constraints.} Each shared landmark is still one variable with one cluster assignment. Never duplicate it into independent copies or discard inconvenient cross-cluster observations. A cluster transform simultaneously updates its cameras and points. Keep intrinsics fixed in the first prototype and restrict internal scale changes when metric constraints make them physically invalid.
+
+\textbf{Measurements.} Track cross-cluster reprojection error, relative similarity recovery, coarse-solve overhead, setup amortization, fine-iteration reduction, and end-to-end time. Compare known clusters with automatically recovered clusters to separate optimizer value from partitioning quality.
+
+\textbf{Prior art and positioning.} Multigrid for BA already uses global modes to accelerate linear systems~\cite{multigrid}. Search nonlinear domain decomposition, submap BA, hierarchical BA, and nonlinear multigrid before claiming novelty. The proposed distinction is a geometry-adaptive \emph{nonlinear} coarse space evaluated on the original objective.
+
+\novelty{A principled coarse-space construction and correction schedule tied to weak geometric modes, with an explanatory synthetic benchmark and transfer to real scenes.}
+\stoprule{Only hand-picked partitions work, coarse setup consumes the gain, or the apparent failure is true unobservability. No solver can recover information absent from the measurements.}
+
+\pagehead{T5. Make robust continuation observability-aware}{ROBUSTNESS BRANCH\quad /\quad ANNEALING WITHOUT FALSE CONNECTIVITY}
+\textbf{Hypothesis.} Reducing a robust-loss scale can prematurely downweight correct bridge tracks before misaligned regions have moved into place. Monitoring geometric information may improve the continuation schedule.
+
+\subsection*{Proposed mechanism}
+Let the continuation family be
+\begin{equation}
+ F_\sigma(\theta)=\tfrac12\sum_o\rho_\sigma\bigl(\norm{r_o(\theta)}^2\bigr),
+ \qquad H_\sigma=J^{\mathsf T}W_\sigma J.
+\end{equation}
+Specify the final target loss and scale in advance. Before tightening $\sigma$, estimate whether the resulting weights strongly weaken selected \emph{non-gauge} relative modes.
+
+Use a fixed state-unit normalization and compare, for example, generalized Rayleigh quotients
+\begin{equation}
+ \mathcal R_\sigma(v)=\frac{v^{\mathsf T}H_\sigma v}{v^{\mathsf T}Mv},\qquad M\succ0,
+\end{equation}
+where gauge directions are removed consistently. Raw eigenvalues across different coordinate units, scale normalizations, or damping levels are not directly comparable. Do not include artificial damping when interpreting measurement observability.
+
+\subsection*{Minimal agent experiment}
+\begin{enumerate}
+\item Construct misaligned clusters with a few \emph{correct} bridge tracks that initially have large residuals. Compare fixed robust loss and an ordinary continuation schedule.
+\item Add a schedule that delays tightening when a small monitored geometric subspace loses substantial information. Permit geometry improvement or a targeted coarse step before reducing the scale.
+\item Repeat with corrupted bridge tracks, mixtures of correct and false bridges, and genuinely disconnected geometry. These counterexamples are mandatory.
+\item Compare all methods at the same final robust objective and report success, geometric error, false-inlier retention, continuation overhead, and time-to-target.
+\end{enumerate}
+
+\textbf{What not to do.} Do not preserve every bridge because it keeps the graph connected. A bad bridge can support a coherent but false reconstruction. Graph connectivity is not a substitute for geometric observability, and a weak eigenvalue is not by itself evidence that a correspondence is correct.
+
+\textbf{Prior art and positioning.} Graduated optimization and adaptive robust kernel/residual scaling are already established for large-scale robust estimation, including BA~\cite{graduated}. The research question is whether geometric-information loss is a useful \emph{additional scheduling signal}, not whether annealing works.
+
+\novelty{A continuation controller that avoids premature loss of useful inter-region constraints without protecting incorrect ones, plus a clear failure taxonomy.}
+\stoprule{The method succeeds only by retaining false constraints, never reaches the prescribed final loss, or expensive spectral monitoring contributes no advantage over a simple residual-based schedule.}
+
+\pagehead{T6. Temporarily smooth uncertain depth}{EXPLORATORY BRANCH\quad /\quad DEPTH TUBES AND CONTINUATION}
+\textbf{Hypothesis.} For weak-parallax tracks, early commitment to a single depth may create an unfavorable optimization path. A temporary, bounded smoothing of the objective along uncertain directions may enlarge the convergence basin.
+
+\subsection*{A minimal surrogate}
+Use a frozen local uncertainty direction $\ell_p$ and a small symmetric quadrature rule:
+\begin{equation}
+ \widetilde F_\sigma(c,X)=
+ \sum_p\sum_{j=1}^{m}\omega_j F_p(c,X_p+\sigma\alpha_j\ell_p),
+ \quad \omega_j\ge0,\quad \sum_j\omega_j=1.
+\end{equation}
+For a first test, use three bounded samples with symmetric offsets and fixed weights. An eigenvector associated with the smallest eigenvalue of a suitably scaled point information block is one candidate direction; treat it as a heuristic when local linearization is poor.
+
+The smoothing radius must eventually reach $\sigma=0$, so the final stage optimizes the original point-reprojection objective. Freeze directions and weights while differentiating a stage, or explicitly include their derivatives. Do not switch between these interpretations silently.
+
+\subsection*{Minimal agent experiment}
+\begin{enumerate}
+\item Begin with synthetic low-parallax tracks and controlled depth initialization errors. Exclude invalid starting projections and define a common valid-domain policy.
+\item Compare no smoothing, isotropic bounded smoothing, and depth-aligned smoothing at matched work budgets. Keep the final objective and terminal refinement identical.
+\item Decrease $\sigma$ according to a simple predeclared schedule, then test a model-defect-based schedule only if the first experiment provides evidence of value.
+\item Report valid convergence basin, final geometric error, final original objective, extra projection/Jacobian work, and sensitivity to the initial radius and direction quality.
+\end{enumerate}
+
+\textbf{Mathematical hazard.} Unbounded Euclidean Gaussian perturbations can cross the camera plane, where perspective projection is singular. Use bounded samples and verify valid signed depth in \emph{every} observing camera. Avoid state-dependent silent sample deletion: it changes the objective and can make it nonsmooth. Reject an invalid trial, reduce a stage radius, or derive an explicit smooth valid-domain parameterization.
+
+\textbf{Prior art and positioning.} ProBA represents landmarks probabilistically using 3D Gaussians and an uncertainty-aware objective~\cite{proba}. Therefore, ``replace points with Gaussians'' is not the contribution. This branch instead tests a temporary optimization surrogate with a controlled return to the original objective.
+
+\novelty{A geometry-aligned, validity-preserving smoothing continuation that improves the initialization basin without benefiting from covariance inflation or a permanently changed loss.}
+\stoprule{The advantage vanishes after identical original-objective refinement, depends on invalid projections, or costs more than equivalent multiple starts of the baseline.}
+
+\pagehead{T7. Interpret OCA as a spectral filter}{OCA-SPECIFIC BRANCH\quad /\quad SEARCH REDUNDANCY AND FILTER DESIGN}
+\textbf{Hypothesis.} The damping/depth grid contains spectrally redundant candidates. Understanding the actual filter can reduce search cost or reveal useful response shapes that the present menu misses.
+
+\subsection*{Exact response for the simplified recursion}
+For Equation~\eqref{eq:oca} with $D=\lambda I$, let $h>0$ be an eigenvalue of $H$. The response multiplying the corresponding component of $b$ after depth $k$ is
+\begin{equation}
+ f_{k,\lambda}(h)=\frac{1-\left(\frac{\lambda}{h+\lambda}\right)^{k+1}}{h}.
+ \label{eq:filter}
+\end{equation}
+Its continuous extension at $h=0$ is $(k+1)/\lambda$. For $(k+1)h/\lambda\ll1$,
+\begin{equation}
+ f_{k,\lambda}(h)\approx\frac{k+1}{\lambda}.
+\end{equation}
+The depth-dependent condition matters: merely $h\ll\lambda$ is not sufficient for arbitrarily large $k$. Similar ratios $\lambda/(k+1)$ imply similar response only in this low-frequency regime, not identical full steps or nonlinear outcomes.
+
+For a fixed SPD metric $M$ and $D=\lambda M$, set
+\begin{equation}
+ \widehat H=M^{-1/2}HM^{-1/2},\quad
+ \widehat b=M^{-1/2}b,\quad \widehat u=M^{1/2}u.
+\end{equation}
+The same scalar-filter analysis applies in the whitened coordinates. Separately varying camera and point damping is generally a different family.
+
+\subsection*{Minimal agent experiment}
+\begin{enumerate}
+\item Unit-test the closed form against the recursion on small PSD matrices and small gauge-fixed BA systems. Verify indexing: here $k=0$ means one damped solve.
+\item Compare filters and resulting steps across the current candidate grid, weighting spectral differences by the actual right-hand-side components. Similar unweighted curves can still generate different relevant motion.
+\item Test whether filter or step similarity predicts similar true-cost outcomes. Prune candidate groups using training scenes, then validate unchanged selection quality on held-out scenes.
+\item Investigate new filter shapes only after demonstrating that a reduced existing menu gives a meaningful speedup without losing convergence quality.
+\end{enumerate}
+
+\textbf{Multi-shift warning.} With point damping,
+\begin{equation}
+ S(\lambda_c,\lambda_p)=H_{cc}+\lambda_cM_c-
+ H_{cX}(H_{XX}+\lambda_pM_X)^{-1}H_{Xc}.
+\end{equation}
+Varying $\lambda_p$ does not generally create scalar shifts of one fixed reduced matrix. Check the actual implementation and shift/preconditioner assumptions before reusing a multi-shift method.
+
+\textbf{Prior art.} OCA and inverse-expansion/power-series BA are relevant starting points~\cite{oca,powerba}. A geometric-series derivation alone is not novel.
+\novelty{A spectrum-informed, right-hand-side-aware OCA candidate strategy tied to nonlinear acceptance and real wall-clock savings.}
+\stoprule{Pruning only reproduces a hand-tuned smaller grid, fails on held-out geometry, or depends on expensive full eigendecompositions at production scale.}
+
+\pagehead{T8. Learn which computation to perform next}{DATA-DRIVEN BRANCH\quad /\quad COMPUTATION ALLOCATION, NOT JUST DAMPING}
+\textbf{Hypothesis.} Solver state contains enough information to choose the next useful operation under a wall-clock budget. This is a richer decision problem than predicting one LM damping parameter.
+
+\subsection*{Define the action space operationally}
+Candidate actions include another OCA recursion step, a new damping candidate, point relaxation, a curvature correction, a true-cost evaluation, a coarse correction, or a new linearization. Each action must specify the caches it consumes, invalidates, and produces.
+
+Features may include nonlinear model defect, numerical and GN/filter residuals, fractional-depth-risk summaries, track-conditioning summaries, recent acceptance ratios, and measured operation costs. Use only information available \emph{before} selecting the action. Features requiring expensive computation must have that cost charged.
+
+\subsection*{Minimal agent experiment}
+\begin{enumerate}
+\item Save independent outer states and their cache metadata. Replay alternative actions from the same parent to build measured action-outcome traces. Keep state transitions and timing attributable to the correct action.
+\item Establish a local oracle upper bound, then compare a fixed schedule, a small deterministic rule, and a lightweight supervised policy. Split data by scene/trajectory family, not random iterates from the same solve.
+\item Evaluate complete closed-loop solver runs on held-out scenes. Offline action accuracy alone is not evidence of better optimization.
+\item Attempt sequential RL only if short-horizon decisions demonstrably damage longer-horizon progress and the simple policy leaves meaningful headroom.
+\end{enumerate}
+
+\textbf{Objective and accounting.} Optimize time to a valid target solution, not iteration count. One possible diagnostic reward is decrease in log optimality gap per measured elapsed time, but the reference target must be declared and training-only information must not enter deployment features. Failure rate, inference time, feature cost, and memory overhead belong in the result.
+
+\textbf{Safety of the optimization loop.} A reliable fallback action must remain available. Every proposed state still passes the same objective, finite-value, gauge, and cheirality checks. Any exploration that accepts objective increases must be declared as a separate controlled nonmonotone algorithm, not hidden inside the acceptance test.
+
+\textbf{Prior art and positioning.} \emph{A Game of Bundle Adjustment} already learns damping through reinforcement learning~\cite{gameba}. The candidate contribution here is adaptive allocation among qualitatively different computations, especially model correction versus spectral filtering or relinearization.
+
+\novelty{A hardware-aware computation policy with held-out-scene transfer and a demonstrated advantage over a strong deterministic scheduler using the same diagnostics.}
+\stoprule{Performance disappears after inference/feature costs are counted, depends on scene leakage, or a simple rule matches the learned policy. Do not train a large agent merely because RL is available.}
+
+\pagehead{Common benchmark and decision rules}{EXPERIMENT DESIGN\quad /\quad SEPARATE MECHANISM FROM ACCIDENT}
+\subsection*{A small controlled generator}
+Start with three camera--point regions. A suggested screening instance has roughly 10 cameras and 300--500 local points per region, plus separately controlled bridge tracks. These are proposed starting settings, not prescribed optimal values. Increase scale only after identifying the mechanism.
+
+Sweep bridge count and placement, parallax, depth spread, observation noise, initial camera rotations/translations, relative cluster scale, point-depth errors, and bridge corruption. Use a low-dimensional sweep for each hypothesis rather than an unmanageable full factorial grid. Include one genuinely unobservable case as a diagnostic, not as a recoverable benchmark.
+
+\subsection*{Primary score and reconstruction validity}
+Define a common original-objective target using a declared reference value $F_{\rm ref}$ and a fixed $\tau\in(0,1)$:
+\begin{equation}
+ F_{\rm target}=F_{\rm ref}+\tau\bigl(F_0-F_{\rm ref}\bigr),\qquad F_0>F_{\rm ref}.
+\end{equation}
+Freeze targets for the comparison. $F_{\rm ref}$ is a reference, not a proof of the global minimum. Publish time-to-target, cost-versus-time, and success rate at the common budget. Treat failures as censored/failed runs rather than dropping them from timing summaries.
+
+For synthetic scenes, report camera rotation error, camera-center and landmark error after \emph{one global} gauge alignment, relative cluster scale error, and invalid-depth counts. Never align clusters independently when evaluating the collective-mode experiment: that would erase the error being tested. Low alternative-objective cost alone does not certify a valid metric reconstruction~\cite{initfree}.
+
+\subsection*{Required comparison contract}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{34mm}Y@{}}
+\toprule
+\textbf{Control} & \textbf{Required treatment}\\
+\midrule
+Same problem & Match observations, weights, camera model, free intrinsics, state units, gauge, and final loss.\\
+Same work budget & Count setup, derivatives, all candidate evaluations, local/coarse solves, synchronization, and inference.\\
+Reproducibility & Save commits, data hashes, seeds, compiler/library versions, hardware, precision, and full commands.\\
+Mechanism ablation & Remove only the claimed ingredient; include a simpler matched-cost alternative.\\
+Generalization & Tune on development scenes and test on unseen scene families and seeds.\\
+\bottomrule
+\end{tabularx}
+
+\subsection*{Progression and stop policy}
+First validate derivatives and algebra on tiny problems. Next run mechanism-isolating synthetic tests with paired seeds. Then screen on the user's existing ladybug cases and other available real BA scene families. A starting target of 10 paired seeds per synthetic setting is reasonable; expand where variability makes the result inconclusive.
+
+Before expensive evaluation, write a practical improvement threshold and a failure-rate tolerance. Retain a method only when its gain exceeds measurement noise, survives a meaningful ablation, and does not conceal additional geometric failures. A well-supported negative result is an acceptable outcome.
+
+\pagehead{Shared instrumentation and deliverables}{IMPLEMENTATION CONTRACT\quad /\quad MAKE RESULTS AUDITABLE}
+\subsection*{One immutable parent state per candidate family}
+A trial candidate must never mutate the shared accepted state. A candidate record identifies its parent state, linearization, weight snapshot, damping, step construction, and local point/coarse state. Commit the entire winning state atomically. Rejected candidates leave no persistent numerical changes.
+
+\textbf{Cache validity.} Symbolic sparsity analysis may outlive a numeric factorization. Numeric factors require the same matrix values. New right-hand sides can reuse fixed factors; changed damping, Jacobians, or robust weights generally cannot. Record these distinctions explicitly.
+
+\subsection*{Minimum trace fields}
+\renewcommand{\arraystretch}{1.13}
+\begin{tabularx}{\linewidth}{@{}p{36mm}Y@{}}
+\toprule
+\textbf{Group} & \textbf{Fields to log}\\
+\midrule
+Identity & Run, scene, seed, parent state, outer iteration, candidate ID, code commit, configuration hash.\\
+Candidate & Method, damping values, recursion depth, step scales, curve order, point-polish budget, coarse/smoothing stage.\\
+Objective & Parent and trial target-objective cost, surrogate cost when used, predicted decrease convention, actual decrease, acceptance reason.\\
+Diagnostics & Damped/recursion numerical residual, GN/filter residual, model defect, scaled step size, depth-risk quantiles, invalid-depth count.\\
+Work & Assembly, factorization, triangular solves, Jacobian/residual evaluation, point/coarse work, learning overhead, end-to-end elapsed time.\\
+Validity & Gauge handling, finite checks, projection-domain violations, geometric error when ground truth exists.\\
+\bottomrule
+\end{tabularx}
+
+\subsection*{Keep diagnostic definitions explicit}
+For ordinary least squares, a useful baseline predicted decrease is
+\begin{equation}
+ \operatorname{pred}(\delta)=-g^{\mathsf T}\delta-\tfrac12\delta^{\mathsf T}H\delta,
+ \qquad g=J^{\mathsf T}r.
+\end{equation}
+Only form an acceptance ratio when the chosen prediction is positive. A curved-path method may use a different path-consistent model; log that definition rather than mixing conventions. Robust-loss predictions must match the stated robust surrogate.
+
+An aggregate normalized model-defect diagnostic is
+\begin{equation}
+ d(\delta)=\frac{\norm{e(\delta)}}{\norm{J\delta}+\epsilon}.
+\end{equation}
+Choose and document the scale of $\epsilon$. Preserve the unnormalized numerator and denominator because a ratio can be misleading near stationarity. For prediction tasks, do not use a diagnostic derived from an unevaluated future trial without charging its evaluation cost.
+
+\subsection*{What each agent must return}
+Return a mechanism report, prior-art comparison, switchable patch, unit tests, reproduction commands/configurations, raw logs, and comparison tables. Include timing breakdowns, failure cases, and the next decisive experiment. Separate measurements from interpretation.
+
+
+\pagehead{Master instruction to pass to an agent}{READY-TO-USE HANDOFF\quad /\quad DEFAULT START: T1}
+\begin{briefbox}{Agent assignment}
+You are investigating a potentially novel bundle-adjustment method using the attached research brief and the existing OCA/multi-damping implementation. Your goal is not to accumulate optimizer tricks. Identify one measurable failure mechanism, build the smallest intervention that targets it, and determine whether the intervention improves valid reconstruction under a fair wall-clock budget.
+
+Begin by inspecting the repository and reproducing the current best baseline. Preserve that baseline and all prior experiments. Do not assume historical flags or reported results are current. Read the mathematical contract, shared benchmark, and instrumentation requirements in this brief before modifying the solver.
+
+Unless assigned another track, begin with T1 instrumentation only. Distinguish numerical solve error, OCA regularization/filter bias, and nonlinear residual model defect. Do not describe deeper OCA recursion as merely solving the original damped equation more accurately.
+
+Before a substantial implementation, inspect the closest primary papers and their algorithms/code where available. Write the exact difference between the proposed extension and existing work. Treat titles and abstracts as leads, not a substitute for checking method details. Do not claim novelty because familiar ingredients have been renamed.
+
+Design a small experiment that could disprove the hypothesis. Validate algebra and derivatives on tiny synthetic cases, then test the failure mechanism with paired seeds. Only scale up after the diagnostic predicts a real weakness and the intervention improves it against a simpler matched-cost alternative.
+
+Keep the final reconstruction objective, gauge, data, camera model, and free variables comparable. Charge every extra solve, derivative, cost evaluation, local optimization, setup operation, and policy overhead. Evaluate geometric validity as well as cost; never report a surrogate-objective win as a reconstruction win.
+
+Implement one hypothesis behind an explicit feature switch. Reuse numeric factors only when the matrix is unchanged. Ensure independent candidate states, valid manifold updates, exact trial projection checks, and a reliable fallback action. Keep existing acceleration machinery unchanged except where necessary to test the selected hypothesis.
+
+Return the patch, tests, complete commands and configuration, raw logs, matched-budget results, failure cases, nearest-prior-art comparison, and a clear verdict: supported, unsupported, or inconclusive. State the next decisive experiment. A reproducible negative result is preferable to an unexplained small gain on one dataset.
+\end{briefbox}
+
+\subsection*{How to choose the next branch}
+If model defect predicts failed steps, try T2 or T3. If coordinated region motion is the bottleneck, try T4. If robust downweighting destroys useful constraints, investigate T5. If poor depth initialization dominates, T6 is a higher-risk option. If the damping/depth grid wastes evaluations, prioritize T7. Only consider T8 after a strong deterministic scheduler and measured action traces exist.
+
+\textbf{Boundary of this brief.} This is an experimental agenda, not a proof of convergence, a comprehensive novelty search, or a claim that any proposed method outperforms the current solver. Its purpose is to make promising hypotheses testable and prevent misleading comparisons.
+
+\pagehead{Primary references}{READING LIST\quad /\quad FOUNDATIONS AND CLOSEST PRIOR ART}
+\small
+The entries below were checked against primary paper pages or official documentation during preparation. They are selected starting points, not an exhaustive literature review. Version dates matter for the recent preprints. The experimental extensions in T1--T8 are proposals in this brief unless explicitly attributed.
+
+\begin{thebibliography}{99}
+\setlength{\itemsep}{9pt}
+\bibitem{oca}
+H. Xu, H. Wang, and H. Zhang.
+\emph{A novel algorithm for optimizing bundle adjustment in image sequence alignment}.
+2024; revised 1 April 2025. arXiv:2411.06343.
+\url{https://arxiv.org/abs/2411.06343}\par
+\textit{Use:} Original OCA context; check differences from perspective BA and the local implementation.
+
+\bibitem{parallax}
+L. Liu et al.
+\emph{Parallax Bundle Adjustment on Manifold with Convexified Initialization}.
+2018. arXiv:1807.03556.
+\url{https://arxiv.org/abs/1807.03556}\par
+\textit{Use:} Geometry-aware parameterization and objective comparisons for T1.
+
+\bibitem{geodesic}
+M. K. Transtrum and J. P. Sethna.
+\emph{Geodesic acceleration and the small-curvature approximation for nonlinear least squares}.
+2012. arXiv:1207.4999.
+\url{https://arxiv.org/abs/1207.4999}\par
+\textit{Use:} Established curved-step correction; a required baseline for T2.
+
+\bibitem{rnclm}
+J. Liu and D. H. Zhang.
+\emph{Higher-Order Geometric Updates for Levenberg--Marquardt Method via Riemann Normal Coordinates}.
+Preprint, 8 July 2026. arXiv:2607.07623.
+\url{https://arxiv.org/abs/2607.07623}\par
+\textit{Use:} Higher-order curved updates and reuse of the current LM matrix. Do not claim these ingredients alone as new.
+
+\bibitem{ceres}
+Ceres Solver authors.
+\emph{Solving Non-linear Least Squares: Inner Iterations}.
+Official documentation source, accessed 11 September 2026.
+\url{https://github.com/ceres-solver/ceres-solver/blob/master/docs/source/nnls_solving.rst}\par
+\textit{Use:} Nonlinear simplified variable projection and inner-iteration baseline for T3. Record the actual software version used in experiments.
+
+\bibitem{povar}
+S. Weber, J. H. Hong, and D. Cremers.
+\emph{Power Variable Projection for Initialization-Free Large-Scale Bundle Adjustment}.
+2024. arXiv:2405.05079.
+\url{https://arxiv.org/abs/2405.05079}\par
+\textit{Use:} Scalable variable projection with a different object-space/projective formulation.
+
+\clearpage
+\kicker{READING LIST\quad /\quad CONTINUED}
+\section*{Primary references, continued}
+
+\bibitem{multigrid}
+T. Konolige and J. Brown.
+\emph{Multigrid for Bundle Adjustment}.
+2020. arXiv:2007.01941.
+\url{https://arxiv.org/abs/2007.01941}\par
+\textit{Use:} Global modes and linear multigrid prior art for T4.
+
+\bibitem{graduated}
+H. Le and C. Zach.
+\emph{A Graduated Filter Method for Large Scale Robust Estimation}.
+2020. arXiv:2003.09080.
+\url{https://arxiv.org/abs/2003.09080}\par
+\textit{Use:} Adaptive robust continuation and filtering; baseline context for T5.
+
+\bibitem{proba}
+J. Chui, H. Andrade-Loarca, and D. Cremers.
+\emph{ProBA: Probabilistic Bundle Adjustment with the Bhattacharyya Coefficient}.
+2025; revised 7 April 2026. arXiv:2505.20858.
+\url{https://arxiv.org/abs/2505.20858}\par
+\textit{Use:} Probabilistic landmark representation; prevents a naive novelty claim for T6.
+
+\bibitem{powerba}
+S. Weber, N. Demmel, T. C. Chan, and D. Cremers.
+\emph{Power Bundle Adjustment for Large-Scale 3D Reconstruction}.
+2022; revised 17 April 2023. arXiv:2204.12834.
+\url{https://arxiv.org/abs/2204.12834}\par
+\textit{Use:} Inverse-expansion and power-series BA prior art for T7.
+
+\bibitem{gameba}
+A. Belder, R. Vivanti, and A. Tal.
+\emph{A Game of Bundle Adjustment---Learning Efficient Convergence}.
+2023. arXiv:2308.13270.
+\url{https://arxiv.org/abs/2308.13270}\par
+\textit{Use:} Reinforcement learning for BA damping; closest control baseline for T8.
+
+\bibitem{sqrtba}
+N. Demmel, C. Sommer, D. Cremers, and V. Usenko.
+\emph{Square Root Bundle Adjustment for Large-Scale Reconstruction}.
+CVPR 2021. arXiv:2103.01843.
+\url{https://arxiv.org/abs/2103.01843}\par
+\textit{Use:} QR/nullspace elimination and numerical-stability comparison.
+
+\bibitem{initfree}
+S. Weber, M. de Mayo, J. H. Hong, C. Olsson, D. Cremers, and R. Clark.
+\emph{Initialization-Free Bundle Adjustment Revisited: A Controlled Experimental Study}.
+Preprint, 18 August 2026. arXiv:2608.18028.
+\url{https://arxiv.org/abs/2608.18028}\par
+\textit{Use:} Distinguishing low object-space objective values from valid Euclidean reconstruction.
+\end{thebibliography}
+\end{document}
