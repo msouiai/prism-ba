@@ -10,6 +10,12 @@ This is a negative result for the tested Eta2-side opening prototype, not a
 refutation of all phase hybrids, Claude's reverse handover, or the rescue ladder.
 No Caspar arm was run, and none of these rows changes the previous Caspar ledger.
 
+**Metadata received after the experiment:**
+[joint disposition and SHIFTDIAG reconciliation](METADATA_RECONCILIATION.md)
+records the delivered definition/traces, the fixed-matrix nature of the
+CG-versus-preconditioner study, and Claude's subsequent consolidation results.
+The original experiment, selection and verdict below are unchanged.
+
 ## What was implemented
 
 The experiment starts from the hash-verified frozen

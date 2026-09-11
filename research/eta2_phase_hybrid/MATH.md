@@ -1,5 +1,10 @@
 # What the prototype solves
 
+The later [metadata reconciliation](METADATA_RECONCILIATION.md) gives Claude's
+exact diagnostic definition. It uses pair-specific normalization, so even our
+raw diameter differs before applying radius clipping. The experimental
+threshold and measurements below have not been retroactively changed.
+
 Write the frozen Gauss–Newton blocks as U, W, V and gradients as g_c, g_p.
 Let V_tau denote the exact damped, safeguarded point factor used by Eta2,
 including its existing floor rules. Eliminating the point increment gives
