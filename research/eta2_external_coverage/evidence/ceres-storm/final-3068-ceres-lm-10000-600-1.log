@@ -1,0 +1,53 @@
+INITIAL score=90993342.023143455 setup_seconds=1.228763958
+RESULT exit=0 iters=10 final_score=2183295.4613302881 runtime=11.277016801
+TRACE iter=0 cost=90993342.02314283 seconds=1.392149687 accepted=1
+TRACE iter=1 cost=10522625.840152685 seconds=2.291213751 accepted=1
+TRACE iter=2 cost=3726901.1498816647 seconds=3.336529732 accepted=1
+TRACE iter=3 cost=6386859604.2355194 seconds=4.815897703 accepted=0
+TRACE iter=4 cost=4202404.223651994 seconds=6.155238867 accepted=0
+TRACE iter=5 cost=2183295.4613302881 seconds=7.420215845 accepted=1
+TRACE iter=6 cost=521797331.93867457 seconds=8.530713797 accepted=0
+TRACE iter=7 cost=95435184.592471614 seconds=9.491264820 accepted=0
+TRACE iter=8 cost=21403513.668793529 seconds=10.028737783 accepted=0
+TRACE iter=9 cost=7103733.161621063 seconds=10.556193829 accepted=0
+CHECK final_score=2183295.4613303011
+CERES 
+Solver Summary (v 2.2.0-eigen-(3.4.0)-lapack-suitesparse-(7.6.1)-eigensparse)
+
+                                     Original                  Reduced
+Parameter blocks                       313922                   313922
+Parameters                             957106                   957106
+Residual blocks                       1653812                  1653812
+Residuals                             3307624                  3307624
+
+Minimizer                        TRUST_REGION
+Trust region strategy     LEVENBERG_MARQUARDT
+                                        Given                     Used
+Linear solver                 ITERATIVE_SCHUR          ITERATIVE_SCHUR
+Preconditioner                   SCHUR_JACOBI             SCHUR_JACOBI
+Threads                                     8                        8
+Linear solver ordering            310854,3068              310854,3068
+Schur structure                         2,3,8                    2,3,d
+
+Cost:
+Initial                          9.099334e+07
+Final                            2.183295e+06
+Change                           8.881005e+07
+
+Minimizer iterations                       10
+Successful steps                            4
+Unsuccessful steps                          6
+
+Time (in seconds):
+Preprocessor                         1.044948
+
+  Residual only evaluation           0.730291 (10)
+  Jacobian & residual evaluation     0.906898 (4)
+  Linear solver                      7.628237 (10)
+Minimizer                           10.002226
+
+Postprocessor                        0.081784
+Total                               11.128959
+
+Termination:                      CONVERGENCE (Parameter tolerance reached. Relative step_norm: 7.222421e-09 <= 1.000000e-08.)
+

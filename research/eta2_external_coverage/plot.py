@@ -23,7 +23,12 @@ if ven:
         for i, r in enumerate(group):
             with (P / r['source'] / 'curve.csv').open() as f:
                 trace = list(csv.DictReader(line for line in f if not line.startswith('#')))
-            ax.plot([float(t['wall_s']) for t in trace], [float(t['cost']) for t in trace],
+            # CSV starts after initial solver allocations. Anchor hits to the
+            # native TARGET timestamp. For misses, endpoint-native alignment
+            # also includes final tail work, so it conservatively delays them.
+            anchor = r['target_seconds'] if r['hit'] else r['native_seconds']
+            offset = max(0., anchor - float(trace[-1]['wall_s']))
+            ax.plot([float(t['wall_s']) + offset for t in trace], [float(t['cost']) for t in trace],
                     color=colors[arm], alpha=.5, linewidth=1.2,
                     label=f"{arm}: {sum(v['hit'] for v in group)}/{len(group)} hits" if i == 0 else None)
     for i, path in enumerate(sorted((P / 'provenance').glob('venice-52-ceres-lm-10000-600-*.log'))):
@@ -38,7 +43,9 @@ if ven:
            title='Venice52: stopping-policy reachability (objective zoom)')
     ax.grid(alpha=.2)
     ax.legend(fontsize=8)
-    fig.tight_layout()
+    fig.text(.5, .01, 'Eta2 traces aligned to native TARGET time or, for misses, conservatively to endpoint time.\n'
+             'Ceres curves are banked accepted callback states. See TIMING.md.', ha='center', fontsize=7)
+    fig.tight_layout(rect=(0, .055, 1, 1))
     fig.savefig(out / 'venice_reachability.png', dpi=180)
     fig.savefig(out / 'venice_reachability.pdf')
     plt.close(fig)

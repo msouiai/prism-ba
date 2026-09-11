@@ -1,0 +1,26 @@
+{
+  "kind": "ceres",
+  "binary": "/workspace/prism-novelty/ceres-frozen",
+  "binary_sha256": "6543c8e6f9baa69c421eeda61aef5d1115ca0d825931b71905904f1f53d74837",
+  "profiles": [
+    "lm-10000",
+    "dogleg-10000"
+  ],
+  "budgets": [
+    600
+  ],
+  "reps": 3,
+  "scenes": [
+    "final-3068",
+    "final-4585"
+  ],
+  "timeout": 3600,
+  "data_sha256": {
+    "final-3068": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+    "final-4585": "d5e0ea06a364d7a7b5b087ab3c9d53c97dbbcd6c7d3984b62428185e66b9dd54"
+  },
+  "ranking_cost": "CPU fp64 against original double observations",
+  "trace_precision": "fp64",
+  "timing": "solve clock; setup excludes file parse; Caspar32 setup includes initial CPU audit",
+  "gpu": "NVIDIA RTX 2000 Ada Generation, 580.126.09\n"
+}

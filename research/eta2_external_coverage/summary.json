@@ -3,38 +3,39 @@
     "stage": "ceres-storm",
     "scene": "final-3068",
     "arm": "dogleg-10000",
-    "n": 1,
-    "valid": 1,
+    "n": 2,
+    "valid": 2,
     "target_registered": false,
     "hits": null,
     "cost": {
-      "median": 1727521.7665245144,
-      "min": 1727521.7665245144,
+      "median": 1716772.0641656138,
+      "min": 1706022.3618067133,
       "max": 1727521.7665245144
     },
     "native_seconds": {
-      "median": 2003.140477307,
-      "min": 2003.140477307,
+      "median": 1546.4189583635,
+      "min": 1089.69743942,
       "max": 2003.140477307
     },
     "outers": {
-      "median": 87,
-      "min": 87,
+      "median": 66.0,
+      "min": 45,
       "max": 87
     },
     "accepts": {
-      "median": 41,
-      "min": 41,
+      "median": 31.5,
+      "min": 22,
       "max": 41
     },
     "rejects": {
-      "median": 46,
-      "min": 46,
+      "median": 34.5,
+      "min": 23,
       "max": 46
     },
     "target_seconds": null,
     "stops": {
-      "CONVERGENCE (Parameter tolerance reached. Relative step_norm: 6.527087e-09 <= 1.000000e-08.)": 1
+      "CONVERGENCE (Parameter tolerance reached. Relative step_norm: 6.527087e-09 <= 1.000000e-08.)": 1,
+      "CONVERGENCE (Parameter tolerance reached. Relative step_norm: 6.781680e-09 <= 1.000000e-08.)": 1
     }
   },
   {
@@ -79,39 +80,125 @@
     "stage": "venice",
     "scene": "venice-52",
     "arm": "champion",
+    "n": 10,
+    "valid": 10,
+    "target_registered": true,
+    "hits": 0,
+    "cost": {
+      "median": 246309.53965068812,
+      "min": 244954.92468472966,
+      "max": 247590.51007005002
+    },
+    "native_seconds": {
+      "median": 1.546301,
+      "min": 1.24327,
+      "max": 2.721098
+    },
+    "outers": {
+      "median": 128.0,
+      "min": 103,
+      "max": 219
+    },
+    "accepts": {
+      "median": 128.0,
+      "min": 103,
+      "max": 219
+    },
+    "rejects": {
+      "median": 6.0,
+      "min": 1,
+      "max": 13
+    },
+    "matvecs": {
+      "median": 454.5,
+      "min": 301,
+      "max": 853
+    },
+    "target_seconds": null,
+    "stops": {
+      "ftol": 10
+    }
+  },
+  {
+    "stage": "venice",
+    "scene": "venice-52",
+    "arm": "stop_disabled",
+    "n": 10,
+    "valid": 10,
+    "target_registered": true,
+    "hits": 0,
+    "cost": {
+      "median": 244929.68882591696,
+      "min": 244928.34250620875,
+      "max": 246035.2724688477
+    },
+    "native_seconds": {
+      "median": 60.0074745,
+      "min": 60.004912,
+      "max": 60.034663
+    },
+    "outers": {
+      "median": 6619.5,
+      "min": 6326,
+      "max": 6686
+    },
+    "accepts": {
+      "median": 6619.5,
+      "min": 6326,
+      "max": 6686
+    },
+    "rejects": {
+      "median": 8.0,
+      "min": 2,
+      "max": 34
+    },
+    "matvecs": {
+      "median": 13765.5,
+      "min": 13401,
+      "max": 15238
+    },
+    "target_seconds": null,
+    "stops": {
+      "budget": 10
+    }
+  },
+  {
+    "stage": "venice-probes",
+    "scene": "venice-52",
+    "arm": "probe_relaxed_ftol",
     "n": 3,
     "valid": 3,
     "target_registered": true,
     "hits": 0,
     "cost": {
-      "median": 247580.7717267545,
-      "min": 246358.38329988267,
-      "max": 247584.4151385308
+      "median": 246040.00211639813,
+      "min": 246035.06533619083,
+      "max": 246305.57213855677
     },
     "native_seconds": {
-      "median": 1.31155,
-      "min": 1.24327,
-      "max": 1.311628
+      "median": 3.572456,
+      "min": 3.351656,
+      "max": 3.726734
     },
     "outers": {
-      "median": 127,
-      "min": 113,
-      "max": 128
+      "median": 334,
+      "min": 259,
+      "max": 381
     },
     "accepts": {
-      "median": 127,
-      "min": 113,
-      "max": 128
+      "median": 334,
+      "min": 259,
+      "max": 381
     },
     "rejects": {
-      "median": 6,
-      "min": 1,
-      "max": 6
+      "median": 9,
+      "min": 7,
+      "max": 10
     },
     "matvecs": {
-      "median": 343,
-      "min": 301,
-      "max": 349
+      "median": 1057,
+      "min": 968,
+      "max": 1325
     },
     "target_seconds": null,
     "stops": {
@@ -119,46 +206,46 @@
     }
   },
   {
-    "stage": "venice",
+    "stage": "venice-probes",
     "scene": "venice-52",
-    "arm": "stop_disabled",
-    "n": 2,
-    "valid": 2,
+    "arm": "probe_tighter_forcing",
+    "n": 3,
+    "valid": 3,
     "target_registered": true,
     "hits": 0,
     "cost": {
-      "median": 244929.60641922103,
-      "min": 244929.59380560808,
-      "max": 244929.61903283396
+      "median": 257725.3454721883,
+      "min": 257725.34462540416,
+      "max": 258662.59496517506
     },
     "native_seconds": {
-      "median": 60.00884,
-      "min": 60.006506,
-      "max": 60.011174
+      "median": 6.425063,
+      "min": 6.400849,
+      "max": 7.847056
     },
     "outers": {
-      "median": 6609.5,
-      "min": 6589,
-      "max": 6630
+      "median": 600,
+      "min": 600,
+      "max": 600
     },
     "accepts": {
-      "median": 6609.5,
-      "min": 6589,
-      "max": 6630
+      "median": 600,
+      "min": 600,
+      "max": 600
     },
     "rejects": {
-      "median": 7.0,
-      "min": 6,
-      "max": 8
+      "median": 3,
+      "min": 2,
+      "max": 6
     },
     "matvecs": {
-      "median": 13581.0,
-      "min": 13401,
-      "max": 13761
+      "median": 2273,
+      "min": 2269,
+      "max": 3723
     },
     "target_seconds": null,
     "stops": {
-      "budget": 2
+      "outer_cap": 3
     }
   }
 ]

@@ -2,7 +2,7 @@
 
 INCOMPLETE: measurements are still in progress.
 
-Available rows: {'venice': 5, 'storm': 0, 'ceres-storm': 2}. All available rows valid: True.
+Available rows: {'venice': 20, 'storm': 0, 'ceres-storm': 3}. All available rows valid: True.
 
 The original solver and champion remain unchanged. This is a coverage and stopping-policy experiment, not a new champion selection.
 
@@ -12,8 +12,8 @@ The two frozen-binary arms alternate at N=10. Champion keeps its original persis
 
 | Arm | N available | Valid | Hits | Median endpoint | Median native seconds | Median target seconds among hits |
 |---|---:|---:|---:|---:|---:|---:|
-| champion | 3 | 3 | 0 | 247,580.771727 | 1.311550 | — |
-| stop_disabled | 2 | 2 | 0 | 244,929.606419 | 60.008840 | — |
+| champion | 10 | 10 | 0 | 246,309.539651 | 1.546301 | — |
+| stop_disabled | 10 | 10 | 0 | 244,929.688826 | 60.007475 | — |
 
 The banked same-host Ceres LM runs reach this target in 4.9353 seconds median (N=3), at accepted iteration 18. Their 36.7203-second median full solve time is not time-to-target. These banked measurements are not new contemporaneous pairs.
 
@@ -27,8 +27,19 @@ Ceres uses the exact banked binary: LM iterative Schur / Schur-Jacobi and dogleg
 
 | Scene | Arm | N available | Valid | Target hits | Median endpoint | Median native seconds | Median target seconds among hits |
 |---|---|---:|---:|---:|---:|---:|---:|
-| final-3068 | dogleg-10000 | 1 | 1 | unregistered | 1,727,521.766525 | 2,003.140477 | — |
+| final-3068 | dogleg-10000 | 2 | 2 | unregistered | 1,716,772.064166 | 1,546.418958 | — |
 | final-3068 | lm-10000 | 1 | 1 | unregistered | 2,183,295.461330 | 11.277017 | — |
+
+### Exploratory Venice follow-up
+
+Two probes were registered after the first primary misses, N=3 each, 600 outers /60 seconds. These change the trajectory from initialization and do not replace the champion.
+
+| Arm | N available | Valid | Hits | Median endpoint | Median target seconds among hits |
+|---|---:|---:|---:|---:|---:|
+| probe_relaxed_ftol | 3 | 3 | 0 | 246,040.002116 | — |
+| probe_tighter_forcing | 3 | 3 | 0 | 257,725.345472 | — |
+
+probe_relaxed_ftol changes FTOL to1e-7; probe_tighter_forcing disables FTOL and changes the forcing multiplier from2 to0.1. See PROBE_PROTOCOL.md.
 
 Target times use accepted Ceres callback states, without interpolation; rejected trial objectives are excluded. Timing among successful runs is conditional when any repetitions miss. Endpoints at unlike stops are not interchangeable with matched-target convergence speed. Iteration caps and termination reasons are in runs.csv and the raw logs.
 
