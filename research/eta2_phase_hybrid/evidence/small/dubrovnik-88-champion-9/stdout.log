@@ -1,0 +1,45 @@
+[R10] --zero_k2: all k2 set to 0 at load
+Loaded /workspace/bal/dubrovnik-88.txt: ncam=88 npt=64298 nobs=383937 n=193422
+[R10] --dof9: refining f,k1 per camera (88 cameras)
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+  [compact-fragments] active=2 saved_bytes=39929448 storage=fp32 camera_reads=contiguous
+  MFCG score_init=30562787.847235732 precision=fp64
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+ATTR_RADIUS o=0 raw_norm=5445.8560983987381 norm=5445.8560983987381 radius=5445.8560983987381 next_radius=10891.712196797476 lambda=0.10000000000000001 next_lambda=0.025000000000000001 rho=0.99642283532921117 accept=1
+CLASSICAL_LM o=0 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=28494581.339233007 rho=0.99642283532921117 accept=1
+  MFCG it   1 cost=2.170136e+06 lam=2.500e-02 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=2
+PCG_PREP o=1 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=1 raw_norm=2850.3640786061119 norm=2850.3640786061119 radius=10891.712196797476 next_radius=10891.712196797476 lambda=0.025000000000000001 next_lambda=0.0025000000000000005 rho=0.99898041080055522 accept=1
+CLASSICAL_LM o=1 lambda=0.025000000000000001 tau=0.025000000000000001 prediction=1301657.1942206996 rho=0.99898041080055522 accept=1
+  MFCG it   2 cost=8.698063e+05 lam=2.500e-03 tau=0.00e+00 cg_it=4 shift=0 ckpt=5 alpha=0 acc mv=8
+PCG_PREP o=2 rebuild=1 drift=0 previous_depth=5
+ATTR_RADIUS o=2 raw_norm=2272.889358021524 norm=2272.889358021524 radius=10891.712196797476 next_radius=10891.712196797476 lambda=0.0025000000000000005 next_lambda=0.00025000000000000006 rho=0.99190491987085372 accept=1
+CLASSICAL_LM o=2 lambda=0.0025000000000000005 tau=0.0025000000000000005 prediction=304855.50474077329 rho=0.99190491987085372 accept=1
+  MFCG it   3 cost=5.674186e+05 lam=2.500e-04 tau=0.00e+00 cg_it=9 shift=0 ckpt=10 alpha=0 acc mv=19
+PCG_PREP o=3 rebuild=1 drift=0 previous_depth=10
+ATTR_RADIUS o=3 raw_norm=2295.2916485708488 norm=2295.2916485708488 radius=10891.712196797476 next_radius=10891.712196797476 lambda=0.00025000000000000006 next_lambda=2.5000000000000008e-05 rho=0.98311495840323015 accept=1
+CLASSICAL_LM o=3 lambda=0.00025000000000000006 tau=0.00025000000000000006 prediction=169689.65635673265 rho=0.98311495840323015 accept=1
+  MFCG it   4 cost=4.005942e+05 lam=2.500e-05 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=21
+PCG_PREP o=4 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=4 raw_norm=7330.2253398243529 norm=7330.2253398243529 radius=10891.712196797476 next_radius=10891.712196797476 lambda=2.5000000000000008e-05 next_lambda=2.5000000000000011e-06 rho=0.77434215249810356 accept=1
+CLASSICAL_LM o=4 lambda=2.5000000000000008e-05 tau=2.5000000000000008e-05 prediction=37640.562392144187 rho=0.77434215249810356 accept=1
+  MFCG it   5 cost=3.714475e+05 lam=2.500e-06 tau=0.00e+00 cg_it=7 shift=0 ckpt=8 alpha=0 acc mv=30
+PCG_PREP o=5 rebuild=1 drift=0 previous_depth=8
+ATTR_RADIUS o=5 raw_norm=732.61624180069202 norm=732.61624180069202 radius=10891.712196797476 next_radius=10891.712196797476 lambda=2.5000000000000011e-06 next_lambda=2.5000000000000009e-07 rho=0.93246850068511045 accept=1
+CLASSICAL_LM o=5 lambda=2.5000000000000011e-06 tau=2.5000000000000011e-06 prediction=9528.1107672632188 rho=0.93246850068511045 accept=1
+  MFCG it   6 cost=3.625628e+05 lam=2.500e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=32
+PCG_PREP o=6 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=6 frozen=56 slope=-10369.933688612968 candidate=370151.64519412944 original=360836.35587809549 current=362562.8273560775 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=6 raw_norm=8283.5551860043579 norm=2070.8887965010895 radius=10891.712196797476 next_radius=10891.712196797476 lambda=2.5000000000000009e-07 next_lambda=2.5000000000000012e-08 rho=0.78419493570061605 accept=1
+CLASSICAL_LM o=6 lambda=2.5000000000000009e-07 tau=2.5000000000000009e-07 prediction=2201.5845797825009 rho=0.78419493570061605 accept=1
+TARGET reached outer=7 seconds=0.117368164 cost=360836.35587809549 threshold=362535.16569039237
+  MFCG: accepts=7 rejects=0 total_matvecs=53 negcurv=0 cand_evals=7 mean_cg_per_outer=7.[R9] wrote /tmp/prism-ba-coarse/research/eta2_phase_hybrid/evidence/small/dubrovnik-88-champion-9/curve.csv
+6
+NUMERIC_REPAIR summary rebuilds=0 floor=9.9999999999999998e-17
+  [retry-cache] builds=7 reuses=0
+  [menu-backtrack] trials=1 rescues=1 evals=3 total_scored=10
+POINT_SAFE summary calls=1 evals=1 wins=0 frozen=56 seconds=0.002432741
+  [scoring] menu_evals=7 alpha_evals=0 backtrack_evals=3 total_scored=10
+RESULT algo=mfree_shifted_cg iters=7 final_cost=360836.3558780955 solve_seconds=0.120399
+DIAGNOSTICS median_reproj_err_px 4.948600 -> 0.659164 | cheirality_violations(obs) 0 -> 0 | cheirality_violations(pts, of 64298) 0 -> 0

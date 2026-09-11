@@ -1,0 +1,21 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/eta2_phase_hybrid",
+    "/tmp/prism-ba-coarse/research/eta2_phase_hybrid/build_collapse/prism_hybrid.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_phase_hybrid/build_collapse/prism-hybrid",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "binary_sha256": "4dc858660ccef3fb269ba2e78403282d7910eef03373f6647224dd043c1eb4b5",
+  "source_sha256": "0c73f379567b2f132f5560da637af69914c5881df597c217425d13819f98d4a4",
+  "base_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "sweep_header_sha256": "f6ddca1c17899266eb5f47b0973078ecb091503089c73678629e0055b708c1fd"
+}

@@ -1,0 +1,31 @@
+{
+  "recorded_utc": "2026-09-11T11:14:30.902297+00:00",
+  "platform": "Linux-6.8.0-101-generic-x86_64-with-glibc2.39",
+  "gpu": {
+    "command": [
+      "nvidia-smi",
+      "--query-gpu=name,uuid,driver_version,memory.total",
+      "--format=csv"
+    ],
+    "returncode": 0,
+    "output": "name, uuid, driver_version, memory.total [MiB]\nNVIDIA RTX 2000 Ada Generation, GPU-73444320-7bf8-d794-1631-c464405863fa, 580.126.09, 16380 MiB\n"
+  },
+  "cuda": {
+    "command": [
+      "nvcc",
+      "--version"
+    ],
+    "returncode": 0,
+    "output": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2025 NVIDIA Corporation\nBuilt on Fri_Feb_21_20:23:50_PST_2025\nCuda compilation tools, release 12.8, V12.8.93\nBuild cuda_12.8.r12.8/compiler.35583870_0\n"
+  },
+  "python": "3.12.3",
+  "base_commit": {
+    "command": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "returncode": 0,
+    "output": "49a33cbeabb60acf915aeaee828e96a8d6c8145e\n"
+  }
+}
