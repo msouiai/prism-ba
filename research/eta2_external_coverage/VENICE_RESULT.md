@@ -15,4 +15,11 @@ The tail analysis finds 100/100 final accepted attempts in all ten extended runs
 
 Claude’s supplied six MFREE rows reach 241602–241656 in about 30 seconds with its own stopping disabled. That explains its old stopping floor, but does not transfer directly to Eta2. The delivered endpoint CSV contains no target crossing times or exported states; its full runtime is not comparable to Ceres’s 4.94-second crossing time. See claude-venice-rows.json and the byte-preserved CSV in provenance/.
 
-This closes the primary reachability test with a negative result for a simple extension. Two exploratory N=3 probes are separately registered in PROBE_PROTOCOL.md and have no results yet at this report version. The Ceres storm coverage and subsequent Eta2 target stage are still running; this file is not their verdict.
+This closes the primary reachability test with a negative result for a simple extension. The two separately registered exploratory probes have also completed. Both miss in all three repetitions, under their own 600-outer / 60-second caps. The Ceres storm coverage and subsequent Eta2 target stage are still running; this file is not their verdict.
+
+| Exploratory arm | Hits | Median endpoint | Median native seconds | Stop |
+|---|---:|---:|---:|---|
+| probe_relaxed_ftol | 0/3 | 246,040.002 | 3.572456 | ftol |
+| probe_tighter_forcing | 0/3 | 257,725.345 | 6.425063 | outer_cap |
+
+FTOL=1e-7 delays stopping while retaining confirmation; forcing=0.1 with FTOL=0 tightens the linear residual test from initialization. The latter changes the early trajectory and stops at 600 outers before its time allowance expires. These are negative bounded probes, not a proof that late forcing correction cannot help. Neither changes the champion.

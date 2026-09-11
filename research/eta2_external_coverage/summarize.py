@@ -9,6 +9,12 @@ import statistics
 
 P = Path(__file__).resolve().parent
 targets = json.loads((P / 'storm-targets.json').read_text()) if (P / 'storm-targets.json').exists() else {}
+if (P / 'early-storm-targets.json').exists():
+    for scene, registered in json.loads((P / 'early-storm-targets.json').read_text()).items():
+        if scene in targets:
+            assert targets[scene]['target'] == registered['target']
+        else:
+            targets[scene] = registered
 rows = []
 for f in sorted((P / 'evidence/ceres-storm').glob('*.json')):
     if f.name == 'preregistered.json':
