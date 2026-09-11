@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.20)
+project(ceres_setup LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+find_package(Ceres REQUIRED)
+add_executable(ceres_setup ceres_bal.cc)
+target_link_libraries(ceres_setup PRIVATE Ceres::ceres)

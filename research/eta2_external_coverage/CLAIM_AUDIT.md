@@ -30,3 +30,5 @@ The new storm-scene coverage and fixed Ceres-derived targets will appear in a
 separate report, with failures and bounded misses retained. A successful result
 can expand the measured scope; it cannot establish fastest among all BA solvers
 without a defined competitor set and further evidence.
+
+A further setup sensitivity check is registered in ceres_setup/PROTOCOL.md. The [Ceres 2.2 full BAL example](https://github.com/ceres-solver/ceres-solver/blob/2.2.0/examples/bundle_adjuster.cc) uses normalization, tighter termination tolerances and a different inner eta than the frozen minimal driver. Existing ratios remain named-profile results; the new bounded check tests how much those setup choices matter on Final3068. It does not replace the primary reference or claim globally optimal Ceres.
