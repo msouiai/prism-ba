@@ -1,0 +1,53 @@
+{
+  "binary": "/workspace/prism-novelty/prism-ablation-frozen",
+  "binary_sha256": "80c14509b9501c13102c30478dd1325c953d401a89eaa338baa399a04dea64cb",
+  "common": {
+    "OCA_FORCE_UNSHARED": "1",
+    "OCA_RHO_LAMBDA": "1",
+    "OCA_GRID_DOWN": "2",
+    "OCA_RHO_SHIFT": "1",
+    "OCA_ALPHA_RHO": "1",
+    "OCA_MENU_GATE": "1e-2",
+    "OCA_FTOL": "1e-5",
+    "OCA_FTOL_K": "8",
+    "OCA_TAU_LAM": "1",
+    "OCA_TAU_LAM_RATCHET": "1"
+  },
+  "execution": {
+    "OCA_RETRY_CACHE": "1",
+    "OCA_MULTI_RHS": "1",
+    "OCA_DIAG_NORM": "1"
+  },
+  "arms": {
+    "A-single": {
+      "OCA_NSHIFTS": "1"
+    },
+    "B-single-guarded": {
+      "OCA_NSHIFTS": "1",
+      "OCA_MENU_BACKTRACK": "8"
+    },
+    "C-multi": {
+      "OCA_NSHIFTS": "5"
+    },
+    "D-multi-guarded": {
+      "OCA_NSHIFTS": "5",
+      "OCA_MENU_BACKTRACK": "8"
+    }
+  },
+  "scenes": [
+    "ladybug-598",
+    "trafalgar-126",
+    "dubrovnik-173",
+    "venice-1672"
+  ],
+  "reps": 3,
+  "max_iter": 600,
+  "timeout": 3600,
+  "data_sha256": {
+    "ladybug-598": "a5a2000eb914f2c740f25290043a78ba96c76a411df585ee7fd85783a0140e74",
+    "trafalgar-126": "28a7540db23a70b3d89b9e587a08ae911742bc39ed2894c547a26b3e7f497133",
+    "dubrovnik-173": "5e8d4d91064f0d85be50ddabd3561157884c38fe565a6f0c4d1027520e2e9407",
+    "venice-1672": "846ee3f4a798170bc26d37c5f24f70fae49993004996d1bca7da5adeac53d49e"
+  },
+  "gpu": "NVIDIA RTX 2000 Ada Generation, 580.126.09\n"
+}
