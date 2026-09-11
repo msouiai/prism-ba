@@ -128,6 +128,9 @@ precision alone, preserving the current controller and target protocol.
 That would measure the memory/time cost and whether removing false curvature
 repairs improves target attainment. These diagnostics already show that
 upgrading point QR alone is not the right fix on this phase.
+Cross-only FP64 does not generally restore a fully consistent Gram matrix
+while point rows remain rounded; its positive sign here is an empirical
+result on these three directions, not a universal definiteness guarantee.
 
 A subsequent representation experiment could preserve Gram consistency by
 forming the blocks from common rounded Jacobian rows, or use condition-aware
