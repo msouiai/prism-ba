@@ -1,0 +1,22 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/champion_point_followup",
+    "-I/tmp/prism-ba-coarse/research/champion_point_followup/build",
+    "/tmp/prism-ba-coarse/research/champion_point_followup/build/prism_followup.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/champion_point_followup/build/prism-followup",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "binary_sha256": "b2e26cb2f330136d49df1d25ad0848d76357c5e68e82778e7b861fcc6a19453d",
+  "source_sha256": "a14ad4ef67c026b943fe2df22c1ef8b829f2667f82413dcf3970cca3f1243254",
+  "base_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "overlay_sha256": "ef9dcbaf39a9cfbc8f06b6987b99617b3bc58446ec92f9525d9ffe017138ae76"
+}
