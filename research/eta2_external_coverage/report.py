@@ -11,8 +11,10 @@ complete = counts == {'venice':20, 'storm':20, 'ceres-storm':12}
 valid = all(r['valid'] for r in rows)
 status = 'All registered runs available.' if complete else 'INCOMPLETE: measurements are still in progress.'
 lines = ['# Eta2 external coverage and stopping-policy reachability', '', status,
+         '', 'Read [FINDINGS.md](FINDINGS.md) for the completed verdict and [SAME_TARGET_LEDGER.md](SAME_TARGET_LEDGER.md) for the combined baseline table.',
          '', f"Available rows: {counts}. All available rows valid: {valid}.", '',
          'The original solver and champion remain unchanged. This is a coverage and stopping-policy experiment, not a new champion selection.', '',
+         'The matched local objective is one half the sum of squared reprojection residuals on the original observation set, with a separate focal length and k1 per camera and k2 fixed at zero (SIMPLE_RADIAL). Eta2 stores a nine-coordinate camera block but does not enable --free_k2. This is not the unrestricted two-radial-coefficient BAL model. Caspar32 solves with float data; its ranked endpoint is rescored against the original double observations, as detailed in banked/PROVENANCE.md.', '',
          '## Venice52: fixed target 243740.27', '',
          'The two frozen-binary arms alternate at N=10. Champion keeps its original persistent-flatness stop and 600-outer cap. The diagnostic disables OCA_FTOL, raises the outer cap to 10000 and keeps a 60-native-second allowance. Both stop at the identical target.', '',
          '| Arm | N available | Valid | Hits | Median endpoint | Median native seconds | Median target seconds among hits |',

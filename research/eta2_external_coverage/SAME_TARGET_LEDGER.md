@@ -28,16 +28,17 @@ Target: 1744796.9841897595
 
 ## final-4585
 
-Target pending completion of the registered Ceres endpoint stage.
+Target: 7767397.3902649265
 
 | Arm | Observed hits | Host / evidence | Endpoint median [range] | Full solve median [range], s | Conditional target time median [range], s |
 |---|---:|---|---:|---:|---:|
-| Caspar32 default / 200 | pending (1 runs) | Codex / banked | 11,035,627.091 [11,035,627.091, 11,035,627.091] | 13.972 [13.972, 13.972] | — |
-| Caspar32 default / 2000 | pending (1 runs) | Codex / banked | 8,942,006.457 [8,942,006.457, 8,942,006.457] | 128.390 [128.390, 128.390] | — |
-| Caspar32 paper / 200 | pending (1 runs) | Codex / banked | 16,932,055.545 [16,932,055.545, 16,932,055.545] | 9.591 [9.591, 9.591] | — |
-| Caspar32 paper / 2000 | pending (2 runs) | Codex / banked | 15,800,645.988 [15,420,314.380, 16,180,977.597] | 53.682 [20.375, 86.989] | — |
-| Ceres dogleg-10000 | pending (2 runs) | Codex / fresh | 7,998,055.634 [7,690,492.466, 8,305,618.803] | 2,433.279 [2,425.714, 2,440.845] | — |
-| Ceres lm-10000 | pending (1 runs) | Codex / fresh | 8,040,781.917 [8,040,781.917, 8,040,781.917] | 67.990 [67.990, 67.990] | — |
+| Caspar32 default / 200 | 0/1 | Codex / banked | 11,035,627.091 [11,035,627.091, 11,035,627.091] | 13.972 [13.972, 13.972] | — |
+| Caspar32 default / 2000 | 0/1 | Codex / banked | 8,942,006.457 [8,942,006.457, 8,942,006.457] | 128.390 [128.390, 128.390] | — |
+| Caspar32 paper / 200 | 0/1 | Codex / banked | 16,932,055.545 [16,932,055.545, 16,932,055.545] | 9.591 [9.591, 9.591] | — |
+| Caspar32 paper / 2000 | 0/2 | Codex / banked | 15,800,645.988 [15,420,314.380, 16,180,977.597] | 53.682 [20.375, 86.989] | — |
+| Ceres dogleg-10000 | 2/3 | Codex / fresh | 7,690,492.466 [7,115,123.732, 8,305,618.803] | 2,440.845 [2,425.714, 3,007.038] | 2,038.777 [1,958.540, 2,119.014] |
+| Ceres lm-10000 | 0/3 | Codex / fresh | 8,040,781.917 [8,040,781.917, 8,040,781.917] | 66.826 [65.593, 67.990] | — |
+| Eta2 champion | 10/10 | Codex / fresh | 7,396,331.320 [7,396,327.894, 7,396,334.267] | 1.719 [1.712, 1.736] | 1.697 [1.692, 1.704] |
 
 Final3068: Eta2 has 8/10 observed hits and a 3.692-second conditional median. MFREE-deep has 5/10 and a 15.694-second median upper bound on crossing time. These samples do not establish a population reliability ranking or a same-host speed ratio.
 

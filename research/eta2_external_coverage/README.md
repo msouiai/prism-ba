@@ -1,10 +1,14 @@
 # Eta2 external coverage and stopping-policy reachability
 
-INCOMPLETE: measurements are still in progress.
+All registered runs available.
 
-Available rows: {'venice': 20, 'storm': 10, 'ceres-storm': 9}. All available rows valid: True.
+Read [FINDINGS.md](FINDINGS.md) for the completed verdict and [SAME_TARGET_LEDGER.md](SAME_TARGET_LEDGER.md) for the combined baseline table.
+
+Available rows: {'venice': 20, 'storm': 20, 'ceres-storm': 12}. All available rows valid: True.
 
 The original solver and champion remain unchanged. This is a coverage and stopping-policy experiment, not a new champion selection.
+
+The matched local objective is one half the sum of squared reprojection residuals on the original observation set, with a separate focal length and k1 per camera and k2 fixed at zero (SIMPLE_RADIAL). Eta2 stores a nine-coordinate camera block but does not enable --free_k2. This is not the unrestricted two-radial-coefficient BAL model. Caspar32 solves with float data; its ranked endpoint is rescored against the original double observations, as detailed in banked/PROVENANCE.md.
 
 ## Venice52: fixed target 243740.27
 
@@ -29,9 +33,10 @@ Ceres uses the exact banked binary: LM iterative Schur / Schur-Jacobi and dogleg
 |---|---|---:|---:|---:|---:|---:|---:|
 | final-3068 | dogleg-10000 | 3 | 3 | 2 | 1,727,521.766525 | 1,131.099964 | 1,302.742597 |
 | final-3068 | lm-10000 | 3 | 3 | 0 | 2,183,295.461330 | 10.714960 | — |
-| final-4585 | dogleg-10000 | 2 | 2 | unregistered | 7,998,055.634057 | 2,433.279302 | — |
-| final-4585 | lm-10000 | 1 | 1 | unregistered | 8,040,781.916687 | 67.989756 | — |
+| final-4585 | dogleg-10000 | 3 | 3 | 2 | 7,690,492.465609 | 2,440.845056 | 2,038.777140 |
+| final-4585 | lm-10000 | 3 | 3 | 0 | 8,040,781.916690 | 66.825965 | — |
 | final-3068 | champion | 10 | 10 | 8 | 1,742,918.320655 | 3.789473 | 3.692232 |
+| final-4585 | champion | 10 | 10 | 10 | 7,396,331.320445 | 1.718598 | 1.696919 |
 
 ### Exploratory Venice follow-up
 

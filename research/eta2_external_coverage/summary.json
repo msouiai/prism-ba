@@ -86,38 +86,43 @@
     "stage": "ceres-storm",
     "scene": "final-4585",
     "arm": "dogleg-10000",
-    "n": 2,
-    "valid": 2,
-    "target_registered": false,
-    "hits": null,
+    "n": 3,
+    "valid": 3,
+    "target_registered": true,
+    "hits": 2,
     "cost": {
-      "median": 7998055.634057116,
-      "min": 7690492.465608838,
+      "median": 7690492.465608838,
+      "min": 7115123.732354188,
       "max": 8305618.802505394
     },
     "native_seconds": {
-      "median": 2433.279302079,
+      "median": 2440.845055706,
       "min": 2425.713548452,
-      "max": 2440.845055706
+      "max": 3007.038375594
     },
     "outers": {
-      "median": 31.5,
+      "median": 32,
       "min": 31,
-      "max": 32
+      "max": 34
     },
     "accepts": {
-      "median": 14.0,
+      "median": 14,
       "min": 14,
-      "max": 14
-    },
-    "rejects": {
-      "median": 17.5,
-      "min": 17,
       "max": 18
     },
-    "target_seconds": null,
+    "rejects": {
+      "median": 17,
+      "min": 16,
+      "max": 18
+    },
+    "target_seconds": {
+      "median": 2038.7771404979999,
+      "min": 1958.539994001,
+      "max": 2119.014286995
+    },
     "stops": {
       "CONVERGENCE (Parameter tolerance reached. Relative step_norm: 4.804572e-09 <= 1.000000e-08.)": 1,
+      "CONVERGENCE (Parameter tolerance reached. Relative step_norm: 7.579482e-09 <= 1.000000e-08.)": 1,
       "CONVERGENCE (Parameter tolerance reached. Relative step_norm: 8.817406e-09 <= 1.000000e-08.)": 1
     }
   },
@@ -125,18 +130,18 @@
     "stage": "ceres-storm",
     "scene": "final-4585",
     "arm": "lm-10000",
-    "n": 1,
-    "valid": 1,
-    "target_registered": false,
-    "hits": null,
+    "n": 3,
+    "valid": 3,
+    "target_registered": true,
+    "hits": 0,
     "cost": {
-      "median": 8040781.916687378,
+      "median": 8040781.916689547,
       "min": 8040781.916687378,
-      "max": 8040781.916687378
+      "max": 8040781.916699164
     },
     "native_seconds": {
-      "median": 67.989756184,
-      "min": 67.989756184,
+      "median": 66.825964806,
+      "min": 65.592842703,
       "max": 67.989756184
     },
     "outers": {
@@ -156,7 +161,7 @@
     },
     "target_seconds": null,
     "stops": {
-      "CONVERGENCE (Parameter tolerance reached. Relative step_norm: 5.359415e-09 <= 1.000000e-08.)": 1
+      "CONVERGENCE (Parameter tolerance reached. Relative step_norm: 5.359415e-09 <= 1.000000e-08.)": 3
     }
   },
   {
@@ -205,6 +210,53 @@
     "stops": {
       "ftol": 2,
       "target": 8
+    }
+  },
+  {
+    "stage": "storm",
+    "scene": "final-4585",
+    "arm": "champion",
+    "n": 10,
+    "valid": 10,
+    "target_registered": true,
+    "hits": 10,
+    "cost": {
+      "median": 7396331.3204454705,
+      "min": 7396327.893900536,
+      "max": 7396334.266836098
+    },
+    "native_seconds": {
+      "median": 1.7185985,
+      "min": 1.712442,
+      "max": 1.73602
+    },
+    "outers": {
+      "median": 6.0,
+      "min": 6,
+      "max": 6
+    },
+    "accepts": {
+      "median": 6.0,
+      "min": 6,
+      "max": 6
+    },
+    "rejects": {
+      "median": 1.0,
+      "min": 1,
+      "max": 1
+    },
+    "matvecs": {
+      "median": 29.0,
+      "min": 29,
+      "max": 29
+    },
+    "target_seconds": {
+      "median": 1.696919021,
+      "min": 1.691896769,
+      "max": 1.704239594
+    },
+    "stops": {
+      "target": 10
     }
   },
   {
