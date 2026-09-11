@@ -22,12 +22,12 @@ def accumulate(ci, pi, jc, jp, nc, np_, weights=None):
     return B, C, E.transpose(0, 2, 1, 3).reshape(nc*6, np_*3)
 
 class Linearization:
-    def __init__(self, state, obs, weights=None, depth_penalty=0.):
+    def __init__(self, state, obs, weights=None, depth_penalty=0., evaluation=None):
         self.state = state
         self.obs = obs
         self.nc, self.np = len(state.R), len(state.X)
         self.ci = obs[:, 0].astype(int); self.pi = obs[:, 1].astype(int)
-        self.r, self.q, self.jc, self.jp, _, _ = project(state, obs, 6, True)
+        self.r, self.q, self.jc, self.jp, _, _ = project(state, obs, 6, True) if evaluation is None else evaluation
         assert np.isfinite(self.r).all() and np.all(self.q[:, 2] < -1e-8)
         self.jc[self.ci == 0] = 0
         self.jp[self.pi == 0, :, 2] = 0

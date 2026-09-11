@@ -15,11 +15,11 @@ ignored build folder, on `research/geometry-agenda`.
 | T1 | Projection-aware model-error control | Closed: predictive gate failed; retain diagnostics | See T1_RESULTS.md. |
 | T2 | Curved updates versus filtering depth | Closed: timing gate failed | See T2_RESULTS.md. |
 | T3 | Nonlinear point relaxation before ranking | Closed: rankings change, but post-only is cheaper | See T3_RESULTS.md. |
-| T4 | Nonlinear collective corrections | In progress: prior art and controlled prototype | Does a nonlinear Sim(3) cluster correction beat the same linear coarse basis on observable, weakly connected geometry? |
-| T5 | Observability-aware robust continuation | Pending T4 | Does the scheduling signal help correct bridges without protecting corrupted bridges, under the same final robust loss? |
-| T6 | Temporary depth-tube smoothing | Pending T5 | Does bounded depth-aligned smoothing improve valid recovery after identical original-objective refinement, beyond isotropic smoothing/multiple starts? |
-| T7 | Spectral interpretation of OCA search | Pending T6 | Does RHS-weighted filter similarity enable held-out menu pruning beyond a simpler smaller menu? |
-| T8 | Allocation among useful computations | Pending T7 | Is there measured oracle headroom beyond a deterministic rule and useful action traces? No RL training without those prerequisites. |
+| T4 | Nonlinear collective corrections | Closed: controlled gain, sampled-real transfer failed | See T4_RESULTS.md. |
+| T5 | Observability-aware robust continuation | Closed: false-bridge and timing gates failed | See T5_RESULTS.md. |
+| T6 | Temporary depth-tube smoothing | Closed: cost outweighs limited geometric benefit | See T6_RESULTS.md. |
+| T7 | Spectral interpretation of OCA search | Closed: quality gate failed; simple menu wins | See T7_RESULTS.md. |
+| T8 | Allocation among useful computations | Closed: local prediction does not transfer to faster solves | See T8_RESULTS.md; conditional RL training not justified. |
 
 ## Shared contract
 

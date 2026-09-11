@@ -56,7 +56,10 @@ Run `check_geometry.py`, `check_reference.py`, `build_capture.py`,
 The source and original GPU binary hashes are in `registration.json`.
 `T1_SYNTHETIC_PROTOCOL.md` predates the synthetic outcomes. JSON files with
 the `t1_` prefix retain every captured/proposed outcome, including failures.
-Native captures and logs are in `/tmp/prism-geometry-agenda/` pending archival.
+Native captures and logs are archived in the three `evidence/t1-*.tar.xz`
+files. [The evidence manifest](evidence/manifest.json) records archive hashes
+and hashes of every contained file. The original scratch copies remain in
+`/tmp/prism-geometry-agenda/`.
 
 The next decisive experiment is a cached curved correction under T2, compared
 with the established LM-plus-geodesic baseline and additional relinearization.

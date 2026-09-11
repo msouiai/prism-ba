@@ -1,0 +1,55 @@
+{
+  "features": [
+    "defect",
+    "depth_risk_p90",
+    "rho",
+    "base_eligible",
+    "top10_energy",
+    "point_gradient_share",
+    "point_condition",
+    "log_rms"
+  ],
+  "actions": [
+    "fresh",
+    "oca",
+    "lambda",
+    "geo",
+    "point",
+    "coarse"
+  ],
+  "tree": {
+    "feature": 1,
+    "feature_name": "depth_risk_p90",
+    "threshold": 0.36231865607378455,
+    "left": {
+      "feature": 1,
+      "feature_name": "depth_risk_p90",
+      "threshold": 0.20995848499164396,
+      "left": {
+        "action": "oca",
+        "samples": 21
+      },
+      "right": {
+        "action": "point",
+        "samples": 5
+      }
+    },
+    "right": {
+      "feature": 0,
+      "feature_name": "defect",
+      "threshold": 0.40108815073183246,
+      "left": {
+        "action": "point",
+        "samples": 5
+      },
+      "right": {
+        "action": "geo",
+        "samples": 9
+      }
+    }
+  },
+  "training_families": [
+    "depth",
+    "cluster"
+  ]
+}

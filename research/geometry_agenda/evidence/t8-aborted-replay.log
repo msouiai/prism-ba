@@ -1,0 +1,53 @@
+depth 100 replayed
+depth 101 replayed
+depth 102 replayed
+depth 103 replayed
+depth 104 replayed
+depth 105 replayed
+depth 106 replayed
+depth 107 replayed
+depth 108 replayed
+depth 109 replayed
+cluster 100 replayed
+cluster 101 replayed
+cluster 102 replayed
+cluster 103 replayed
+cluster 104 replayed
+cluster 105 replayed
+cluster 106 replayed
+cluster 107 replayed
+cluster 108 replayed
+cluster 109 replayed
+rotation 100 replayed
+rotation 101 replayed
+rotation 102 replayed
+rotation 103 replayed
+rotation 104 replayed
+rotation 105 replayed
+rotation 106 replayed
+rotation 107 replayed
+Traceback (most recent call last):
+  File "/tmp/prism-ba-coarse/research/geometry_agenda/t8_replay.py", line 92, in <module>
+    if __name__ == '__main__': main()
+                               ^^^^^^
+  File "/tmp/prism-ba-coarse/research/geometry_agenda/t8_replay.py", line 55, in main
+    winner, detail = perform(cache, action, w, target)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/prism-ba-coarse/research/geometry_agenda/allocation.py", line 119, in perform
+    trial, info = work.call('coarse', coarse_solve, state, lin.obs, cg, pg,
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/prism-ba-coarse/research/geometry_agenda/experiment.py", line 33, in call
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/prism-ba-coarse/research/geometry_agenda/collective.py", line 92, in coarse_solve
+    eig = generalized_spectrum(K, M)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/prism-ba-coarse/research/geometry_agenda/collective.py", line 50, in generalized_spectrum
+    L = np.linalg.cholesky(M)
+        ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/numpy/linalg/_linalg.py", line 848, in cholesky
+    r = gufunc(a, signature=signature)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/numpy/linalg/_linalg.py", line 107, in _raise_linalgerror_nonposdef
+    raise LinAlgError("Matrix is not positive definite")
+numpy.linalg.LinAlgError: Matrix is not positive definite
