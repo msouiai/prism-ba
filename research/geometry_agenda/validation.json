@@ -1,0 +1,84 @@
+{
+  "utc": "2026-09-11T01:10:37.297607+00:00",
+  "checks": [
+    {
+      "script": "check_geometry.py",
+      "returncode": 0,
+      "stdout": "{\n  \"pinhole_identity_relative_error\": 2.213701995073187e-16,\n  \"bound_cases\": 10000,\n  \"derivatives\": [\n    {\n      \"k1\": 0.0,\n      \"finite_difference_relative_errors\": {\n        \"0.01\": 6.154221930478156e-08,\n        \"0.001\": 6.1566050355276e-10,\n        \"0.0001\": 1.432716611781833e-11,\n        \"1e-05\": 1.2557591810114703e-10,\n        \"1e-06\": 1.198849323494657e-09\n      },\n      \"decomposition_relative_error\": 1.3309179877504446e-14\n    },\n    {\n      \"k1\": 0.025,\n      \"finite_difference_relative_errors\": {\n        \"0.01\": 6.203218865235401e-08,\n        \"0.001\": 6.204057590513576e-10,\n        \"0.0001\": 1.6363279267724387e-11,\n        \"1e-05\": 1.3272783248577635e-10,\n        \"1e-06\": 1.0930138018886528e-09\n      },\n      \"decomposition_relative_error\": 1.1258482309248045e-14\n    }\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "script": "check_reference.py",
+      "returncode": 0,
+      "stdout": "[\n  {\n    \"penalty_beta\": 0.0,\n    \"schur_direct_relative\": 9.22072873994705e-16,\n    \"numerical_residual_relative\": 1.4926604786680977e-16,\n    \"new_rhs_relative\": 5.766208946752911e-16,\n    \"augmented_lstsq_relative\": 3.8244636550249635e-15\n  },\n  {\n    \"penalty_beta\": 0.1,\n    \"schur_direct_relative\": 1.1497041703137408e-15,\n    \"numerical_residual_relative\": 2.74798508637156e-16,\n    \"new_rhs_relative\": 6.332394301140348e-16\n  }\n]\n",
+      "stderr": ""
+    },
+    {
+      "script": "check_curvature.py",
+      "returncode": 0,
+      "stdout": "second derivative checks passed; worst best-step error 5.17914500460789e-08\n",
+      "stderr": ""
+    },
+    {
+      "script": "check_points.py",
+      "returncode": 0,
+      "stdout": "point monotonicity, gauge, camera freezing, parent and order independence passed\n",
+      "stderr": ""
+    },
+    {
+      "script": "check_collective.py",
+      "returncode": 0,
+      "stdout": "collective invariance, tangent derivatives, gauge, and independent-state checks passed\n",
+      "stderr": ""
+    },
+    {
+      "script": "check_robust.py",
+      "returncode": 0,
+      "stdout": "robust derivative, information decrease and disconnected detection passed\n",
+      "stderr": ""
+    },
+    {
+      "script": "check_smoothing.py",
+      "returncode": 0,
+      "stdout": "smoothing derivative, zero-radius identity, quadrature and invalid-domain checks passed\n",
+      "stderr": ""
+    },
+    {
+      "script": "check_spectral.py",
+      "returncode": 0,
+      "stdout": "filter/metric/gauge/Schur tests passed; max BA error 1.0546299664732681e-14 nonshift fraction 0.33363232318503555\n",
+      "stderr": ""
+    },
+    {
+      "script": "check_allocation.py",
+      "returncode": 0,
+      "stdout": "{\n  \"immutable_parent\": true,\n  \"gauge_preserved\": true,\n  \"fallback_preserved\": true,\n  \"failed_coarse_falls_back\": true,\n  \"finite_features\": true,\n  \"endpoint_costs\": {\n    \"fresh\": 70688.37502236606,\n    \"oca\": 70688.37502236606,\n    \"lambda\": 70688.37502236606,\n    \"geo\": 28526.75779939492,\n    \"point\": 8236.219423019345,\n    \"coarse\": 70688.37502236606\n  }\n}\n",
+      "stderr": ""
+    },
+    {
+      "script": "eta2_champion/build.py --check-only",
+      "returncode": 0,
+      "stdout": "Verified frozen source and 44 headers.\n"
+    }
+  ],
+  "compiled_scripts": 44,
+  "strict_json_files": 68,
+  "archives": [
+    {
+      "archive": "t1-ladybug-49.tar.xz",
+      "verified_members": 84,
+      "sha256": "369e106630e9b5b4c38b81702f0ceef38e8771526a17e781aed22ae184eb5100"
+    },
+    {
+      "archive": "t1-dubrovnik-88.tar.xz",
+      "verified_members": 120,
+      "sha256": "a29d73b60d728994fab43558044ce606762aa197402fe8eab676a5dd636f17d7"
+    },
+    {
+      "archive": "t1-venice-52.tar.xz",
+      "verified_members": 156,
+      "sha256": "b21de47be18686d17255bd35ce66f586a0a02a2da826b4eb2ca2ef0b1c77f720"
+    }
+  ],
+  "passed": true
+}

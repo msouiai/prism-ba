@@ -40,6 +40,11 @@ refinement geometry guarantees. Fixed extra lambda has one rotation geometry
 failure and a depth timing regression: its real-sample result is an engineering
 lead, not a generally superior solver or native Eta2/Caspar comparison.
 
+Paired-seed bootstrap intervals for tree speed versus ordinary are
+0.87–1.10x (depth), 0.87–0.99x (cluster), and 0.82–0.88x (rotation).
+The rotation slowdown is clear within this ten-seed cohort; the depth result
+does not distinguish a modest gain from a modest loss.
+
 Always-coarse misses nine of thirty depth targets, with nine of ten depth
 seeds failing geometry; it is much slower on rotation and real samples.
 Twenty-seven coarse attempts have degenerate automatic metrics and use the

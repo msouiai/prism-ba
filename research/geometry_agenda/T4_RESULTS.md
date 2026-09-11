@@ -14,6 +14,9 @@ close prior-art limitations. It does not establish a new fastest BA solver.
 | Automatic v2, 300–309, 30/900 | 3.06x / 2.70x | 1.25x / 1.35x |
 
 Every observable row hits on all ten seeds, N=3, with no point-NRMSE>0.15 cases.
+For larger automatic v2, paired-seed 95% percentile bootstrap intervals are
+2.70–3.24x (weak) and 2.31–2.93x (strong) versus fine BA. These conditional
+ten-seed intervals do not measure cross-host or real-scene uncertainty.
 The automatic v1 camera partition is correct, but up to 9% of small-problem
 points follow the wrong cluster; with ten local views per point instead of
 four, that assignment defect almost disappears. V2 weights point ownership

@@ -17,7 +17,12 @@ for seed in range(4):
         assert np.all(point_values(o, obs) <= point_values(c, obs)+1e-10)
         assert np.array_equal(o.R, c.R) and np.array_equal(o.t, c.t)
         assert o.X[0, 2] == c.X[0, 2]
-        rows.append({'before': valid_cost(c, obs), 'after': valid_cost(o, obs)})
+        before, after = valid_cost(c, obs), valid_cost(o, obs)
+        if not np.isfinite(before):
+            assert not np.isfinite(after) and np.array_equal(o.X, c.X)
+        rows.append({'before': before if np.isfinite(before) else None,
+                     'after': after if np.isfinite(after) else None,
+                     'invalid_input_retained': bool(not np.isfinite(before))})
     assert np.array_equal(s.X, parent.X) and np.array_equal(s.R, parent.R)
-pathlib.Path(__file__).with_name('point_checks.json').write_text(json.dumps({'passed': True, 'rows': rows}, indent=2)+'\n')
+pathlib.Path(__file__).with_name('point_checks.json').write_text(json.dumps({'passed': True, 'rows': rows}, indent=2, allow_nan=False)+'\n')
 print('point monotonicity, gauge, camera freezing, parent and order independence passed')
