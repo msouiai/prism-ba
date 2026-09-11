@@ -1,0 +1,88 @@
+{
+  "paths": [
+    {
+      "arm": "anchored",
+      "winning_families": [
+        "depth"
+      ],
+      "severe_geometry_regressions": [
+        {
+          "id": "low_parallax-503",
+          "metric": "camera_nrmse",
+          "baseline": 0.6422266969545721,
+          "candidate": 0.7813922741318642
+        }
+      ],
+      "general_promotion": false
+    },
+    {
+      "arm": "moving_host",
+      "winning_families": [
+        "depth"
+      ],
+      "severe_geometry_regressions": [],
+      "general_promotion": false
+    },
+    {
+      "arm": "virtual_ray",
+      "winning_families": [
+        "low_parallax"
+      ],
+      "severe_geometry_regressions": [],
+      "general_promotion": false
+    },
+    {
+      "arm": "observed_polish",
+      "winning_families": [
+        "low_parallax"
+      ],
+      "severe_geometry_regressions": [],
+      "general_promotion": false
+    }
+  ],
+  "stiffness": {
+    "passed": false,
+    "severe_parents": 2,
+    "families": [
+      "depth"
+    ],
+    "median_perspective_fraction": 0.9837404023047303
+  },
+  "energy_bound": {
+    "rule": "bound_full",
+    "selected": 45,
+    "parents": 45,
+    "median_products": 4.0,
+    "median_products_vs_eta05": 1.5,
+    "opportunities": [
+      [
+        "depth-501",
+        "depth",
+        0
+      ],
+      [
+        "ladybug-49",
+        "bal",
+        0
+      ]
+    ],
+    "opportunity_families": [
+      "bal",
+      "depth"
+    ],
+    "new_invalid": [],
+    "offset_changes_in_opportunities": [
+      [
+        "depth-501",
+        0
+      ],
+      [
+        "ladybug-49",
+        0
+      ]
+    ],
+    "gate": false
+  },
+  "incumbent": "frozen Eta2 unchanged",
+  "native_promotion": false
+}
