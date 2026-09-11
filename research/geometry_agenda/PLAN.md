@@ -12,10 +12,10 @@ ignored build folder, on `research/geometry-agenda`.
 
 | Order | Hypothesis | Status | Decisive gate |
 |---|---|---|---|
-| T1 | Projection-aware model-error control | In progress: instrumentation and algebra | Does prospective fractional depth change add predictive value beyond damping and step norm? If so, beat matched-work step shortening. |
-| T2 | Curved updates versus filtering depth | Pending T1 | Does a safeguarded curved correction improve original-objective progress per total time over LM plus the same correction and extra relinearization? |
-| T3 | Nonlinear point relaxation before ranking | Pending T2 | Does pre-ranking relaxation change useful winners and outperform polishing only after acceptance? |
-| T4 | Nonlinear collective corrections | Pending T3 | Does a nonlinear Sim(3) cluster correction beat the same linear coarse basis on observable, weakly connected geometry? |
+| T1 | Projection-aware model-error control | Closed: predictive gate failed; retain diagnostics | See T1_RESULTS.md. |
+| T2 | Curved updates versus filtering depth | Closed: timing gate failed | See T2_RESULTS.md. |
+| T3 | Nonlinear point relaxation before ranking | Closed: rankings change, but post-only is cheaper | See T3_RESULTS.md. |
+| T4 | Nonlinear collective corrections | In progress: prior art and controlled prototype | Does a nonlinear Sim(3) cluster correction beat the same linear coarse basis on observable, weakly connected geometry? |
 | T5 | Observability-aware robust continuation | Pending T4 | Does the scheduling signal help correct bridges without protecting corrupted bridges, under the same final robust loss? |
 | T6 | Temporary depth-tube smoothing | Pending T5 | Does bounded depth-aligned smoothing improve valid recovery after identical original-objective refinement, beyond isotropic smoothing/multiple starts? |
 | T7 | Spectral interpretation of OCA search | Pending T6 | Does RHS-weighted filter similarity enable held-out menu pruning beyond a simpler smaller menu? |
