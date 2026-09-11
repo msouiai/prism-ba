@@ -1,0 +1,20 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "/tmp/prism-ba-coarse/research/eta2_curvature_audit/build/prism_curvature.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_curvature_audit/build/prism-curvature",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "source_sha256": "f25068c9aa8bf3c9303836a091abfdf7ba5d76bd831d5a11b242064874d48dfe",
+  "binary_sha256": "51a466f7e99f9d7fe0c78bd5d34fc62bd2441fe0d834d0ce70cceffbf786d321",
+  "parent_source_sha256": "60b99480990999e3dd74b6589a998d674eb55e23e0db8e700ece3fdc6839fbbe",
+  "protocol_sha256": "ddc49d97c34ea1b5e1ad824f6dab19dd7e7c88fb025aeae6a5fb8265cddc48f5"
+}

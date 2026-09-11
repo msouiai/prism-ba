@@ -1,0 +1,623 @@
+[
+  {
+    "metadata": {
+      "ncam": 52.0,
+      "npt": 64053.0,
+      "nobs": 347173.0,
+      "outer": 39.0,
+      "cg_completed": 17.0,
+      "cost": 248405.39915406003,
+      "lambda": 1.0000000000000005e-08,
+      "tau": 1.0000000000000005e-08,
+      "pAp": -20.453842163089625,
+      "pp": 7953983498.6073,
+      "quotient": -2.571521825091916e-09,
+      "cutoff": 1e-14,
+      "intr_damp": 1.0,
+      "k2mask": 0.0,
+      "radius": 12901.41035851867
+    },
+    "cutoff_class": "negative",
+    "actual_cpu_dot_quotient": -2.5715218250919237e-09,
+    "cpu_schur_quotients": {
+      "stored": -2.5715218423725366e-09,
+      "W32_R32qr": -2.5715218423716784e-09,
+      "W64_Rstored": 4.102612691254634e-08,
+      "W32_R64qr": -2.5826732561554885e-09,
+      "W64_R64qr": 4.102618334530826e-08
+    },
+    "gpu_rows": [
+      {
+        "operator": "stored_repeat",
+        "rep": "0",
+        "pAp": "-20.453842163090027",
+        "quotient": "-2.5715218250919663e-09"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "1",
+        "pAp": "-20.453842163089764",
+        "quotient": "-2.5715218250919333e-09"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "2",
+        "pAp": "-20.453842163088861",
+        "quotient": "-2.5715218250918199e-09"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "3",
+        "pAp": "-20.453842163089202",
+        "quotient": "-2.5715218250918625e-09"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "4",
+        "pAp": "-20.453842163088733",
+        "quotient": "-2.5715218250918038e-09"
+      },
+      {
+        "operator": "stored",
+        "rep": "0",
+        "pAp": "-20.453842163089195",
+        "quotient": "-2.5715218250918617e-09"
+      },
+      {
+        "operator": "W32_R32qr",
+        "rep": "0",
+        "pAp": "-20.453842163089462",
+        "quotient": "-2.5715218250918952e-09"
+      },
+      {
+        "operator": "W64_Rstored",
+        "rep": "0",
+        "pAp": "326.32113669595105",
+        "quotient": "4.1026126940430307e-08"
+      },
+      {
+        "operator": "W32_R64qr",
+        "rep": "0",
+        "pAp": "-20.542539613249229",
+        "quotient": "-2.5826731494786379e-09"
+      },
+      {
+        "operator": "W64_R64qr",
+        "rep": "0",
+        "pAp": "326.32158556073523",
+        "quotient": "4.1026183373132772e-08"
+      }
+    ],
+    "gpu_stored_repeat_range": [
+      -2.5715218250919663e-09,
+      -2.571521825091804e-09
+    ],
+    "gpu_minus_cpu_quotients": {
+      "stored": 1.728067484459838e-17,
+      "W32_R32qr": 1.7279783143898047e-17,
+      "W64_Rstored": 2.7883967281586944e-17,
+      "W32_R64qr": 1.0667685056235307e-16,
+      "W64_R64qr": 2.782450953915663e-17
+    },
+    "camera_energy": 4.901828425880622e-06,
+    "point_schur_terms": {
+      "stored": 4.914399947722995e-06,
+      "W32_R32qr": 4.914399947722994e-06,
+      "W64_Rstored": 4.870802298968076e-06,
+      "W32_R64qr": 4.9144110991367785e-06,
+      "W64_R64qr": 4.870802242535314e-06
+    },
+    "stable_fp64_energy": 4.102618325012429e-08,
+    "jacobian_rows_schur": 4.102618325012422e-08,
+    "stable_terms": {
+      "residual": 3.0998940667095196e-08,
+      "point_damping": 5.875508296779273e-12,
+      "intrinsic_prior": 2.1367074732309472e-11,
+      "camera_damping": 1.0000000000000005e-08
+    },
+    "camera_block_vs_rows_plus_prior": 9.515589448907343e-17,
+    "camera_reassembly_rayleigh_delta": -1.9834269410848487e-15,
+    "cross_rounding_relative_frobenius": 2.4369941989405385e-08,
+    "point_rows_rounding_relative_frobenius": 1.804601792838823e-08,
+    "cross_rounding_perturbation": {
+      "linear": 1.8825079233812782e-11,
+      "quadratic": -4.3616473834152686e-08,
+      "total": -4.359764875491888e-08,
+      "track_bins": {
+        "2": {
+          "points": 26823,
+          "signed_rayleigh_error": -4.359763098196179e-08,
+          "absolute_rayleigh_error": 4.3598002237676854e-08
+        },
+        "3": {
+          "points": 10345,
+          "signed_rayleigh_error": -3.1980992090907725e-15,
+          "absolute_rayleigh_error": 1.3048497014632925e-13
+        },
+        "4": {
+          "points": 5894,
+          "signed_rayleigh_error": -3.8992185746684076e-15,
+          "absolute_rayleigh_error": 8.686046577878606e-14
+        },
+        "5+": {
+          "points": 20991,
+          "signed_rayleigh_error": -1.0675639308353495e-14,
+          "absolute_rayleigh_error": 5.626159770775302e-13
+        },
+        "0-1": {
+          "points": 0,
+          "signed_rayleigh_error": 0.0,
+          "absolute_rayleigh_error": 0.0
+        }
+      },
+      "worst_points": [
+        {
+          "point": 60378,
+          "observations": 2,
+          "error": -4.2280102880294586e-08
+        },
+        {
+          "point": 60447,
+          "observations": 2,
+          "error": -1.3175211492453077e-09
+        },
+        {
+          "point": 46953,
+          "observations": 2,
+          "error": -1.474349430553355e-14
+        },
+        {
+          "point": 47738,
+          "observations": 2,
+          "error": -3.367416014032273e-15
+        },
+        {
+          "point": 46982,
+          "observations": 2,
+          "error": -2.1359737072598983e-15
+        },
+        {
+          "point": 47756,
+          "observations": 2,
+          "error": -1.7347360984305634e-15
+        },
+        {
+          "point": 46960,
+          "observations": 2,
+          "error": -1.1075280537235174e-15
+        },
+        {
+          "point": 60839,
+          "observations": 2,
+          "error": -1.0517691165671514e-15
+        },
+        {
+          "point": 60821,
+          "observations": 2,
+          "error": -9.816874804618353e-16
+        },
+        {
+          "point": 33564,
+          "observations": 2,
+          "error": -9.417670056013144e-16
+        }
+      ]
+    },
+    "cpu_independent_cost": 248405.39915406008,
+    "longdouble_bits": 64
+  },
+  {
+    "metadata": {
+      "ncam": 52.0,
+      "npt": 64053.0,
+      "nobs": 347173.0,
+      "outer": 39.0,
+      "cg_completed": 23.0,
+      "cost": 248405.39602671942,
+      "lambda": 1.0000000000000005e-08,
+      "tau": 1.0000000000000005e-08,
+      "pAp": -2.070053615405694,
+      "pp": 3713876560.837809,
+      "quotient": -5.573835267531652e-10,
+      "cutoff": 1e-14,
+      "intr_damp": 1.0,
+      "k2mask": 0.0,
+      "radius": 12901.410358518682
+    },
+    "cutoff_class": "negative",
+    "actual_cpu_dot_quotient": -5.57383526753161e-10,
+    "cpu_schur_quotients": {
+      "stored": -5.57383647809148e-10,
+      "W32_R32qr": -5.573836478088278e-10,
+      "W64_Rstored": 3.433541681720218e-08,
+      "W32_R64qr": -5.609904495912093e-10,
+      "W64_R64qr": 3.433542515098515e-08
+    },
+    "gpu_rows": [
+      {
+        "operator": "stored_repeat",
+        "rep": "0",
+        "pAp": "-2.0700536154097833",
+        "quotient": "-5.5738352675426622e-10"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "1",
+        "pAp": "-2.0700536154061453",
+        "quotient": "-5.5738352675328673e-10"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "2",
+        "pAp": "-2.0700536154059641",
+        "quotient": "-5.5738352675323793e-10"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "3",
+        "pAp": "-2.0700536154059037",
+        "quotient": "-5.5738352675322159e-10"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "4",
+        "pAp": "-2.0700536154093285",
+        "quotient": "-5.5738352675414379e-10"
+      },
+      {
+        "operator": "stored",
+        "rep": "0",
+        "pAp": "-2.0700536154107212",
+        "quotient": "-5.5738352675451882e-10"
+      },
+      {
+        "operator": "W32_R32qr",
+        "rep": "0",
+        "pAp": "-2.0700536154191695",
+        "quotient": "-5.5738352675679356e-10"
+      },
+      {
+        "operator": "W64_Rstored",
+        "rep": "0",
+        "pAp": "127.51749969550627",
+        "quotient": "3.4335416809529005e-08"
+      },
+      {
+        "operator": "W32_R64qr",
+        "rep": "0",
+        "pAp": "-2.0834491246989018",
+        "quotient": "-5.6099040734646788e-10"
+      },
+      {
+        "operator": "W64_R64qr",
+        "rep": "0",
+        "pAp": "127.51753064644451",
+        "quotient": "3.4335425143391947e-08"
+      }
+    ],
+    "gpu_stored_repeat_range": [
+      -5.573835267542662e-10,
+      -5.573835267532216e-10
+    ],
+    "gpu_minus_cpu_quotients": {
+      "stored": 1.2105462913899128e-16,
+      "W32_R32qr": 1.210520342734097e-16,
+      "W64_Rstored": -7.6731722075032e-18,
+      "W32_R64qr": 4.224474140297532e-17,
+      "W64_R64qr": -7.593200385881574e-18
+    },
+    "camera_energy": 9.87109367909503e-06,
+    "point_schur_terms": {
+      "stored": 9.881651062742839e-06,
+      "W32_R32qr": 9.881651062742839e-06,
+      "W64_Rstored": 9.846758262277827e-06,
+      "W32_R64qr": 9.881654669544621e-06,
+      "W64_R64qr": 9.846758253944044e-06
+    },
+    "stable_fp64_energy": 3.433542582538627e-08,
+    "jacobian_rows_schur": 3.433542582538632e-08,
+    "stable_terms": {
+      "residual": 2.4322199670560738e-08,
+      "point_damping": 2.5965521975438866e-12,
+      "intrinsic_prior": 1.0629602627977486e-11,
+      "camera_damping": 1.0000000000000005e-08
+    },
+    "camera_block_vs_rows_plus_prior": -6.746641069814268e-16,
+    "camera_reassembly_rayleigh_delta": 5.295691713287614e-16,
+    "cross_rounding_relative_frobenius": 2.1612559588788124e-08,
+    "point_rows_rounding_relative_frobenius": 2.272788582896885e-08,
+    "cross_rounding_perturbation": {
+      "linear": -4.746731923564694e-11,
+      "quadratic": -3.4845333145775676e-08,
+      "total": -3.4892800465011317e-08,
+      "track_bins": {
+        "2": {
+          "points": 26823,
+          "signed_rayleigh_error": -3.489283272896769e-08,
+          "absolute_rayleigh_error": 3.489355019080105e-08
+        },
+        "3": {
+          "points": 10345,
+          "signed_rayleigh_error": 1.4031190447111797e-14,
+          "absolute_rayleigh_error": 3.023958105581006e-13
+        },
+        "4": {
+          "points": 5894,
+          "signed_rayleigh_error": -9.500606028011522e-16,
+          "absolute_rayleigh_error": 1.9368563594667324e-13
+        },
+        "5+": {
+          "points": 20991,
+          "signed_rayleigh_error": 1.918282652842868e-14,
+          "absolute_rayleigh_error": 1.1042540504477868e-12
+        },
+        "0-1": {
+          "points": 0,
+          "signed_rayleigh_error": 0.0,
+          "absolute_rayleigh_error": 0.0
+        }
+      },
+      "worst_points": [
+        {
+          "point": 60378,
+          "observations": 2,
+          "error": -1.9680974602427283e-08
+        },
+        {
+          "point": 60447,
+          "observations": 2,
+          "error": -1.5211860321568947e-08
+        },
+        {
+          "point": 46953,
+          "observations": 2,
+          "error": -9.57306478650343e-15
+        },
+        {
+          "point": 60771,
+          "observations": 2,
+          "error": -5.5127591741326224e-15
+        },
+        {
+          "point": 60380,
+          "observations": 2,
+          "error": -4.5004907802854585e-15
+        },
+        {
+          "point": 48326,
+          "observations": 2,
+          "error": -4.3961934075947855e-15
+        },
+        {
+          "point": 473,
+          "observations": 30,
+          "error": -1.8957604777474367e-15
+        },
+        {
+          "point": 13768,
+          "observations": 27,
+          "error": -1.5667998638049055e-15
+        },
+        {
+          "point": 46963,
+          "observations": 2,
+          "error": -1.4790366934814324e-15
+        },
+        {
+          "point": 50214,
+          "observations": 2,
+          "error": -1.4054798934818941e-15
+        }
+      ]
+    },
+    "cpu_independent_cost": 248405.39602671922,
+    "longdouble_bits": 64
+  },
+  {
+    "metadata": {
+      "ncam": 52.0,
+      "npt": 64053.0,
+      "nobs": 347173.0,
+      "outer": 39.0,
+      "cg_completed": 15.0,
+      "cost": 248405.42480957677,
+      "lambda": 1.0000000000000005e-08,
+      "tau": 1.0000000000000005e-08,
+      "pAp": -12.842398456495765,
+      "pp": 6100012770.620878,
+      "quotient": -2.105306814823049e-09,
+      "cutoff": 1e-14,
+      "intr_damp": 1.0,
+      "k2mask": 0.0,
+      "radius": 12901.410358518686
+    },
+    "cutoff_class": "negative",
+    "actual_cpu_dot_quotient": -2.105306814823053e-09,
+    "cpu_schur_quotients": {
+      "stored": -2.105306636037702e-09,
+      "W32_R32qr": -2.1053066360376878e-09,
+      "W64_Rstored": 4.277910821019555e-08,
+      "W32_R64qr": -2.1089424273481605e-09,
+      "W64_R64qr": 4.277910049133995e-08
+    },
+    "gpu_rows": [
+      {
+        "operator": "stored_repeat",
+        "rep": "0",
+        "pAp": "-12.842398456496063",
+        "quotient": "-2.1053068148230983e-09"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "1",
+        "pAp": "-12.84239845649595",
+        "quotient": "-2.1053068148230797e-09"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "2",
+        "pAp": "-12.84239845649639",
+        "quotient": "-2.1053068148231517e-09"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "3",
+        "pAp": "-12.842398456496021",
+        "quotient": "-2.1053068148230913e-09"
+      },
+      {
+        "operator": "stored_repeat",
+        "rep": "4",
+        "pAp": "-12.842398456496134",
+        "quotient": "-2.1053068148231099e-09"
+      },
+      {
+        "operator": "stored",
+        "rep": "0",
+        "pAp": "-12.842398456496149",
+        "quotient": "-2.105306814823112e-09"
+      },
+      {
+        "operator": "W32_R32qr",
+        "rep": "0",
+        "pAp": "-12.842398456514264",
+        "quotient": "-2.105306814826082e-09"
+      },
+      {
+        "operator": "W64_Rstored",
+        "rep": "0",
+        "pAp": "260.9531061591307",
+        "quotient": "4.2779108171042419e-08"
+      },
+      {
+        "operator": "W32_R64qr",
+        "rep": "0",
+        "pAp": "-12.864576567503448",
+        "quotient": "-2.1089425631143476e-09"
+      },
+      {
+        "operator": "W64_R64qr",
+        "rep": "0",
+        "pAp": "260.953059074588",
+        "quotient": "4.2779100452281085e-08"
+      }
+    ],
+    "gpu_stored_repeat_range": [
+      -2.1053068148231517e-09,
+      -2.1053068148230797e-09
+    ],
+    "gpu_minus_cpu_quotients": {
+      "stored": -1.7878541014939914e-16,
+      "W32_R32qr": -1.7878839420345893e-16,
+      "W64_Rstored": -3.915313183987457e-17,
+      "W32_R64qr": -1.357661870869135e-16,
+      "W64_R64qr": -3.905886633726803e-17
+    },
+    "camera_energy": 3.95508732025174e-06,
+    "point_schur_terms": {
+      "stored": 3.967192626887778e-06,
+      "W32_R32qr": 3.967192626887778e-06,
+      "W64_Rstored": 3.922308212041545e-06,
+      "W32_R64qr": 3.9671962626790884e-06,
+      "W64_R64qr": 3.922308219760401e-06
+    },
+    "stable_fp64_energy": 4.27791009299575e-08,
+    "jacobian_rows_schur": 4.277910092995639e-08,
+    "stable_terms": {
+      "residual": 3.276351410545812e-08,
+      "point_damping": 1.6860182041413628e-12,
+      "intrinsic_prior": 1.3900806295234296e-11,
+      "camera_damping": 1.0000000000000005e-08
+    },
+    "camera_block_vs_rows_plus_prior": -4.3835036544070705e-16,
+    "camera_reassembly_rayleigh_delta": 2.515054111163635e-16,
+    "cross_rounding_relative_frobenius": 2.0769622035851783e-08,
+    "point_rows_rounding_relative_frobenius": 1.8340275193785613e-08,
+    "cross_rounding_perturbation": {
+      "linear": -1.6744313900626967e-10,
+      "quadratic": -4.471697170722698e-08,
+      "total": -4.488441484623325e-08,
+      "track_bins": {
+        "2": {
+          "points": 26823,
+          "signed_rayleigh_error": -4.488440768289156e-08,
+          "absolute_rayleigh_error": 4.488467622852633e-08
+        },
+        "3": {
+          "points": 10345,
+          "signed_rayleigh_error": -1.9526191925272338e-15,
+          "absolute_rayleigh_error": 9.03501555749004e-14
+        },
+        "4": {
+          "points": 5894,
+          "signed_rayleigh_error": 4.557600055700591e-16,
+          "absolute_rayleigh_error": 5.937847610538408e-14
+        },
+        "5+": {
+          "points": 20991,
+          "signed_rayleigh_error": -5.666482498528839e-15,
+          "absolute_rayleigh_error": 3.6546894826267424e-13
+        },
+        "0-1": {
+          "points": 0,
+          "signed_rayleigh_error": 0.0,
+          "absolute_rayleigh_error": 0.0
+        }
+      },
+      "worst_points": [
+        {
+          "point": 60378,
+          "observations": 2,
+          "error": -4.3650758080912955e-08
+        },
+        {
+          "point": 60447,
+          "observations": 2,
+          "error": -1.233634273499234e-09
+        },
+        {
+          "point": 46953,
+          "observations": 2,
+          "error": -1.3936917183299721e-14
+        },
+        {
+          "point": 46947,
+          "observations": 2,
+          "error": -2.929682881400775e-15
+        },
+        {
+          "point": 46963,
+          "observations": 2,
+          "error": -1.9950231856502605e-15
+        },
+        {
+          "point": 54600,
+          "observations": 2,
+          "error": -1.6042528281314787e-15
+        },
+        {
+          "point": 47710,
+          "observations": 2,
+          "error": -1.4611924788295997e-15
+        },
+        {
+          "point": 46982,
+          "observations": 2,
+          "error": -1.2566654231117466e-15
+        },
+        {
+          "point": 60423,
+          "observations": 3,
+          "error": -1.2369553460401371e-15
+        },
+        {
+          "point": 48328,
+          "observations": 2,
+          "error": -8.042300647297912e-16
+        }
+      ]
+    },
+    "cpu_independent_cost": 248405.4248095769,
+    "longdouble_bits": 64
+  }
+]

@@ -102,6 +102,23 @@ def analyze(folder):
     actual_q=np.sum(actual*p,dtype=LD)/pp
     q=meta['quotient']
     classification='nonfinite' if not math.isfinite(q) else 'negative' if q<0 else 'zero' if q==0 else 'small_positive'
+    # Exact fixed-factor perturbation identity for rounding W alone:
+    # delta q = -2 <R^-T W64^T v, R^-T deltaW^T v> - ||R^-T deltaW^T v||^2.
+    y64=forward(factors['stored'],g['W64'])
+    dy=forward(factors['stored'],g['W32']-g['W64'])
+    linear=-2*np.sum(y64*dy,axis=1,dtype=LD)
+    quadratic=-np.sum(dy*dy,axis=1,dtype=LD)
+    point_error=linear+quadratic
+    tracks=np.bincount(op,minlength=np_)
+    bins={}
+    for label,mask in [('2',tracks==2),('3',tracks==3),('4',tracks==4),('5+',tracks>=5),('0-1',tracks<2)]:
+        bins[label]=dict(points=int(mask.sum()),signed_rayleigh_error=float(np.sum(point_error[mask],dtype=LD)),
+                         absolute_rayleigh_error=float(np.sum(np.abs(point_error[mask]),dtype=LD)))
+    worst=np.argsort(point_error)[:10]
+    perturbation=dict(linear=float(np.sum(linear,dtype=LD)),quadratic=float(np.sum(quadratic,dtype=LD)),
+        total=float(np.sum(point_error,dtype=LD)),track_bins=bins,
+        worst_points=[dict(point=int(i),observations=int(tracks[i]),error=float(point_error[i])) for i in worst])
+    assert abs(perturbation['total']-(quotients['stored']-quotients['W64_Rstored']))<1e-15
     result=dict(metadata=meta,cutoff_class=classification,actual_cpu_dot_quotient=float(actual_q),
         cpu_schur_quotients=quotients,gpu_rows=gpu,gpu_stored_repeat_range=[min(repeat),max(repeat)],
         gpu_minus_cpu_quotients=differences,camera_energy=float(camera),point_schur_terms=point_terms,
@@ -109,6 +126,7 @@ def analyze(folder):
         stable_terms=dict(residual=float(residual_energy),point_damping=float(point_damping),intrinsic_prior=float(prior),camera_damping=meta['lambda']),
         camera_block_vs_rows_plus_prior=float(camera-camera_rows-prior),
         camera_reassembly_rayleigh_delta=float(h_delta),cross_rounding_relative_frobenius=float(Werr),point_rows_rounding_relative_frobenius=float(Berr),
+        cross_rounding_perturbation=perturbation,
         cpu_independent_cost=state_cost,longdouble_bits=np.finfo(LD).nmant+1)
     assert abs(float(actual_q)-q)<1e-10*max(1,abs(q))
     assert max(abs(v) for v in differences.values())<1e-10*max(1,abs(float(camera)))
