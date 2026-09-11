@@ -2,7 +2,7 @@
 
 INCOMPLETE: measurements are still in progress.
 
-Available rows: {'venice': 20, 'storm': 0, 'ceres-storm': 3}. All available rows valid: True.
+Available rows: {'venice': 20, 'storm': 10, 'ceres-storm': 9}. All available rows valid: True.
 
 The original solver and champion remain unchanged. This is a coverage and stopping-policy experiment, not a new champion selection.
 
@@ -23,12 +23,15 @@ Claude supplied six MFREE endpoint rows: plain 300-outer median 241637.513 in 30
 
 ## Ceres storm coverage and Eta2 fixed targets
 
-Ceres uses the exact banked binary: LM iterative Schur / Schur-Jacobi and dogleg sparse Schur / SuiteSparse, radius 10000, eight threads, 600 iterations, 3600 process seconds, N=3 per profile and scene. Eta2 uses 60 native seconds and 600 outers, N=10. Targets are frozen after the complete Ceres endpoint stage and before any corresponding Eta2 run, at 1.01 times the lower valid profile median.
+Ceres uses the exact banked binary: LM iterative Schur / Schur-Jacobi and dogleg sparse Schur / SuiteSparse, radius 10000, eight threads, 600 iterations, 3600 process seconds, N=3 per profile and scene. Eta2 uses 60 native seconds and 600 outers, N=10. Targets are frozen after each scene has a complete Ceres endpoint stage and before any corresponding Eta2 run, at 1.01 times the lower valid profile median.
 
 | Scene | Arm | N available | Valid | Target hits | Median endpoint | Median native seconds | Median target seconds among hits |
 |---|---|---:|---:|---:|---:|---:|---:|
-| final-3068 | dogleg-10000 | 2 | 2 | unregistered | 1,716,772.064166 | 1,546.418958 | — |
-| final-3068 | lm-10000 | 1 | 1 | unregistered | 2,183,295.461330 | 11.277017 | — |
+| final-3068 | dogleg-10000 | 3 | 3 | 2 | 1,727,521.766525 | 1,131.099964 | 1,302.742597 |
+| final-3068 | lm-10000 | 3 | 3 | 0 | 2,183,295.461330 | 10.714960 | — |
+| final-4585 | dogleg-10000 | 2 | 2 | unregistered | 7,998,055.634057 | 2,433.279302 | — |
+| final-4585 | lm-10000 | 1 | 1 | unregistered | 8,040,781.916687 | 67.989756 | — |
+| final-3068 | champion | 10 | 10 | 8 | 1,742,918.320655 | 3.789473 | 3.692232 |
 
 ### Exploratory Venice follow-up
 
@@ -41,6 +44,8 @@ Two probes were registered after the first primary misses, N=3 each, 600 outers 
 
 probe_relaxed_ftol changes FTOL to1e-7; probe_tighter_forcing disables FTOL and changes the forcing multiplier from2 to0.1. See PROBE_PROTOCOL.md.
 
+The [combined same-target ledger](SAME_TARGET_LEDGER.md) adds every available frozen Caspar32 profile/cap, including misses and full solve times, plus Claude’s MFREE CSV and explicitly incomplete f64 aggregate provenance. Host, endpoint audit, repetition count and crossing-time upper bounds remain labeled separately.
+
 Target times use accepted Ceres callback states, without interpolation; rejected trial objectives are excluded. Timing among successful runs is conditional when any repetitions miss. Endpoints at unlike stops are not interchangeable with matched-target convergence speed. Iteration caps and termination reasons are in runs.csv and the raw logs.
 
 ## Claim scope and evidence
@@ -51,4 +56,4 @@ The older paused 37/48 sweep tests different A/B/C/D configurations, not Eta2, a
 
 The host is RTX 2000 Ada with an AMD EPYC 9354 CPU and a 6.8-core container CPU quota. CPU and GPU measurements are serialized. Native solve seconds exclude input loading and endpoint audit; setup/process seconds remain available separately where the frozen drivers expose them.
 
-Reproduction: PROTOCOL.md, ORDER_NOTE.md, run_ceres.py, run_eta2.py. Evidence: provenance/, evidence/, runs.csv, all-results.json, summary.json, storm-targets.json when registered. Verification: audit.py. Figures: plot.py. No solver-source modification is part of this experiment.
+Reproduction: PROTOCOL.md, ORDER_NOTE.md, ORDER_NOTE_2.md, run_ceres.py, run_eta2.py and run_ready_storm.py. The second ordering note lets Final3068 run once its own baseline is complete; its target rule is unchanged. Evidence: provenance/, evidence/, runs.csv, all-results.json, summary.json, storm-targets.json when registered. Verification: audit.py. Figures: plot.py. No solver-source modification is part of this experiment.

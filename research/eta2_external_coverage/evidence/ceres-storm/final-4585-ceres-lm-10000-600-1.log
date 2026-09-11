@@ -1,0 +1,59 @@
+INITIAL score=602872963.48932469 setup_seconds=7.140290676
+RESULT exit=0 iters=16 final_score=8040781.9166873768 runtime=67.989756184
+TRACE iter=0 cost=602872963.48932314 seconds=8.365532875 accepted=1
+TRACE iter=1 cost=1133384347.8087614 seconds=11.788332939 accepted=0
+TRACE iter=2 cost=153078234.79466859 seconds=15.671121836 accepted=1
+TRACE iter=3 cost=7497920851.2170544 seconds=20.085447788 accepted=0
+TRACE iter=4 cost=33174945674.131584 seconds=23.895587921 accepted=0
+TRACE iter=5 cost=1.4628931656750109e+23 seconds=27.597623825 accepted=0
+TRACE iter=6 cost=31511475.611594424 seconds=32.951622963 accepted=1
+TRACE iter=7 cost=12137270.905047247 seconds=38.685904980 accepted=1
+TRACE iter=8 cost=8491735075906.8408 seconds=43.865891933 accepted=0
+TRACE iter=9 cost=182515523451.72397 seconds=47.478375912 accepted=0
+TRACE iter=10 cost=7094094290.0346813 seconds=49.764059782 accepted=0
+TRACE iter=11 cost=147665669.29659456 seconds=51.911176920 accepted=0
+TRACE iter=12 cost=9240723.0057594683 seconds=55.598290920 accepted=1
+TRACE iter=13 cost=8040781.9166873768 seconds=59.414271832 accepted=1
+TRACE iter=14 cost=8390937.8223705199 seconds=62.066283941 accepted=0
+TRACE iter=15 cost=8176803.4728713529 seconds=64.265990973 accepted=0
+CHECK final_score=8040781.9166873777
+CERES 
+Solver Summary (v 2.2.0-eigen-(3.4.0)-lapack-suitesparse-(7.6.1)-eigensparse)
+
+                                     Original                  Reduced
+Parameter blocks                      1329167                  1329167
+Parameters                            4010426                  4010426
+Residual blocks                       9125125                  9125125
+Residuals                            18250250                 18250250
+
+Minimizer                        TRUST_REGION
+Trust region strategy     LEVENBERG_MARQUARDT
+                                        Given                     Used
+Linear solver                 ITERATIVE_SCHUR          ITERATIVE_SCHUR
+Preconditioner                   SCHUR_JACOBI             SCHUR_JACOBI
+Threads                                     8                        8
+Linear solver ordering           1324582,4585             1324582,4585
+Schur structure                         2,3,8                    2,3,d
+
+Cost:
+Initial                          6.028730e+08
+Final                            8.040782e+06
+Change                           5.948322e+08
+
+Minimizer iterations                       16
+Successful steps                            6
+Unsuccessful steps                         10
+
+Time (in seconds):
+Preprocessor                         6.146488
+
+  Residual only evaluation           6.386156 (16)
+  Jacobian & residual evaluation     8.073781 (6)
+  Linear solver                     40.603384 (16)
+Minimizer                           60.616527
+
+Postprocessor                        0.421578
+Total                               67.184593
+
+Termination:                      CONVERGENCE (Parameter tolerance reached. Relative step_norm: 5.359415e-09 <= 1.000000e-08.)
+
