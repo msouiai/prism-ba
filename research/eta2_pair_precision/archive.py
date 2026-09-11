@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Preserve source, binaries, traces, and all primary states and operator witnesses in a verified archive."""
-import datetime,fcntl,hashlib,io,json,subprocess,tarfile
+import datetime,fcntl,hashlib,io,json,subprocess,tarfile,shutil
 from pathlib import Path
 P=Path(__file__).resolve().parent
 ROOT=P.parents[1]
@@ -9,7 +9,7 @@ def sha(p):
 def main():
     stamp=datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     dest=Path('/workspace/collab/results')/('eta2_pair_precision_'+stamp+'.tar.gz')
-    temporary=Path(str(dest)+'.part')
+    temporary=P/'build'/(dest.name+'.part')
     files={str(f.relative_to(ROOT)):f for f in P.rglob('*') if f.is_file() and '__pycache__' not in f.parts}
     F=P.parent/'eta2_champion'
     for f in list((F/'source').rglob('*'))+[F/'source_manifest.json',F/'champion.json',F/'build.py',F/'bench/audit_prism_state.py']:
@@ -35,8 +35,12 @@ def main():
                 assert actual==manifest['files'][member.name]['sha256'],member.name
                 checked+=1
             assert checked==len(files)
-        temporary.rename(dest)
-        h=sha(dest)
+        h=sha(temporary)
+        remote_partial=Path(str(dest)+'.part')
+        shutil.copyfile(temporary,remote_partial)
+        assert sha(remote_partial)==h
+        remote_partial.rename(dest)
+        temporary.unlink() # Only our newly generated, verified duplicate.
         Path(str(dest)+'.sha256').write_text(h+'  '+dest.name+'\n')
         Path(str(dest)+'.manifest.json').write_bytes(data)
     result=dict(path=str(dest),sha256=h,bytes=dest.stat().st_size,files=len(files),commit=manifest['commit'],verified=True)
