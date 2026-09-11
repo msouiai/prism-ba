@@ -82,6 +82,38 @@ def dense_audit(folder,obs):
         dense=float(z.reshape(-1).astype(float)@matrices[name]@z.reshape(-1).astype(float))
         assert abs(q-dense)<1e-10,(name,q,dense)
         quotients[name]=dict(extended_rayleigh=q,dense_rayleigh=dense,difference=q-dense)
+    # Independent nonnegative full-Jacobian energy at the eliminated point
+    # minimizer. This avoids Schur cancellation in the FP64 reference check.
+    J=read('Jc64.f64',(no,2,9));B=read('B64.f64',(no,2,3))
+    jv=np.empty((no,2),dtype=LD);g=np.zeros((np_,3),dtype=LD)
+    for lo in range(0,no,8192):
+        hi=min(no,lo+8192)
+        jv[lo:hi]=np.einsum('ori,oi->or',J[lo:hi].astype(LD),v[oc[lo:hi]],dtype=LD)
+        np.add.at(g,op[lo:hi],np.einsum('ori,or->oi',B[lo:hi].astype(LD),jv[lo:hi],dtype=LD))
+    r=R64.astype(LD);y=forward(r,g);x=np.empty_like(y)
+    x[:,2]=y[:,2]/r[:,5]
+    x[:,1]=(y[:,1]-r[:,4]*x[:,2])/r[:,3]
+    x[:,0]=(y[:,0]-r[:,1]*x[:,1]-r[:,2]*x[:,2])/r[:,0]
+    residual=LD(0)
+    R=read('R_state.f64',(nc,3,3)).astype(LD);t=read('t_state.f64',(nc,3)).astype(LD)
+    X=read('X_state.f64',(np_,3)).astype(LD);intr=read('intr_state.f64',(3,nc)).astype(LD)
+    radius_sum=np.zeros(nc,dtype=LD);counts=np.bincount(oc,minlength=nc)
+    for lo in range(0,no,8192):
+        hi=min(no,lo+8192);cc=oc[lo:hi];pt=op[lo:hi]
+        rem=jv[lo:hi]-np.einsum('ori,oi->or',B[lo:hi].astype(LD),x[pt],dtype=LD)
+        residual+=np.sum(rem*rem,dtype=LD)
+        q=np.einsum('oij,oj->oi',R[cc],X[pt],dtype=LD)+t[cc]
+        np.add.at(radius_sum,cc,(q[:,0]**2+q[:,1]**2)/q[:,2]**2)
+    C=read('Cdiag.f64',(np_,3)).astype(LD);tau=LD(meta['tau'])
+    floor=tau*np.sum(C,axis=1)/3;floor=np.where(floor>0,floor,LD(1e-32))
+    D=np.maximum(tau*C,LD(.001)*floor[:,None])
+    point_damping=np.sum(D*x*x,dtype=LD)
+    mean=np.maximum(radius_sum/np.maximum(counts,1),LD(1e-12))
+    prior=LD(meta['intr_damp'])*np.sum(np.where(counts>0,
+      (v[:,6]/(LD(.5)*abs(intr[0])+LD(.001)))**2+(mean*v[:,7])**2,0),dtype=LD)
+    camera_damping=LD(meta['lambda'])*np.sum(z*z,dtype=LD)
+    stable=residual+point_damping+prior+camera_damping
+    assert stable>=camera_damping and abs(float(stable)-quotients['W64_R64qr']['extended_rayleigh'])<1e-10
     cost=audit(folder/'endpoint.state',(nc,np_,no),obs)
     assert abs(cost-meta['cost'])/cost<1e-7
     # Ensure that the capture made no state update: the endpoint equals all
@@ -95,6 +127,8 @@ def dense_audit(folder,obs):
         **{name+'_eigenvalues':v[0] for name,v in eigens.items()})
     result=dict(state=folder.name,metadata=meta,independent_cost=cost,operators=checks,
       mixed_min_vector_quotients=quotients,longdouble_significand_bits=np.finfo(LD).nmant+1,
+      stable_full_jacobian_energy=float(stable),stable_terms=dict(residual=float(residual),
+        point_damping=float(point_damping),intrinsics_prior=float(prior),camera_damping=float(camera_damping)),
       state_unchanged=True,dense_artifact_sha256=sha(folder/'dense_operators.npz'))
     write(folder/'audit.json',result)
     return result

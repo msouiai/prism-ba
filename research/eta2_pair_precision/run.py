@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Registered serial pair/precision experiment with independent endpoint scoring."""
-import argparse, csv, fcntl, gzip, hashlib, json, math, os, re, shutil
+import argparse, csv, fcntl, functools, gzip, hashlib, json, math, os, re, shutil
 import socket, statistics, subprocess, sys, time
 from pathlib import Path
 P=Path(__file__).resolve().parent
 F=P.parent/'eta2_champion'
 sys.path.insert(0,str(F/'bench'))
 from audit_prism_state import observations,audit
+observations=functools.lru_cache(maxsize=2)(observations)
 CHAMP=json.loads((F/'champion.json').read_text())
 ORIGINAL=Path('/tmp/prism-rl-actor/build/prism-tr')
 TARGETS={'final-3068':1744796.9841897595,'venice-52':243740.27}

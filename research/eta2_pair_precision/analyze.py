@@ -20,6 +20,7 @@ def main():
             matvecs_median=med([r['matvecs'] for r in valid]),cap_hits=sum(r['cap_hit'] for r in valid),
             probes=sum(len(r.get('probes',[])) for r in valid),
             probe_accepts=sum(p['accept'] for r in valid for p in r.get('probes',[])),
+            probe_truncations=sum(p['trunc'] for r in valid for p in r.get('probes',[])),
             stop_miss_witnesses=len(witnesses),stop_miss_witnesses_rescued=sum(r['hit'] for r in witnesses)))
     pairs=[]
     for r in rows:
@@ -30,6 +31,18 @@ def main():
                           endpoint_delta=ec,wall_delta=wall,fail=ec>.005 or wall>.2))
     out=dict(groups=groups,paired_screen=pairs,all_valid=all(r['valid'] for r in rows),rows=len(rows))
     (P/'summary.json').write_text(json.dumps(out,indent=2)+'\n')
+    gates={}
+    for arm in ['pair','pair64']:
+        gg=[g for g in groups if g['stage']=='final' and g['arm']==arm]
+        if gg:
+            g=gg[0]
+            gates[arm+'_final_pass']=(g['n']==10 and g['valid']==10 and g['stop_miss_witnesses']>=2 and
+              g['stop_miss_witnesses_rescued']==g['stop_miss_witnesses'] and
+              g['conditional_seconds'] is not None and g['conditional_seconds']<=3.96)
+    v=[g for g in groups if g['stage']=='venice' and g['arm']=='declip64']
+    if v:gates['declip64_venice_hits']=v[0]['hits']
+    gates['screen_failures']=[p for p in pairs if p['stage']=='screen' and p['fail']]
+    (P/'gates.json').write_text(json.dumps(gates,indent=2)+'\n')
     for g in groups:print(g['stage'],g['scene'],g['arm'],str(g['hits'])+'/'+str(g['n']),
                          'target_s',g['conditional_seconds'],'native_s',g['native_median'],
                          'endpoint',g['endpoint_median'],'probes',g['probes'],
