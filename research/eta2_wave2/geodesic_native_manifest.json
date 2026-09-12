@@ -1,0 +1,29 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave2",
+    "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/build/prism_geodesic_native.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/build/prism-geodesic-native",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "source_sha256": "4f1543f3edac621ffec525304dbcbf811831b6fb5f8da5ef8ea2c543e349886c",
+  "binary_sha256": "0e73b02d5714a44511baadd3cc3360343a7bbd64bffbf43b9c2aa2b82bba4173",
+  "protocol_sha256": "38c57965649b3ec867eee9f60bd4fee5c53040505e72571c38b8290a798535fe",
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave2/build_geodesic_native.py": "f200450dbe4f587c8bd0cd54ed457f8b418ac58bab41b2068bf522bffe95088f",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/geodesic_native.cuh": "3409b65777c7510bfac715ff0217d63b322222ca71d263c649d14140121bed1c",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/geodesic_native.inc": "4f9043591b99a578097460ed4b41c8feaf9c20719aeb678b560b49e4081bc465",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/geodesic_analytic.cuh": "a0ea955b99e3a85deca08be44fd70fbb1732c633d00a85edb2b06033dd54d293",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/build.py": "655b646321fc68f1205f294a118df60947311676d292e236ce1ef73552ba2ca7",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/wave_trace.cuh": "e866f4e5071aba8da6e03b082035e3ebc8d9011d37117f8dedb27f80ba2184e7"
+  }
+}

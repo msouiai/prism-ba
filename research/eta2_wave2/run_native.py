@@ -44,14 +44,14 @@ def run(reg,stage,cell,arm,rep):
     assert G.sha(cell['path'])==cell['input_sha256']
     folder.mkdir(parents=True,exist_ok=True)
     flags=dict(ARMS.get(arm,{}))
-    binary=G.ORIGINAL if arm=='original' else P/'build/prism-wave2'
+    binary=G.ORIGINAL if arm=='original' else Path(reg.get('binary',P/'build/prism-wave2'))
     if arm!='original':flags.update(OCA_STCG_ATTEMPTS=str(folder/'attempts.json'),OCA_WAVE_TRACE=str(folder/'wave.json'))
     cli=list(G.CHAMP['cli'])
     if arm.startswith('lambda'):cli[cli.index('--lam0')+1]=str(reg['initial_lambdas'][arm])
     fd,raw=tempfile.mkstemp(prefix='eta2-wave2-',suffix='.state',dir='/dev/shm');os.close(fd)
     temporary=Path(raw);(folder/'endpoint.state').symlink_to(temporary)
     G.write(folder/'staging.json',dict(raw_path=raw,policy='RAM duplicate removed only after verified durable gzip'))
-    row=G.run(folder,scene,arm,rep,binary,flags,P/'PROTOCOL.md',cell['target'],cell['cap'],cell['path'],cli,reg['build_manifest'])
+    row=G.run(folder,scene,arm,rep,binary,flags,Path(reg.get('protocol',P/'PROTOCOL.md')),cell['target'],cell['cap'],cell['path'],cli,reg['build_manifest'])
     assert G.sha(temporary)==row['state']['sha256'];temporary.unlink()
     text=(folder/'stdout.log').read_text()
     row['stop_reason']='target' if row['hit'] else ('time_cap' if 'BUDGET stop=' in text else ('outer_cap' if row['outers']>=600 else ('ftol' if row['stop_ftol'] else 'other')))

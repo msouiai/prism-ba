@@ -1,0 +1,459 @@
+{
+  "build_manifest": {
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave2",
+      "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "/tmp/prism-ba-coarse/research/eta2_wave2/build/prism_wave_root.cu",
+      "-o",
+      "/tmp/prism-ba-coarse/research/eta2_wave2/build/prism-wave-root",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    "source_sha256": "bbd5d9f703f33871c2a19f98e506007656975700bb9a5c3c4c9342800918ee66",
+    "binary_sha256": "d612776a33f6ab71d7acca95a3176e31eb99f2d4383256969e409d69ad7aa499",
+    "protocol_sha256": "d9bcb88cfe4cb5b093973597168ff945fb2ec7ce024d2da1349a9e3de6aeac16",
+    "parent_source": "{\n  \"command\": [\n    \"nvcc\",\n    \"-O3\",\n    \"-DNDEBUG\",\n    \"-std=c++17\",\n    \"-arch=sm_89\",\n    \"-I/usr/include/eigen3\",\n    \"-I/tmp/prism-ba-coarse/research/eta2_wave2\",\n    \"-I/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload\",\n    \"-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers\",\n    \"/tmp/prism-ba-coarse/research/eta2_wave2/build/prism_wave2.cu\",\n    \"-o\",\n    \"/tmp/prism-ba-coarse/research/eta2_wave2/build/prism-wave2\",\n    \"-lcublas\",\n    \"-lcusolver\"\n  ],\n  \"source_sha256\": \"c1521c20063184ee809a625bf75dc7d359c08b41bedfbdb6bbb7d3710f4da71f\",\n  \"binary_sha256\": \"6eced579b927cfad63a31481d6635f3fdefa30a4f9039ef3d8f5b0c15e7f4c01\",\n  \"frozen_source_sha256\": \"22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8\",\n  \"champion_sha256\": \"6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251\",\n  \"protocol_sha256\": \"b018e3b4485051863275acb6993de8b5007d63bae7164465af6c4f5a71a0a9b8\",\n  \"local_headers_and_builders\": {\n    \"/tmp/prism-ba-coarse/research/eta2_wave2/build.py\": \"655b646321fc68f1205f294a118df60947311676d292e236ce1ef73552ba2ca7\",\n    \"/tmp/prism-ba-coarse/research/eta2_wave2/wave_trace.cuh\": \"e866f4e5071aba8da6e03b082035e3ebc8d9011d37117f8dedb27f80ba2184e7\",\n    \"/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/build.py\": \"d2c46774fcef0e9f279bc0cc0a197fca844cf3bd067e5f0e5e6dc8a7dc551049\",\n    \"/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/frontload.cuh\": \"7a4a7de108e5616bb76ace88476d29ce1fa6ab605888127f56c4c201830efaee\",\n    \"/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/coherent_rows.cuh\": \"38c042aa5a5f55c8cc740b901de7a92afe54f8fb9cf26920cc9c821bada6d6ce\",\n    \"/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/attempt_trace.h\": \"43400101d54c0ccf94464025497105ef825e16c7e7cbb1d21f7dff019619daf6\"\n  },\n  \"reversible_patch_count\": 24,\n  \"default_off\": true\n}\n",
+    "sources": {
+      "/tmp/prism-ba-coarse/research/eta2_wave2/build_root.py": "582c2121c63502a1e5254721c8e7c2876794721dd35b3d93d587b1f92cb68e0c",
+      "/tmp/prism-ba-coarse/research/eta2_wave2/root_policy.h": "faa4f4b8e55630910be495fa4cd6c6e6de5f4a3bf548cf47b8796bf76b525ba4",
+      "/tmp/prism-ba-coarse/research/eta2_wave2/wave_trace.cuh": "e866f4e5071aba8da6e03b082035e3ebc8d9011d37117f8dedb27f80ba2184e7",
+      "/tmp/prism-ba-coarse/research/eta2_wave2/build.py": "655b646321fc68f1205f294a118df60947311676d292e236ce1ef73552ba2ca7"
+    }
+  },
+  "protocol": "/tmp/prism-ba-coarse/research/eta2_wave2/ROOT_NATIVE_PROTOCOL.md",
+  "protocol_sha256": "d9bcb88cfe4cb5b093973597168ff945fb2ec7ce024d2da1349a9e3de6aeac16",
+  "binary": "/tmp/prism-ba-coarse/research/eta2_wave2/build/prism-wave-root",
+  "arms": {
+    "off": {},
+    "coupled": {
+      "OCA_W2_ROOT": "1"
+    },
+    "frozen": {
+      "OCA_W2_ROOT": "2"
+    },
+    "opening": {
+      "OCA_W2_ROOT": "3"
+    }
+  },
+  "cells": {
+    "venice-52": {
+      "scene": "venice-52",
+      "path": "/workspace/bal/venice-52.txt",
+      "target": 243740.27,
+      "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "cap": 60
+    },
+    "final-3068": {
+      "scene": "final-3068",
+      "path": "/workspace/bal/final-3068.txt",
+      "target": 1744796.9841897595,
+      "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+      "cap": 60
+    },
+    "dubrovnik-88": {
+      "scene": "dubrovnik-88",
+      "path": "/workspace/bal/dubrovnik-88.txt",
+      "target": 0,
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "cap": 60
+    }
+  },
+  "native_panel": {
+    "practical": [
+      {
+        "scene": "ladybug-539",
+        "multiplier": 1.005,
+        "target": 164797.8493852759,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+        "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+        "cell": "ladybug-539-1.005"
+      },
+      {
+        "scene": "ladybug-539",
+        "multiplier": 1.01,
+        "target": 165617.73918321263,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+        "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+        "cell": "ladybug-539-1.01"
+      },
+      {
+        "scene": "ladybug-539",
+        "multiplier": 1.02,
+        "target": 167257.518779086,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+        "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+        "cell": "ladybug-539-1.02"
+      },
+      {
+        "scene": "trafalgar-138",
+        "multiplier": 1.005,
+        "target": 103088.39569543337,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+        "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+        "cell": "trafalgar-138-1.005"
+      },
+      {
+        "scene": "trafalgar-138",
+        "multiplier": 1.01,
+        "target": 103601.27328595793,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+        "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+        "cell": "trafalgar-138-1.01"
+      },
+      {
+        "scene": "trafalgar-138",
+        "multiplier": 1.02,
+        "target": 104627.02846700703,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+        "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+        "cell": "trafalgar-138-1.02"
+      },
+      {
+        "scene": "final-394",
+        "multiplier": 1.005,
+        "target": 306349.5931045434,
+        "cap": 8,
+        "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+        "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+        "cell": "final-394-1.005"
+      },
+      {
+        "scene": "final-394",
+        "multiplier": 1.01,
+        "target": 307873.7204334218,
+        "cap": 8,
+        "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+        "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+        "cell": "final-394-1.01"
+      },
+      {
+        "scene": "final-394",
+        "multiplier": 1.02,
+        "target": 310921.97509117844,
+        "cap": 8,
+        "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+        "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+        "cell": "final-394-1.02"
+      }
+    ],
+    "tail": [
+      {
+        "scene": "venice-52",
+        "target": 243740.27,
+        "cap": 60,
+        "path": "/workspace/bal/venice-52.txt",
+        "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+        "cell": "venice-52"
+      },
+      {
+        "scene": "final-3068",
+        "target": 1744796.9841897595,
+        "cap": 60,
+        "path": "/workspace/bal/final-3068.txt",
+        "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+        "cell": "final-3068"
+      }
+    ],
+    "protocol_sha256": "b35a62f3a12e5cedb24e4c7956663ea1907854480decca960035d9ef99505b2b",
+    "source_protocol_sha256": "5c3523bc936e34e59af444fd51ccc9f3832e11a248dffa669a9fced368e8c2db",
+    "source_anchors_sha256": "4180b284a57de82d48d866b8dfa7afedc2aab065da37521bc7d5094499d0d013"
+  },
+  "independent_validation": {
+    "rows": [
+      {
+        "scene": "venice-52",
+        "rep": 1,
+        "rows": [
+          {
+            "arm": "lambda_coupled",
+            "lambda_value": 4.0379843073860307e-07,
+            "tau": 4.0379843073860307e-07,
+            "full_normal_relative": 1.215182878506998e-10,
+            "score": {
+              "score_init": 244946.83905292646,
+              "cost": 244946.72152928667,
+              "true_decrease": 0.1175236397870406,
+              "prediction": 0.11978367590518005,
+              "rho": 0.9811323529599436,
+              "accepted": true,
+              "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+              "prediction_absolute_term_scale": 85.60024463526128,
+              "maximum_point_displacement": 11810.930533036679,
+              "scene_radius": 11714.335694038562,
+              "large_moves_inward": 0,
+              "large_moves_outward": 1,
+              "camera_scaled_norm": 331.0013757463086,
+              "front_to_behind_observations": 0,
+              "behind_to_front_observations": 0,
+              "invalid_initial_observations": 0,
+              "invalid_candidate_observations": 0,
+              "changed_k2_entries": 0,
+              "cpu_scoring_audit_seconds": 0.1821042108349502
+            },
+            "native_score_relative_error": 1.782254745543958e-15,
+            "native_source_certified": true,
+            "raw_sha256": "997c43a351c44dd32eb977a2becec39373ecbc9b15b73e490d18b39ff06fe1c4",
+            "step_sha256": "997c43a351c44dd32eb977a2becec39373ecbc9b15b73e490d18b39ff06fe1c4"
+          },
+          {
+            "arm": "lambda_frozen_tau",
+            "lambda_value": 4.0379843073860307e-07,
+            "tau": 4.458387347826933e-08,
+            "full_normal_relative": 1.119927412248153e-10,
+            "score": {
+              "score_init": 244946.83905292646,
+              "cost": 244946.7167852276,
+              "true_decrease": 0.12226769886289184,
+              "prediction": 0.1250143742850227,
+              "rho": 0.9780291231481215,
+              "accepted": true,
+              "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+              "prediction_absolute_term_scale": 85.66756896978096,
+              "maximum_point_displacement": 106333.18843866813,
+              "scene_radius": 11714.335694038562,
+              "large_moves_inward": 0,
+              "large_moves_outward": 4,
+              "camera_scaled_norm": 331.0676362195367,
+              "front_to_behind_observations": 0,
+              "behind_to_front_observations": 0,
+              "invalid_initial_observations": 0,
+              "invalid_candidate_observations": 0,
+              "changed_k2_entries": 0,
+              "cpu_scoring_audit_seconds": 0.17841281881555915
+            },
+            "native_score_relative_error": 1.3069868387122553e-15,
+            "native_source_certified": true,
+            "raw_sha256": "e4156e8108f9273a1846ef975fa3dc2987da0a87be3f98822fc2637a5c208e08",
+            "step_sha256": "e4156e8108f9273a1846ef975fa3dc2987da0a87be3f98822fc2637a5c208e08"
+          }
+        ],
+        "passed": true,
+        "qualification": "Source reduced solves certify1e-10; CPU full-normal1e-5 validation gate allows previously measured independent point/row arithmetic sensitivity and is not an exact-full-step claim."
+      },
+      {
+        "scene": "final-3068",
+        "rep": 0,
+        "rows": [
+          {
+            "arm": "lambda_coupled",
+            "lambda_value": 406216.18569004844,
+            "tau": 406216.18569004844,
+            "full_normal_relative": 6.3832689614444934e-09,
+            "score": {
+              "score_init": 1831859.0179865493,
+              "cost": 1831858.8426262937,
+              "true_decrease": 0.175360255603096,
+              "prediction": 0.25508106285363413,
+              "rho": 0.6874687350025587,
+              "accepted": true,
+              "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+              "prediction_absolute_term_scale": 0.2941326969599137,
+              "maximum_point_displacement": 5.961052376152313e-08,
+              "scene_radius": 10433051.85948712,
+              "large_moves_inward": 0,
+              "large_moves_outward": 0,
+              "camera_scaled_norm": 0.0007923733686832659,
+              "front_to_behind_observations": 0,
+              "behind_to_front_observations": 0,
+              "invalid_initial_observations": 0,
+              "invalid_candidate_observations": 0,
+              "changed_k2_entries": 0,
+              "cpu_scoring_audit_seconds": 0.8129052207805216
+            },
+            "native_score_relative_error": 1.6523098270829942e-15,
+            "native_source_certified": true,
+            "raw_sha256": "664a22e3aa85223187b73ec285bf64860111882e897a4a9d9c32b9e2cb72b7a3",
+            "step_sha256": "664a22e3aa85223187b73ec285bf64860111882e897a4a9d9c32b9e2cb72b7a3"
+          },
+          {
+            "arm": "lambda_frozen_tau",
+            "lambda_value": 406216.18569004844,
+            "tau": 7752.199624997855,
+            "full_normal_relative": 6.359653169718111e-09,
+            "score": {
+              "score_init": 1831859.0179865493,
+              "cost": 1831858.8406091577,
+              "true_decrease": 0.1773773917268472,
+              "prediction": 0.2569092536988915,
+              "rho": 0.6904281927296437,
+              "accepted": true,
+              "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+              "prediction_absolute_term_scale": 0.30518960967139924,
+              "maximum_point_displacement": 3.123079768496784e-06,
+              "scene_radius": 10433051.85948712,
+              "large_moves_inward": 0,
+              "large_moves_outward": 0,
+              "camera_scaled_norm": 0.000792373311243795,
+              "front_to_behind_observations": 0,
+              "behind_to_front_observations": 0,
+              "invalid_initial_observations": 0,
+              "invalid_candidate_observations": 0,
+              "changed_k2_entries": 0,
+              "cpu_scoring_audit_seconds": 0.8111561196856201
+            },
+            "native_score_relative_error": 1.3981083167635872e-15,
+            "native_source_certified": true,
+            "raw_sha256": "c6a50b92b852411a6878cc7d25023aeb282652647c385049ffad75ca24226ac8",
+            "step_sha256": "c6a50b92b852411a6878cc7d25023aeb282652647c385049ffad75ca24226ac8"
+          }
+        ],
+        "passed": true,
+        "qualification": "Source reduced solves certify1e-10; CPU full-normal1e-5 validation gate allows previously measured independent point/row arithmetic sensitivity and is not an exact-full-step claim."
+      },
+      {
+        "scene": "final-3068",
+        "rep": 5,
+        "rows": [
+          {
+            "arm": "lambda_coupled",
+            "lambda_value": 7419.475746592459,
+            "tau": 7419.475746592459,
+            "full_normal_relative": 7.042179130853762e-10,
+            "score": {
+              "score_init": 1866085.436039495,
+              "cost": 1866062.5038590832,
+              "true_decrease": 22.932180411841987,
+              "prediction": 27.828240445490554,
+              "rho": 0.8240614586021391,
+              "accepted": true,
+              "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+              "prediction_absolute_term_scale": 32.127853639363444,
+              "maximum_point_displacement": 6.247377123943452e-06,
+              "scene_radius": 10374516.80594847,
+              "large_moves_inward": 0,
+              "large_moves_outward": 0,
+              "camera_scaled_norm": 0.06119159278914167,
+              "front_to_behind_observations": 0,
+              "behind_to_front_observations": 0,
+              "invalid_initial_observations": 0,
+              "invalid_candidate_observations": 0,
+              "changed_k2_entries": 0,
+              "cpu_scoring_audit_seconds": 0.8328137448988855
+            },
+            "native_score_relative_error": 1.871566277970601e-15,
+            "native_source_certified": true,
+            "raw_sha256": "a1249e46e21cb75edea86e1136c78fb72ed02f0a68062daade29722f824aae15",
+            "step_sha256": "a1249e46e21cb75edea86e1136c78fb72ed02f0a68062daade29722f824aae15"
+          },
+          {
+            "arm": "lambda_frozen_tau",
+            "lambda_value": 7419.475746592459,
+            "tau": 11.159928306476408,
+            "full_normal_relative": 7.040667982685012e-10,
+            "score": {
+              "score_init": 1866085.436039495,
+              "cost": 1866069.1936023042,
+              "true_decrease": 16.24243719094154,
+              "prediction": 54.442198754200376,
+              "rho": 0.29834278487307403,
+              "accepted": true,
+              "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+              "prediction_absolute_term_scale": 144.78242962580688,
+              "maximum_point_displacement": 0.0038528995979201118,
+              "scene_radius": 10374516.80594847,
+              "large_moves_inward": 0,
+              "large_moves_outward": 0,
+              "camera_scaled_norm": 0.06115905208827424,
+              "front_to_behind_observations": 0,
+              "behind_to_front_observations": 0,
+              "invalid_initial_observations": 0,
+              "invalid_candidate_observations": 0,
+              "changed_k2_entries": 0,
+              "cpu_scoring_audit_seconds": 0.8337402860634029
+            },
+            "native_score_relative_error": 1.4972476548165366e-15,
+            "native_source_certified": true,
+            "raw_sha256": "1593990f1da61e2122f01edd3bdde940ff5709dcbd39c78c283ef589e6065e58",
+            "step_sha256": "1593990f1da61e2122f01edd3bdde940ff5709dcbd39c78c283ef589e6065e58"
+          }
+        ],
+        "passed": true,
+        "qualification": "Source reduced solves certify1e-10; CPU full-normal1e-5 validation gate allows previously measured independent point/row arithmetic sensitivity and is not an exact-full-step claim."
+      },
+      {
+        "scene": "final-3068",
+        "rep": 6,
+        "rows": [
+          {
+            "arm": "lambda_coupled",
+            "lambda_value": 8181096.837887049,
+            "tau": 8181096.837887049,
+            "full_normal_relative": 1.978975973296277e-09,
+            "score": {
+              "score_init": 1951880.1271295813,
+              "cost": 1951880.0967095552,
+              "true_decrease": 0.03042002590998045,
+              "prediction": 0.03266027970662638,
+              "rho": 0.9314073909724842,
+              "accepted": true,
+              "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+              "prediction_absolute_term_scale": 0.039504651391989214,
+              "maximum_point_displacement": 3.5713895172050303e-09,
+              "scene_radius": 10486077.124764306,
+              "large_moves_inward": 0,
+              "large_moves_outward": 0,
+              "camera_scaled_norm": 6.318349051080715e-05,
+              "front_to_behind_observations": 0,
+              "behind_to_front_observations": 0,
+              "invalid_initial_observations": 0,
+              "invalid_candidate_observations": 0,
+              "changed_k2_entries": 0,
+              "cpu_scoring_audit_seconds": 0.8020143737085164
+            },
+            "native_score_relative_error": 2.7435623802233253e-15,
+            "native_source_certified": true,
+            "raw_sha256": "5dd2e17bd5788abe8daf85c4b2ce53d31391c3d6decc8c71c443c7ab0f2fe714",
+            "step_sha256": "5dd2e17bd5788abe8daf85c4b2ce53d31391c3d6decc8c71c443c7ab0f2fe714"
+          },
+          {
+            "arm": "lambda_frozen_tau",
+            "lambda_value": 8181096.837887049,
+            "tau": 9.703747947193543,
+            "full_normal_relative": 1.978976999045177e-09,
+            "score": {
+              "score_init": 1951880.1271295813,
+              "cost": 1951880.098537537,
+              "true_decrease": 0.0285920442483466,
+              "prediction": 0.0972576699890801,
+              "rho": 0.29398241034930056,
+              "accepted": true,
+              "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+              "prediction_absolute_term_scale": 7.771982141744947,
+              "maximum_point_displacement": 0.002700302127780704,
+              "scene_radius": 10486077.124764306,
+              "large_moves_inward": 0,
+              "large_moves_outward": 0,
+              "camera_scaled_norm": 6.31834479442884e-05,
+              "front_to_behind_observations": 0,
+              "behind_to_front_observations": 0,
+              "invalid_initial_observations": 0,
+              "invalid_candidate_observations": 0,
+              "changed_k2_entries": 0,
+              "cpu_scoring_audit_seconds": 0.8320425949059427
+            },
+            "native_score_relative_error": 1.5507091699782993e-15,
+            "native_source_certified": true,
+            "raw_sha256": "8a983ec8d91497bfd2fbd8b1054e43efa2644f6640b1c184a50d20c2da1f86a0",
+            "step_sha256": "8a983ec8d91497bfd2fbd8b1054e43efa2644f6640b1c184a50d20c2da1f86a0"
+          }
+        ],
+        "passed": true,
+        "qualification": "Source reduced solves certify1e-10; CPU full-normal1e-5 validation gate allows previously measured independent point/row arithmetic sensitivity and is not an exact-full-step claim."
+      }
+    ],
+    "passed": true
+  }
+}

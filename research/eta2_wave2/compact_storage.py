@@ -17,6 +17,16 @@ def main():
     candidates = sorted(Path('/tmp/prism-cg-value-noise/inputs').glob('*.txt'))
     candidates += sorted(Path('/tmp/prism-rl-actor/runs').rglob('endpoint.state'))
     candidates += sorted(Path('/tmp/prism-rl-curvature/runs').rglob('endpoint.state'))
+    for root in ['/tmp/prism-cg-value-noise-large/runs',
+                 '/tmp/prism-rl-damping-trajectory/runs',
+                 '/tmp/prism-rl-deep-eta2/runs',
+                 '/tmp/prism-rl-damping-extended/runs',
+                 '/tmp/prism-reference-forcing/runs',
+                 '/tmp/prism-ba-accuracy',
+                 '/tmp/prism-rl-deep-eta2-large',
+                 '/tmp/prism-cg-value']:
+        candidates += sorted(Path(root).rglob('endpoint.state'))
+    candidates.sort(key=lambda p:p.stat().st_size if p.exists() else 0)
     for p in candidates:
         if shutil.disk_usage('/').free > 2_000_000_000: break
         if p.is_symlink() or not p.is_file(): continue

@@ -1,0 +1,17 @@
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+  [compact-fragments] active=2 saved_bytes=9984 storage=fp32 camera_reads=contiguous
+  MFCG score_init=364516.19390409789 precision=fp64
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+GEODESIC attempt=0 outer=0 accepts_before=0 cg=2 products=3 relative=0.2610644586544314 certified=1 cutoff=0 guard=0.65730387741874241 admitted=1 won=1 cost=59276.574006678216 prediction=346173.00924888439 rho=0.88175453239326573 seconds=0.002044991
+ATTR_RADIUS o=0 raw_norm=245.38404495694635 norm=245.38404495694633 radius=245.38404495694635 next_radius=490.76808991389271 lambda=0.10000000000000001 next_lambda=0.025000000000000001 rho=0.88175453239326573 accept=1
+CLASSICAL_LM o=0 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=346173.00924888439 rho=0.88175453239326573 accept=1
+  MFCG it   1 cost=5.927657e+04 lam=2.500e-02 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=5
+  MFCG: accepts=1 rejects=0 total_matvecs=5 negcurv=0 cand_evals=2 mean_cg_per_outer=5.0
+NUMERIC_REPAIR summary rebuilds=0 floor=9.9999999999999998e-17
+  [retry-cache] builds=1 reuses=0
+  [menu-backtrack] trials=0 rescues=0 evals=0 total_scored=2
+POINT_SAFE summary calls=0 evals=0 wins=0 frozen=0 seconds=0
+  [scoring] menu_evals=2 alpha_evals=0 backtrack_evals=0 total_scored=2
+RESULT algo=mfree_shifted_cg iters=1 final_cost=59276.5740066782 solve_seconds=0.019304
+DIAGNOSTICS median_reproj_err_px 33.770689 -> 12.641177 | cheirality_violations(obs) 0 -> 0 | cheirality_violations(pts, of 24) 0 -> 0

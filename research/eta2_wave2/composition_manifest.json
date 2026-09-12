@@ -1,0 +1,29 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave2",
+    "-I/tmp/prism-ba-coarse/research/eta2_track_damping",
+    "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/build/prism_composition.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/build/prism-composition",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "source_sha256": "8198e2b11839b43ad0e74772d4b41bda7a3d8f73af41cdaaeb354a5cef563d6d",
+  "binary_sha256": "a50c36c7c4eb22228a2186290e87be5bc646b481a2a9d2ba0fb7f64119e05639",
+  "protocol_sha256": "f4afdddbeecb677b69563b2ada05bd117377e757d307b1f3c2b533daed21f08f",
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave2/build_composition.py": "f132038e55a255442a2d3b40dda164c189e3503fbf8b3684b7e0d46ee72e335e",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/composition_capture.cuh": "4799691149ce31798063fc4afed1374259a76afd37eeda46e080f500e3528784",
+    "/tmp/prism-ba-coarse/research/eta2_track_damping/track_factor.cuh": "60da1912f74d5eaaa13a8bd796f1a2379c227e6d50f7ff62854e060f25c7cefe",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/build.py": "655b646321fc68f1205f294a118df60947311676d292e236ce1ef73552ba2ca7",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/wave_trace.cuh": "e866f4e5071aba8da6e03b082035e3ebc8d9011d37117f8dedb27f80ba2184e7"
+  }
+}
