@@ -254,13 +254,18 @@ def conditional_point_solve(cameras: CameraState, X: np.ndarray,
                              cam_idx: np.ndarray, pt_idx: np.ndarray, uv: np.ndarray,
                              camera_step: np.ndarray, lam: float, *,
                              chart: str = "euclidean", anchor_idx: np.ndarray | None = None,
-                             tau: float | None = None, chunk_size: int = 50000) -> dict:
+                             tau: float | None = None, chunk_size: int = 50000,
+                             freeze_depth: np.ndarray | None = None) -> dict:
     """Solve (Jp'Jp + diag_damping) delta = -Jp'(r + Jc*camera_step).
 
     Point damping uses the champion's per-coordinate diagonal/trace-floor rule
     *in each chart*. This changes the physical damping metric across charts and
     must not be described as a pure nonlinear-retraction ablation. No fallback
     silently replaces a singular or nonfinite point solve; it raises instead.
+    Optional inverse-depth constraints set delta_rho=0 and solve the remaining
+    2x2 bearing block with the original three-coordinate damping unchanged.
+    Report the active-coordinate residual; the constrained depth residual is a
+    Lagrange reaction, not evidence that the constrained solve is inaccurate.
     """
     start = time.perf_counter()
     tau = lam if tau is None else tau
@@ -271,6 +276,10 @@ def conditional_point_solve(cameras: CameraState, X: np.ndarray,
         anchor_idx = first_observation_anchors(cam_idx, pt_idx, len(X))
     point_chart = make_chart(X, cameras, chart, anchor_idx)
     npt = len(X)
+    if freeze_depth is not None:
+        freeze_depth = np.asarray(freeze_depth)
+        if chart != "inverse_depth" or freeze_depth.dtype != np.bool_ or freeze_depth.shape != (npt,):
+            raise ValueError("freeze_depth requires inverse_depth and a boolean (npt,) mask")
     V = np.zeros((npt, 3, 3)); b = np.zeros((npt, 3))
     score_init = np.longdouble(0)
     for start_o in range(0, len(cam_idx), chunk_size):
@@ -295,11 +304,29 @@ def conditional_point_solve(cameras: CameraState, X: np.ndarray,
         damped[:, a, a] += damping[:, a]
     if not np.isfinite(damped).all() or not np.isfinite(b).all():
         raise FloatingPointError("Nonfinite point model")
-    delta = np.linalg.solve(damped, b[..., None])[..., 0]
+    constrained = freeze_depth is not None and np.any(freeze_depth)
+    if constrained:
+        delta = np.zeros_like(b)
+        free = ~freeze_depth
+        if np.any(free):
+            delta[free] = np.linalg.solve(damped[free], b[free, :, None])[..., 0]
+        delta[freeze_depth, :2] = np.linalg.solve(damped[freeze_depth, :2, :2], b[freeze_depth, :2, None])[..., 0]
+    else:
+        # Preserve the original default and all-false control arithmetic exactly.
+        delta = np.linalg.solve(damped, b[..., None])[..., 0]
     residual = np.einsum("nij,nj->ni", damped, delta) - b
+    active_rhs = b
+    reaction_norm = 0.
+    if constrained:
+        reaction_norm = float(np.linalg.norm(residual[freeze_depth, 2]))
+        residual[freeze_depth, 2] = 0.
+        active_rhs = b.copy()
+        active_rhs[freeze_depth, 2] = 0.
     return {"chart": point_chart, "delta": delta, "H_candidate": point_chart.retract(delta),
             "point_normal": V, "point_damping": damping,
-            "linear_relative_residual": float(np.linalg.norm(residual) / max(np.linalg.norm(b), 1e-300)),
+            "linear_relative_residual": float(np.linalg.norm(residual) / max(np.linalg.norm(active_rhs), 1e-300)),
+            "frozen_depth_count": int(np.count_nonzero(freeze_depth)) if freeze_depth is not None else 0,
+            "constraint_reaction_norm": reaction_norm,
             "score_init": float(score_init), "lambda": float(lam), "tau": float(tau),
             "cpu_solve_seconds": time.perf_counter() - start}
 
@@ -309,7 +336,7 @@ def evaluate_chart_step(cameras: CameraState, X: np.ndarray,
                         camera_step: np.ndarray, lam: float, *,
                         chart: str = "euclidean", anchor_idx: np.ndarray | None = None,
                         tau: float | None = None, scene_radius: float | None = None,
-                        chunk_size: int = 50000) -> dict:
+                        chunk_size: int = 50000, freeze_depth: np.ndarray | None = None) -> dict:
     """Point solve and independent true/model scores; no candidate acceptance.
 
     A returned candidate still needs the main solver's full acceptance checks.
@@ -318,7 +345,8 @@ def evaluate_chart_step(cameras: CameraState, X: np.ndarray,
     """
     start = time.perf_counter()
     result = conditional_point_solve(cameras, X, cam_idx, pt_idx, uv, camera_step, lam,
-                                    chart=chart, anchor_idx=anchor_idx, tau=tau, chunk_size=chunk_size)
+                                    chart=chart, anchor_idx=anchor_idx, tau=tau, chunk_size=chunk_size,
+                                    freeze_depth=freeze_depth)
     pc = result["chart"]; Hnew = result["H_candidate"]; delta = result["delta"]
     updated_cameras = cameras.retract(camera_step)
     names = ("initial", "full", "camera_only", "point_only", "model_full", "model_camera", "model_point")

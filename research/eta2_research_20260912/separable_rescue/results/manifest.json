@@ -1,0 +1,374 @@
+{
+  "protocol": {
+    "path": "/tmp/prism-ba-coarse/research/eta2_research_20260912/PROTOCOL_10.md",
+    "sha256": "1e32e5e9c01ee0c4a6096bb84583b915fbe8a6e40804afe5a03bcd21d45a5ec9",
+    "registration_commit": "64be3cad3cbaef91e827d8f18e970c15a798ef4b"
+  },
+  "baseline": {
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "verified_headers": 44,
+    "champion_config": {
+      "label": "sustained-eta2-lambda0.1",
+      "status": "best tested global configuration on six-scene fixed-target panel; defaults unchanged",
+      "binary": "/tmp/prism-rl-sustained/build/prism-tr",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "initial_lambda": 0.1,
+      "flags": {
+        "OCA_ATTR_RADIUS": "1",
+        "OCA_ATTR_RESCUE": "1",
+        "OCA_ATTR_STRICT": "1",
+        "OCA_BACKTRACK_REARM": "1",
+        "OCA_CAMERA_TR": "0",
+        "OCA_CG_STOP": "0",
+        "OCA_CLASSICAL_LM": "1",
+        "OCA_COMPACT_FRAGMENTS": "2",
+        "OCA_DEMAND_MENU": "0",
+        "OCA_DIAG_NORM": "1",
+        "OCA_FORCE_UNSHARED": "1",
+        "OCA_FTOL": "1e-5",
+        "OCA_FTOL_K": "8",
+        "OCA_GRID_DOWN": "2",
+        "OCA_MENU_BACKTRACK": "8",
+        "OCA_MENU_GATE": "1e-2",
+        "OCA_MULTI_RHS": "1",
+        "OCA_NSHIFTS": "1",
+        "OCA_PCG": "1",
+        "OCA_POINT_SAFEGUARD": "1",
+        "OCA_RETRY_CACHE": "1",
+        "OCA_RHO_LAMBDA": "1",
+        "OCA_RHO_SHIFT": "1",
+        "OCA_SCHUR_NUMERIC_GUARD": "1",
+        "OCA_SWITCH_RESTART": "0",
+        "OCA_TR_RECURRENCE": "0",
+        "OCA_RLA_FIXED_ETA": "2"
+      },
+      "cli": [
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        "0.1",
+        "--max_iter",
+        "600"
+      ],
+      "evidence": "/tmp/prism-rl-sustained/verdict.json",
+      "limitations": [
+        "Muell lambda10 + eta2 is a counterexample",
+        "Largest tighter-target gain is only1.035x",
+        "Not a learned RL improvement"
+      ]
+    },
+    "arithmetic_note": "Native Scalar=double with FP32 compact cross blocks/point rows; this CPU reference is Gram-consistent FP64"
+  },
+  "source_sha256": "a20b84afb67b262212741c3c641cecc714e3f0d13bc94ef72b715b9110aa69fe",
+  "core_sha256": "af5e813104c1aff653909a51dc3f3b4ca8326c32a17e9c0f3fb3444896120e89",
+  "chart_reference_sha256": "6d357755d17aee6c7b1270698da15bbe2aee8ed64491e32d78ebcfc8ebdba9e8",
+  "bal_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+  "configuration": {
+    "arms": [
+      "binary",
+      "point_fractions",
+      "point_then_camera"
+    ],
+    "source_direction": "eta2-0.step before native point safeguard",
+    "point_fractions": [
+      0,
+      0.25,
+      0.5,
+      1
+    ],
+    "ties": "prefer full or larger alpha; prefer moved camera",
+    "repetitions": 3,
+    "threads": 1
+  },
+  "setup_io_seconds": 2.207545735873282,
+  "capture_inputs": [
+    {
+      "capture_rep": 0,
+      "metadata": {
+        "ncam": 3068.0,
+        "npt": 310854.0,
+        "nobs": 1653812.0,
+        "outer": 44.0,
+        "cost": 1831859.0179865486,
+        "lambda": 7752.199624997855,
+        "tau": 7752.199624997855,
+        "radius": 0.0010563338981545876,
+        "floor": 1.1016538259408796e-06,
+        "previous_rhs_norm": 402.6543426057074,
+        "rhs_norm": 321.875835522313,
+        "eta": 0.5,
+        "eta2_cg": 1.0,
+        "eta2_recursive_residual": 5.080516649976961e-09,
+        "eta2_cutoff": 0.0,
+        "terminal_witness": 1.0
+      },
+      "native_unguarded": {
+        "arm": "eta2",
+        "rep": 0,
+        "cost": 1831858.8176358372,
+        "prediction": 0.341871481272501,
+        "decrease": 0.20035071135498583,
+        "rho": 0.5860410193013118,
+        "camera_norm": 0.0010563338981545865,
+        "pcg_iterations": 1,
+        "true_residual": 5.080516649976961e-09,
+        "certified": 0,
+        "seconds": 0.0,
+        "reason": "native_inexact"
+      },
+      "raw_cpu_unguarded": {
+        "score_init": 1831859.0179865493,
+        "cost": 1831858.8176358358,
+        "true_decrease": 0.20035071355197678,
+        "prediction": 0.34187148212779117,
+        "rho": 0.5860410242615262,
+        "accepted": true,
+        "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+        "prediction_absolute_term_scale": 0.40201037366500486,
+        "maximum_point_displacement": 3.1230578903812886e-06,
+        "scene_radius": 10433051.85948712,
+        "large_moves_inward": 0,
+        "large_moves_outward": 0,
+        "camera_scaled_norm": 0.0010563338981545876,
+        "front_to_behind_observations": 0,
+        "behind_to_front_observations": 0,
+        "invalid_initial_observations": 0,
+        "invalid_candidate_observations": 0,
+        "changed_k2_entries": 0,
+        "cpu_scoring_audit_seconds": 0.9629864762537181
+      },
+      "raw_source_parity": {
+        "cost": {
+          "status": "within_budget",
+          "cpu": 1831858.8176358358,
+          "native": 1831858.8176358372,
+          "absolute_error": 1.3969838619232178e-09,
+          "normalization_scale": 1831858.8176358358,
+          "normalized_error": 7.626045459803174e-16,
+          "tolerance": 0.000915939408817918
+        },
+        "prediction": {
+          "status": "within_budget",
+          "cpu": 0.34187148212779117,
+          "native": 0.341871481272501,
+          "absolute_error": 8.552901720193518e-10,
+          "normalization_scale": 0.40201037366500486,
+          "normalized_error": 8.552901720193518e-10,
+          "tolerance": 1.05e-08
+        },
+        "score_init": {
+          "status": "within_budget",
+          "cpu": 1831859.0179865493,
+          "native": 1831859.0179865486,
+          "absolute_error": 6.984919309616089e-10,
+          "normalization_scale": 1831859.0179865493,
+          "normalized_error": 3.8130223128706822e-16,
+          "tolerance": 0.0009159395089932748
+        }
+      },
+      "setup_and_raw_audit_seconds": 0.9687209399417043,
+      "sha256": {
+        "R_state.f64": "9cb2f9fce42eb4d975262b13a346d9ccb55698c00325e09b9d9c2624e3516c9a",
+        "t_state.f64": "366080eba40cab9393874b3d104cb73b43f779b0beca4b5b255fe493dd4cdf04",
+        "X_state.f64": "9248a4eca3568bbc18ce5989d7c4bf464f454d81a3e4c39f36999e1a5b0f74b0",
+        "intr_state.f64": "5d8b60d6217d5c7b5f91e069a4f99acf9d75176d1ff4dec797adf3921db6e237",
+        "metadata.txt": "608e52525a44eef9148198542de216955f8f041b7cc8dcc2db5734fc0adc664c",
+        "E.f64": "688912346e0a20c103b31e89a8e68bc24fb009c8acb431b6f489c52aa03cb53e",
+        "eta2-0.step": "c3ee9d58078a17180ef29e89a244cc05eedc502962fd9d8f4957e269ff7b7e63"
+      }
+    },
+    {
+      "capture_rep": 5,
+      "metadata": {
+        "ncam": 3068.0,
+        "npt": 310854.0,
+        "nobs": 1653812.0,
+        "outer": 88.0,
+        "cost": 1866085.436039509,
+        "lambda": 11.159928306476408,
+        "tau": 11.159928306476408,
+        "radius": 0.0676053694818936,
+        "floor": 1.623983306704963e-07,
+        "previous_rhs_norm": 453.0185725903762,
+        "rhs_norm": 453.91425120138496,
+        "eta": 0.5,
+        "eta2_cg": 1.0,
+        "eta2_recursive_residual": 0.00458721904562175,
+        "eta2_cutoff": 0.0,
+        "terminal_witness": 1.0
+      },
+      "native_unguarded": {
+        "arm": "eta2",
+        "rep": 0,
+        "cost": 1866070.1685665112,
+        "prediction": 57.303130558990546,
+        "decrease": 15.267472997773439,
+        "rho": 0.26643348886595963,
+        "camera_norm": 0.0676053694818936,
+        "pcg_iterations": 1,
+        "true_residual": 0.00458721904562175,
+        "certified": 0,
+        "seconds": 0.0,
+        "reason": "native_inexact"
+      },
+      "raw_cpu_unguarded": {
+        "score_init": 1866085.436039495,
+        "cost": 1866070.1685665278,
+        "true_decrease": 15.267472967430908,
+        "prediction": 57.30313054165029,
+        "rho": 0.2664334884170748,
+        "accepted": true,
+        "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+        "prediction_absolute_term_scale": 142.35002661937426,
+        "maximum_point_displacement": 0.0038649381822001942,
+        "scene_radius": 10374516.80594847,
+        "large_moves_inward": 0,
+        "large_moves_outward": 0,
+        "camera_scaled_norm": 0.06760536948189357,
+        "front_to_behind_observations": 0,
+        "behind_to_front_observations": 0,
+        "invalid_initial_observations": 0,
+        "invalid_candidate_observations": 0,
+        "changed_k2_entries": 0,
+        "cpu_scoring_audit_seconds": 0.8323412211611867
+      },
+      "raw_source_parity": {
+        "cost": {
+          "status": "within_budget",
+          "cpu": 1866070.1685665278,
+          "native": 1866070.1685665112,
+          "absolute_error": 1.6530975699424744e-08,
+          "normalization_scale": 1866070.1685665278,
+          "normalized_error": 8.858710662591782e-15,
+          "tolerance": 0.000933045084283264
+        },
+        "prediction": {
+          "status": "within_budget",
+          "cpu": 57.30313054165029,
+          "native": 57.303130558990546,
+          "absolute_error": 1.7340255453746067e-08,
+          "normalization_scale": 142.35002661937426,
+          "normalized_error": 1.2181420590887342e-10,
+          "tolerance": 8.117501330968714e-08
+        },
+        "score_init": {
+          "status": "within_budget",
+          "cpu": 1866085.436039495,
+          "native": 1866085.436039509,
+          "absolute_error": 1.3969838619232178e-08,
+          "normalization_scale": 1866085.436039495,
+          "normalized_error": 7.486173113746177e-15,
+          "tolerance": 0.0009330527180197476
+        }
+      },
+      "setup_and_raw_audit_seconds": 0.836076432839036,
+      "sha256": {
+        "R_state.f64": "261a50bfd3e72701ec63baaf9eade1f6ab5ce70402ee2ca9430ed02a439e6c82",
+        "t_state.f64": "180cff359f78b261b4665e4664a933d197c07ba6d62a8e2e7a45e5c5da0a52db",
+        "X_state.f64": "ed9cc726435b90f12135eb19130224db73c6e88db65c41753a9c0ea0cc3c17c8",
+        "intr_state.f64": "8de5ddf90b25e398e515c31fe71b9fdd9a9414cc8a0ccadbe1931942e331243a",
+        "metadata.txt": "598cf512b78d40549cad0b9485bd6dcc23d03ff3931f02d9480bc5854f6cf39d",
+        "E.f64": "8a8f8b08f670c8d0a17234034328d2ceb5e91b845ab85635274339d3edfcc194",
+        "eta2-0.step": "7d462ee0b5fe42a31224d4e2eca2f7bd73779004b234d2f629d198ff9e2218b7"
+      }
+    },
+    {
+      "capture_rep": 6,
+      "metadata": {
+        "ncam": 3068.0,
+        "npt": 310854.0,
+        "nobs": 1653812.0,
+        "outer": 47.0,
+        "cost": 1951880.1271295827,
+        "lambda": 9.703747947193543,
+        "tau": 9.703747947193543,
+        "radius": 6.602086863466173e-05,
+        "floor": 3.447463806762678e-07,
+        "previous_rhs_norm": 516.4883603735178,
+        "rhs_norm": 516.9100967765634,
+        "eta": 0.5,
+        "eta2_cg": 1.0,
+        "eta2_recursive_residual": 0.003278658443042554,
+        "eta2_cutoff": 0.0,
+        "terminal_witness": 1.0
+      },
+      "native_unguarded": {
+        "arm": "eta2",
+        "rep": 0,
+        "cost": 1951880.1008063303,
+        "prediction": 0.09843992404745328,
+        "decrease": 0.026323252357542515,
+        "rho": 0.267404232705963,
+        "camera_norm": 6.60208686346617e-05,
+        "pcg_iterations": 1,
+        "true_residual": 0.003278658443042554,
+        "certified": 0,
+        "seconds": 0.0,
+        "reason": "native_inexact"
+      },
+      "raw_cpu_unguarded": {
+        "score_init": 1951880.1271295813,
+        "cost": 1951880.100806328,
+        "true_decrease": 0.02632325321528392,
+        "prediction": 0.09843992426502272,
+        "rho": 0.2674042408283017,
+        "accepted": true,
+        "acceptance_rule": "finite full cost, pred>0, true decrease>0, strict rho>0.1",
+        "prediction_absolute_term_scale": 7.773591213063327,
+        "maximum_point_displacement": 0.0026957560276442464,
+        "scene_radius": 10486077.124764306,
+        "large_moves_inward": 0,
+        "large_moves_outward": 0,
+        "camera_scaled_norm": 6.602086863466171e-05,
+        "front_to_behind_observations": 0,
+        "behind_to_front_observations": 0,
+        "invalid_initial_observations": 0,
+        "invalid_candidate_observations": 0,
+        "changed_k2_entries": 0,
+        "cpu_scoring_audit_seconds": 0.8284426182508469
+      },
+      "raw_source_parity": {
+        "cost": {
+          "status": "within_budget",
+          "cpu": 1951880.100806328,
+          "native": 1951880.1008063303,
+          "absolute_error": 2.3283064365386963e-09,
+          "normalization_scale": 1951880.100806328,
+          "normalized_error": 1.1928532062890877e-15,
+          "tolerance": 0.0009759500504031641
+        },
+        "prediction": {
+          "status": "within_budget",
+          "cpu": 0.09843992426502272,
+          "native": 0.09843992404745328,
+          "absolute_error": 2.175694485684332e-10,
+          "normalization_scale": 7.773591213063327,
+          "normalized_error": 2.7988280140434082e-11,
+          "tolerance": 1.3886795606531665e-08
+        },
+        "score_init": {
+          "status": "within_budget",
+          "cpu": 1951880.1271295813,
+          "native": 1951880.1271295827,
+          "absolute_error": 1.3969838619232178e-09,
+          "normalization_scale": 1951880.1271295813,
+          "normalized_error": 7.157119141212891e-16,
+          "tolerance": 0.0009759500635647908
+        }
+      },
+      "setup_and_raw_audit_seconds": 0.8306930898688734,
+      "sha256": {
+        "R_state.f64": "2384a6d67378e94ef93b853a84e58e62df4de434a1de003b354409fe99b78561",
+        "t_state.f64": "a570a5a44e7a05a2ca67e8ed44bd0eec84fd170ab1e190732d391d7aad037e9b",
+        "X_state.f64": "6990729b7df7d691534cae0594556eec4f6b3a66b30602f1dc05920ff8b25a2c",
+        "intr_state.f64": "38c9d02865161e5cc083652e346071096a440f43bb58bd11223783e34646a70b",
+        "metadata.txt": "04cb58688225463bd96049d597098fdbae7754a818381aeb03e1cc944ec857de",
+        "E.f64": "a56fd2760f75782ed5487f96ec1a827cf21e95bf79df3541e3500a4e31c6d588",
+        "eta2-0.step": "82b1c0e043ac0992c2a55aca2a0e4fe08e4de9b634bd1dfefe7f2cbc7a281259"
+      }
+    }
+  ],
+  "campaign_elapsed_seconds": 54.30106048192829
+}

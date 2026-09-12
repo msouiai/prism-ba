@@ -1,0 +1,85 @@
+{
+  "status": "all checks passed",
+  "baseline": {
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "verified_headers": 44,
+    "champion_config": {
+      "label": "sustained-eta2-lambda0.1",
+      "status": "best tested global configuration on six-scene fixed-target panel; defaults unchanged",
+      "binary": "/tmp/prism-rl-sustained/build/prism-tr",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "initial_lambda": 0.1,
+      "flags": {
+        "OCA_ATTR_RADIUS": "1",
+        "OCA_ATTR_RESCUE": "1",
+        "OCA_ATTR_STRICT": "1",
+        "OCA_BACKTRACK_REARM": "1",
+        "OCA_CAMERA_TR": "0",
+        "OCA_CG_STOP": "0",
+        "OCA_CLASSICAL_LM": "1",
+        "OCA_COMPACT_FRAGMENTS": "2",
+        "OCA_DEMAND_MENU": "0",
+        "OCA_DIAG_NORM": "1",
+        "OCA_FORCE_UNSHARED": "1",
+        "OCA_FTOL": "1e-5",
+        "OCA_FTOL_K": "8",
+        "OCA_GRID_DOWN": "2",
+        "OCA_MENU_BACKTRACK": "8",
+        "OCA_MENU_GATE": "1e-2",
+        "OCA_MULTI_RHS": "1",
+        "OCA_NSHIFTS": "1",
+        "OCA_PCG": "1",
+        "OCA_POINT_SAFEGUARD": "1",
+        "OCA_RETRY_CACHE": "1",
+        "OCA_RHO_LAMBDA": "1",
+        "OCA_RHO_SHIFT": "1",
+        "OCA_SCHUR_NUMERIC_GUARD": "1",
+        "OCA_SWITCH_RESTART": "0",
+        "OCA_TR_RECURRENCE": "0",
+        "OCA_RLA_FIXED_ETA": "2"
+      },
+      "cli": [
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        "0.1",
+        "--max_iter",
+        "600"
+      ],
+      "evidence": "/tmp/prism-rl-sustained/verdict.json",
+      "limitations": [
+        "Muell lambda10 + eta2 is a counterexample",
+        "Largest tighter-target gain is only1.035x",
+        "Not a learned RL improvement"
+      ]
+    },
+    "arithmetic_note": "Native Scalar=double with FP32 compact cross blocks/point rows; this CPU reference is Gram-consistent FP64"
+  },
+  "old_revision": "f8d25e36ea3bb59d3e316a0422ed166bdd5788c4",
+  "old_reference_sha256": "35a14def911bd478b0ea309c2b47b6c1742ff79a2f9f2880959f1236d79569ec",
+  "new_reference_sha256": "6d357755d17aee6c7b1270698da15bbe2aee8ed64491e32d78ebcfc8ebdba9e8",
+  "default_control_invariance": {
+    "euclidean": "bit-identical numerical arrays and scores to committed pre-freeze reference",
+    "homogeneous": "bit-identical numerical arrays and scores to committed pre-freeze reference",
+    "inverse_depth": "bit-identical numerical arrays and scores to committed pre-freeze reference"
+  },
+  "all_false_inverse_depth_mask_bit_identical": true,
+  "venice0_default_control_bit_identical": true,
+  "constraints": [
+    {
+      "frozen": 5,
+      "augmented_lstsq_max_relative_error": 1.473283727409301e-15,
+      "active_residual": 3.3329972998932936e-17,
+      "constraint_reaction_norm": 1843.9074583899142
+    },
+    {
+      "frozen": 9,
+      "augmented_lstsq_max_relative_error": 1.473283727409301e-15,
+      "active_residual": 3.294318445971889e-17,
+      "constraint_reaction_norm": 3420.256909325373
+    }
+  ],
+  "threshold_boundary_rule_verified": true
+}
