@@ -27,6 +27,10 @@ Current high-level results:
 - exact gauge-quotient posterior variance identifies geometric starvation at
   Venice camera 34 in 5/5 terminal states, but the cheap local Schur-block
   score gives the identical top-one decision; no probing/prior arm is earned.
+- a focal-depth camera chart (`q=t_z/f`, `ell=log(f)`) improves camera 34's
+  local scaled condition by 170.8x and retains 12.7x more of the captured
+  healthy-camera motion, but a fresh solve exposes another soft direction:
+  it remains about 331 radii long and raises true cost in 5/5 terminal states.
 
-See `D6_COVARIANCE_RESULTS.md` for the current decision.  The scientific champion remains
+See `D7_INTRINSICS_CHART_RESULTS.md` for the current decision.  The scientific champion remains
 unchanged.
