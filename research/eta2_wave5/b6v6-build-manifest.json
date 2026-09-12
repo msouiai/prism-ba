@@ -1,0 +1,29 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/build/b6v6.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/build/prism-b6v6",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "source_sha256": "63eb318f166074ba78bed635eeae341641c87c536a658c08f699ec544e3aa66c",
+  "binary_sha256": "97ad70b33669ec18cfe832a34c509beb3021672ae9a2816d8044b7389cfd197f",
+  "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "reversible_patch_count": 17,
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave5/build_b6v6.py": "350e2a2a280fc2bf76f771993e8c372870b60ffed420225f2e4ae6f25318e326",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/build_b6v4.py": "13ef29668ba1f6090e640e430bd4caebce37b0feda1a287fd4eb5ec38f61ebd2",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/build_b6v2.py": "0094ce6ca703114be2c53f88da97350e0794149b435f7fbfc75a082e8acf9007",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/prep_latency.cuh": "f9c83971c78a6f2c090619e07197d5b2dcea51c30212a5b640fd5ae76ff6d5db"
+  },
+  "protocol_sha256": "3fa736239018583b5c3799b7eb7b64d4fead75e558bd76b98c3cf5aba09893b2"
+}

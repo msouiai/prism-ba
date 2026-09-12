@@ -69,3 +69,9 @@ Current decisions:
 - B6v5 preserves the old RHS atomic work and applies only three bitwise fusions.
   It is 1.79% faster on the panel but neutral on Muell, confirming that the
   discarded diagonal work is the source of B6v4's large-scene gain.
+- B6v6 replaces B6v4's atomic RHS with a fixed camera-owned reduction.  It is
+  8.23% faster than dots-only on the panel, 3.93% faster on Muell, and cuts the
+  Muell preparation bucket from 0.241 to 0.074 s.  The always-on arm is held
+  back by a +0.253% Venice endpoint movement despite improving the sampled
+  Final3068 hit count from 3/10 to 6/10.  A camera-count dispatch is the only
+  registered follow-up.
