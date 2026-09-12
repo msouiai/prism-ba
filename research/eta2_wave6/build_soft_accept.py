@@ -61,8 +61,8 @@ def derive():
              std::isfinite(lm_rho)&&lm_prediction>0.;
         w6_soft_applied=true;++w6_soft_trials;w6_soft_alpha_sum+=alpha;
         if(have)++w6_soft_commits;
-        std::printf("W6_SOFT_RHO o=%d alpha=%.17g old_rho=%.17g scaled_rho=%.17g old_candidate=%.17g scaled_candidate=%.17g prediction=%.17g commit=%d\n",
-          k,alpha,old_rho,lm_rho,old_candidate,(double)best_cost,lm_prediction,(int)have);
+        std::printf("W6_SOFT_RHO o=%d alpha=%.17g old_rho=%.17g scaled_rho=%.17g current=%.17g old_candidate=%.17g scaled_candidate=%.17g prediction=%.17g commit=%d\n",
+          k,alpha,old_rho,lm_rho,(double)cost,old_candidate,(double)best_cost,lm_prediction,(int)have);
       }
       if(!w6_soft_applied)
         have=have&&std::isfinite(lm_rho)&&lm_prediction>0&&lm_rho>(attr_strict?.1:0);'''

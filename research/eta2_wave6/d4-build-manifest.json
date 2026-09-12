@@ -1,0 +1,27 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave6",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/build/soft_accept.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-soft-accept",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "source_sha256": "bac19258cfd3ca384917360aa5347889fe829676a59b923c5fd78e743405d968",
+  "binary_sha256": "ac37b43259397987fc0c7639d672f9baab71f49ea98b147b779932bfe42fb802",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "reversible_patch_count": 36,
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave6/build_soft_accept.py": "038245355acb93cabcca726d72c310918e42a2b74b504d9b37847722e1bfddbc",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/build_deterministic.py": "2a80ca57e9fd8a7595e5f74edfa7dbd7e1b481df9f35fa237863545f02d1e4ac"
+  },
+  "protocol_sha256": "3c112852501586e1e28c1c1200b5e61602f0e6663aae672414cad6cea886065a"
+}
