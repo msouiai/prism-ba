@@ -38,3 +38,7 @@ Current decisions:
   `3.53e-16`, yet Trafalgar target time is 1.49--2.77x slower.  On Venice52,
   Schur formation alone consumes 56.72 of 60.12 seconds and the exact step
   follows a worse clipped trajectory; FP64 Cholesky is only 0.84 seconds.
+- B6 batched FP64 dot reductions plus fused PCG vector updates improve the
+  practical-panel geometric mean by 3.62% with identical median product counts,
+  but the fused arithmetic perturbs the Final3068 tail trajectory.  The
+  combined arm is not promoted; a preregistered dots-only isolation follows.
