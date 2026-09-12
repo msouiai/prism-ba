@@ -1,0 +1,111 @@
+{
+  "protocol_sha256": "91d70ad8a5022cdbdf0807ec43942678227dfa8f7ae2136f21d4202b8dd6542f",
+  "binary_sha256": "37b262dc44c6f75cbd971f24bbb261735c793ff929ba92962bcc0bde27837679",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "build_manifest": {
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_track_damping",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "/tmp/prism-ba-coarse/research/eta2_track_damping/build/prism_track_tau.cu",
+      "-o",
+      "/tmp/prism-ba-coarse/research/eta2_track_damping/build/prism-track-tau",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+    "derived_source_sha256": "e806e3431a15dc4ca6e9df6eb7d765c7f6869710dd4f8116b80672e2efe18dc6",
+    "binary_sha256": "37b262dc44c6f75cbd971f24bbb261735c793ff929ba92962bcc0bde27837679",
+    "protocol_sha256": "e882aa4ed571c1889b0477d2a252c976d56c47f8b74f82a779c80fcaa1a6dd4a",
+    "headers": {
+      "attempt_trace.h": "43400101d54c0ccf94464025497105ef825e16c7e7cbb1d21f7dff019619daf6",
+      "track_factor.cuh": "60da1912f74d5eaaa13a8bd796f1a2379c227e6d50f7ff62854e060f25c7cefe"
+    },
+    "inverse_source_parity": true,
+    "substitutions": 9,
+    "default": "off",
+    "rule": [
+      1,
+      1,
+      0.3
+    ]
+  },
+  "cells": [
+    {
+      "stage": "tail",
+      "scene": "final-3068",
+      "n": 10,
+      "target": 1744796.9841897595,
+      "target_stopping": true,
+      "path": "/workspace/bal/final-3068.txt",
+      "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+      "cap": 60,
+      "max_outers": 600
+    },
+    {
+      "stage": "tail",
+      "scene": "venice-52",
+      "n": 10,
+      "target": 243740.27,
+      "target_stopping": true,
+      "path": "/workspace/bal/venice-52.txt",
+      "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "cap": 60,
+      "max_outers": 600
+    },
+    {
+      "stage": "controls",
+      "scene": "final-4585",
+      "n": 3,
+      "target": 7767397.3902649265,
+      "target_stopping": false,
+      "path": "/workspace/bal/final-4585.txt",
+      "input_sha256": "d5e0ea06a364d7a7b5b087ab3c9d53c97dbbcd6c7d3984b62428185e66b9dd54",
+      "cap": 60,
+      "max_outers": 600
+    },
+    {
+      "stage": "controls",
+      "scene": "dubrovnik-88",
+      "n": 3,
+      "target": 362571.82,
+      "target_stopping": false,
+      "path": "/workspace/bal/dubrovnik-88.txt",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "cap": 60,
+      "max_outers": 600
+    },
+    {
+      "stage": "controls",
+      "scene": "ladybug-539",
+      "n": 3,
+      "target": 165617.73918321263,
+      "target_stopping": false,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cap": 60,
+      "max_outers": 600
+    }
+  ],
+  "historical": {
+    "source": "/tmp/prism-ba-coarse/research/eta2_external_coverage/storm-results.json",
+    "sha256": "f5a5b9055d1bb5789ee0b9b1cf4b722d4f5d1b5ff5d679d80d8a7b6af5284404",
+    "n": 10,
+    "hits": 8,
+    "target": 1744796.9841897595,
+    "median": 3.692232392,
+    "range": [
+      2.88178699,
+      4.269963151
+    ],
+    "maximum_on_median_20percent": 4.4306788704
+  },
+  "prior_screen_in_primary": false,
+  "expected_scored_runs": 58
+}
