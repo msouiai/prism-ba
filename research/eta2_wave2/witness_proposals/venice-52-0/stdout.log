@@ -1,0 +1,44 @@
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+  [compact-fragments] active=2 saved_bytes=36105992 storage=fp32 camera_reads=contiguous
+  MFCG score_init=246359.02458229894 precision=fp64
+W2_DIRECTION arm=eta2_saved rep=0 gain=0.54701781424228102 rho=0.78673320769714472 norm=0 R=6450.7051792593411 guard=0 cert=0
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=reference_raw rep=0 gain=35.50997686618939 rho=0.96935009990779664 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+W2_DIRECTION arm=reference_clip rep=0 gain=35.509976866160287 rho=0.96935009990700205 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=lambda_coupled rep=0 gain=35.50997686618939 rho=0.96935009990779664 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=lambda_frozen_tau rep=0 gain=35.509976866160287 rho=0.96935009990700183 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=geodesic_guarded rep=0 gain=36.401562343613477 rho=1.0196145264859218 norm=1165.4438221334506 R=6450.7051792593411 guard=0.0131658792 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=reference_raw rep=1 gain=35.509976866160287 rho=0.96935009990700216 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+W2_DIRECTION arm=reference_clip rep=1 gain=35.509976866131183 rho=0.96935009990620813 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=lambda_coupled rep=1 gain=35.509976866131183 rho=0.96935009990620702 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=lambda_frozen_tau rep=1 gain=35.509976866160287 rho=0.96935009990700205 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=geodesic_guarded rep=1 gain=36.401562343642581 rho=1.0196145264867378 norm=1165.4438221334506 R=6450.7051792593411 guard=0.0131658792 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=reference_raw rep=2 gain=35.509976866160287 rho=0.96935009990700216 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+W2_DIRECTION arm=reference_clip rep=2 gain=35.50997686618939 rho=0.96935009990779686 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=lambda_coupled rep=2 gain=35.509976866160287 rho=0.96935009990700238 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=lambda_frozen_tau rep=2 gain=35.509976866131183 rho=0.96935009990620757 norm=1164.9592564532136 R=6450.7051792593411 guard=0 cert=1
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+W2_DIRECTION arm=geodesic_guarded rep=2 gain=36.401562343613477 rho=1.0196145264859218 norm=1165.4438221334506 R=6450.7051792593411 guard=0.0131658792 cert=1
+W2_WITNESS_COMPLETE
+  MFCG: accepts=0 rejects=0 total_matvecs=0 negcurv=0 cand_evals=0 mean_cg_per_outer=0.0
+NUMERIC_REPAIR summary rebuilds=0 floor=9.9999999999999998e-17
+  [retry-cache] builds=1 reuses=0
+  [menu-backtrack] trials=0 rescues=0 evals=0 total_scored=0
+POINT_SAFE summary calls=0 evals=0 wins=0 frozen=0 seconds=0
+  [scoring] menu_evals=0 alpha_evals=0 backtrack_evals=0 total_scored=0
+RESULT algo=mfree_shifted_cg iters=0 final_cost=246359.0245822989 solve_seconds=5.729768
+DIAGNOSTICS median_reproj_err_px 0.359935 -> 0.359935 | cheirality_violations(obs) 13 -> 13 | cheirality_violations(pts, of 64053) 7 -> 7
