@@ -42,3 +42,7 @@ Current decisions:
   practical-panel geometric mean by 3.62% with identical median product counts,
   but the fused arithmetic perturbs the Final3068 tail trajectory.  The
   combined arm is not promoted; a preregistered dots-only isolation follows.
+- B6v2 dots-only batching is the current systems winner: 1.32% faster on the
+  practical-panel geometric mean, identical work counts, 8/10 Final3068 hits
+  in both arms, and no Venice endpoint movement.  It remains an overlay while
+  exact-rounding vector fusion is tested for the remaining launch overhead.
