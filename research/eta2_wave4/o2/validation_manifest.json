@@ -1,0 +1,373 @@
+{
+  "baseline_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+  "candidate_sha256": "4b05ad4ee261e7a346dbf43cfc0d207366bdf7544734b31b288c10f4bbcdbd10",
+  "rows": [
+    {
+      "label": "tiny-on-audit",
+      "binary_sha256": "4b05ad4ee261e7a346dbf43cfc0d207366bdf7544734b31b288c10f4bbcdbd10",
+      "input_sha256": "fbad2845b0c8603b1a60a16c258a1b31a892a10a7a6e30945834c3d50e9bd5e5",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "97",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/toy.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "40",
+        "--state_out",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/validation/tiny-on-audit.state"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=37 final_cost=0.9670273344 solve_seconds=0.759890",
+      "flags": {
+        "OCA_O2": "1",
+        "OCA_O2_AUDIT": "1"
+      },
+      "log_sha256": "a9988a1398d416a2af3ab4513c0ef58787cb50997df7c73b94e43d37f9f7bf3b",
+      "wave_attempt_parity": true,
+      "trace_rows": 40,
+      "trace_numeric_repairs": 3,
+      "wave_sha256": "843dfd9246cdb6bc7c68e3ed777aafbe23c6b27aa5f9c57e8b4669961da77d76",
+      "attempts_sha256": "0731c46de592fec6dcaf5e91e68a76e1eee1dad2ff2b9abdef83d37b5690771f",
+      "memcheck_errors": 0,
+      "independent_original_cost": 0.9670273344165908,
+      "audit_lines": [
+        "O2_AUDIT stage=0 cost_rel=1.351045536630967e-16 Hcc_rel=9.7953638279673565e-17 Cdiag_rel=9.9076634306257146e-17 bc_rel=4.3314249723095274e-16 bp_rel=5.3107469552149476e-16 cross_rel=0 rows_rel=0 model_rel=1.0232301577414104e-15 point_solve_rel=3.1017840403799663e-16 mask_frozen=13 passed=1",
+        "O2_AUDIT stage=0.25 cost_rel=1.1416838111784493e-15 Hcc_rel=1.2211140437202589e-16 Cdiag_rel=1.5272088062141473e-16 bc_rel=1.5641706065317931e-14 bp_rel=3.2220350223349454e-15 cross_rel=0 rows_rel=0 model_rel=4.144562342672589e-15 point_solve_rel=2.7374106745033918e-16 mask_frozen=15 passed=1",
+        "O2_AUDIT stage=0.5 cost_rel=1.6289379974248765e-15 Hcc_rel=5.836887759217267e-17 Cdiag_rel=8.9751632825888048e-17 bc_rel=3.1171627063893196e-15 bp_rel=3.9247555113163528e-15 cross_rel=0 rows_rel=0 model_rel=8.5521386058193524e-16 point_solve_rel=1.3426351108210567e-16 mask_frozen=17 passed=1",
+        "O2_AUDIT stage=0.75 cost_rel=3.594453407467594e-15 Hcc_rel=1.4249682486817104e-16 Cdiag_rel=1.2707573786745278e-16 bc_rel=1.145761502110259e-14 bp_rel=1.2961518990230259e-14 cross_rel=0 rows_rel=0 model_rel=2.0227568687332384e-15 point_solve_rel=2.0041030148241539e-16 mask_frozen=21 passed=1",
+        "O2_AUDIT stage=0.90000000000000002 cost_rel=1.2735906363388983e-14 Hcc_rel=1.5652424647196749e-16 Cdiag_rel=1.6075517944692043e-16 bc_rel=3.0422710967964241e-14 bp_rel=3.3101666299304754e-14 cross_rel=0 rows_rel=0 model_rel=2.4846070745598898e-16 point_solve_rel=2.0467313201292862e-16 mask_frozen=24 passed=1",
+        "O2_AUDIT stage=1 cost_rel=2.8188203026638722e-14 Hcc_rel=1.2820614697814597e-16 Cdiag_rel=1.2851572304957067e-16 bc_rel=2.5630597229645816e-14 bp_rel=8.0179930624866472e-14 cross_rel=0 rows_rel=0 model_rel=6.0362281610146008e-15 point_solve_rel=2.8931495678896624e-16 mask_frozen=24 passed=1"
+      ],
+      "stages_checked": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        1.0
+      ]
+    },
+    {
+      "label": "tiny-off-memcheck",
+      "binary_sha256": "4b05ad4ee261e7a346dbf43cfc0d207366bdf7544734b31b288c10f4bbcdbd10",
+      "input_sha256": "fbad2845b0c8603b1a60a16c258a1b31a892a10a7a6e30945834c3d50e9bd5e5",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "97",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/toy.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "12"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=12 final_cost=0.9673785027 solve_seconds=0.206671",
+      "flags": {},
+      "log_sha256": "5cd7afc34a318b54330e86b0504a309644e90853df46d99a40b1640a71c7e0fe",
+      "wave_attempt_parity": true,
+      "trace_rows": 12,
+      "trace_numeric_repairs": 0,
+      "wave_sha256": "57674adea8d99c1b339a921aa055e860e6ded7239dbbc431eff34f7a3cc133dd",
+      "attempts_sha256": "9157c9659e4ca15ea0765d09f0edf013e7b9b3707bf90bb6bce6182f140b97de",
+      "memcheck_errors": 0
+    },
+    {
+      "label": "compat-original-0",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-rl-actor/build/prism-tr",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358945.4290103654 solve_seconds=0.421657",
+      "flags": {},
+      "log_sha256": "86302d26abe29b3f86d09297690bb89217e577f203660d876faa3f8695783cd7"
+    },
+    {
+      "label": "compat-off-0",
+      "binary_sha256": "4b05ad4ee261e7a346dbf43cfc0d207366bdf7544734b31b288c10f4bbcdbd10",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358945.5479049654 solve_seconds=0.422410",
+      "flags": {},
+      "log_sha256": "3b26ea7fb2dbc1e7841641dd6c1621793face1e00a4ef3c7a6eab5fb48e52df1",
+      "wave_attempt_parity": true,
+      "trace_rows": 35,
+      "trace_numeric_repairs": 0,
+      "wave_sha256": "89bd24d1ce0eceeb93791ee4f9ef9e0d80d6a8089e0e0caa9332e486de89f6ef",
+      "attempts_sha256": "4113cd809c32bcdcaa8a59a4792bf7a712e8030db9f6927e9c1f05a301a3a664"
+    },
+    {
+      "label": "compat-off-1",
+      "binary_sha256": "4b05ad4ee261e7a346dbf43cfc0d207366bdf7544734b31b288c10f4bbcdbd10",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358945.3853451574 solve_seconds=0.414312",
+      "flags": {},
+      "log_sha256": "f560754655e68a6d540ab9b90e82e8a22b694b8b03aef94efaa0b5337aca4241",
+      "wave_attempt_parity": true,
+      "trace_rows": 34,
+      "trace_numeric_repairs": 0,
+      "wave_sha256": "f5e7a8888d789b5dba8690a02e89e91a2d7c778c25973124fc27e1ef0c1adc7a",
+      "attempts_sha256": "067999c0357f3221992aa6df1df0621f3d9fd0d5008586f5f86adf76d2b893b9"
+    },
+    {
+      "label": "compat-original-1",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-rl-actor/build/prism-tr",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=31 final_cost=358935.7337489199 solve_seconds=0.409297",
+      "flags": {},
+      "log_sha256": "b6d22159be3eef7adc1a4047060afc7d96e14cd1ab2f4d75abde96ffd0231a5b"
+    },
+    {
+      "label": "compat-original-2",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-rl-actor/build/prism-tr",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358944.9364728511 solve_seconds=0.419834",
+      "flags": {},
+      "log_sha256": "ee23a4788a5f7bb87c327f4ce28c7aa41c7a230822868ada6d9a9c3eeb3b179a"
+    },
+    {
+      "label": "compat-off-2",
+      "binary_sha256": "4b05ad4ee261e7a346dbf43cfc0d207366bdf7544734b31b288c10f4bbcdbd10",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358945.2359402271 solve_seconds=0.416409",
+      "flags": {},
+      "log_sha256": "03bf8268f78f83cccb368f9041dcd7b7c86e0e780ee37ce0a205794238c19b72",
+      "wave_attempt_parity": true,
+      "trace_rows": 34,
+      "trace_numeric_repairs": 0,
+      "wave_sha256": "899878e55382db83bd91c2afac7a070e8400fc57f5fc88cb8af85db07795fbb9",
+      "attempts_sha256": "661b51f771706738471b9dced567efe4a48d14308fe3c6aa808e720bdb5b5513"
+    },
+    {
+      "label": "target-cap-edge",
+      "binary_sha256": "4b05ad4ee261e7a346dbf43cfc0d207366bdf7544734b31b288c10f4bbcdbd10",
+      "input_sha256": "2a44e0dbca4cf5ccd58492841afaddd5e73dea8cc6fdd89a06e0e5e95b371d7d",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/zero-residual.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "6",
+        "--state_out",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/validation/target-cap-edge.state"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=2 final_cost=0.0000000000 solve_seconds=0.021925",
+      "flags": {
+        "OCA_O2": "1",
+        "OCA_TARGET_COST": "1"
+      },
+      "log_sha256": "76342faa5663dd018545e0360045286547a62d00f3aa3272a69cbdec7efa78a9",
+      "wave_attempt_parity": true,
+      "trace_rows": 18,
+      "trace_numeric_repairs": 0,
+      "wave_sha256": "b2c3350bebf2335ee91fa9c4e7bfa8319a5893b89ef3b515ec0d876e64353384",
+      "attempts_sha256": "29e29badb1fda34ad67a26650d46134cbc5346828e51bdcf95a426b224ab1d41",
+      "independent_original_cost": 0.0
+    },
+    {
+      "label": "partial-stage-target-edge",
+      "binary_sha256": "4b05ad4ee261e7a346dbf43cfc0d207366bdf7544734b31b288c10f4bbcdbd10",
+      "input_sha256": "2a44e0dbca4cf5ccd58492841afaddd5e73dea8cc6fdd89a06e0e5e95b371d7d",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/zero-residual.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "1",
+        "--state_out",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/validation/partial-stage-target-edge.state"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=1 final_cost=0.0000000000 solve_seconds=0.019270",
+      "flags": {
+        "OCA_O2": "1",
+        "OCA_TARGET_COST": "1"
+      },
+      "log_sha256": "e04621cbaf9c858a6036b06e74b4f7b60a31a195f7b5d6c87743ccc8f4ce47e7",
+      "wave_attempt_parity": true,
+      "trace_rows": 9,
+      "trace_numeric_repairs": 0,
+      "wave_sha256": "be63c6dbd681938336ff8b66d3008a4c8fc592088f32cfe1ad0df153127b75a9",
+      "attempts_sha256": "a8ccc9b75bc759948e4f39b2a5357de1f147f08829bbfbde8296fd029e0a0e08",
+      "independent_original_cost": 0.0
+    }
+  ],
+  "source_and_header_identity": true,
+  "gpu_lock": "/tmp/prism_gpu.lock",
+  "kind": "correctness_not_performance",
+  "edge_checks_passed": true,
+  "numeric_continue_trace_checked": true,
+  "wave_trace_schema": "JSON array; see HANDOFF.md",
+  "wave_gauge_measured": false,
+  "compatibility_summary": {
+    "original": {
+      "n": 3,
+      "costs": [
+        358945.4290103654,
+        358935.7337489199,
+        358944.9364728511
+      ],
+      "median_cost": 358944.9364728511,
+      "cost_range": [
+        358935.7337489199,
+        358945.4290103654
+      ],
+      "seconds": [
+        0.421657,
+        0.409297,
+        0.419834
+      ],
+      "median_seconds": 0.419834,
+      "seconds_range": [
+        0.409297,
+        0.421657
+      ]
+    },
+    "off": {
+      "n": 3,
+      "costs": [
+        358945.5479049654,
+        358945.3853451574,
+        358945.2359402271
+      ],
+      "median_cost": 358945.3853451574,
+      "cost_range": [
+        358945.2359402271,
+        358945.5479049654
+      ],
+      "seconds": [
+        0.42241,
+        0.414312,
+        0.416409
+      ],
+      "median_seconds": 0.416409,
+      "seconds_range": [
+        0.414312,
+        0.42241
+      ]
+    },
+    "off_vs_original_cost_delta_percent": 0.00012505324931133543,
+    "timing_ranges_overlap": true
+  },
+  "wave_trace_validation": {
+    "schema": "top-level JSON array; HANDOFF.md Wave harness integration",
+    "gauge_measured": false,
+    "rows_checked": 182,
+    "actual_numeric_repair_rows_checked": 3,
+    "all_parity": true,
+    "extra_gpu_copies_reductions_or_sync": 0
+  },
+  "validation_driver_sha256": "03addd2dda22090f0b549f246cc9cc4935aeebed7e5fa7e3d47807256283051f"
+}

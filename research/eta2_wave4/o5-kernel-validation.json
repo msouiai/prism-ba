@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "cases": 96,
+  "kernel_evaluations": 192,
+  "max_relative_error": 4.490423848841994e-08,
+  "columns": [
+    "slope",
+    "IRLS_GN_curvature",
+    "prediction",
+    "actual_track_cost"
+  ],
+  "column_max": [
+    4.490423848841994e-08,
+    1.8348916235083979e-09,
+    7.490500736815083e-09,
+    1.3283818489639998e-13
+  ],
+  "source_sha256": "fe9dbade5e115ad45a8393a47df70597c0d46afd97ffad9aa60fe03f90374d3f",
+  "binary_sha256": "246706cb6171cabe4f471c9e02c8f0de77bec20f399baba622e6e97537757da1",
+  "command": [
+    "nvcc",
+    "-O2",
+    "-std=c++17",
+    "-arch=sm_89",
+    "/tmp/prism-ba-coarse/research/eta2_wave4/o5_kernel_test.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave4/build/o5-kernel-test"
+  ]
+}

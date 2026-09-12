@@ -1,0 +1,23 @@
+[R10] --zero_k2: all k2 set to 0 at load
+Loaded /workspace/bal/final-3068.txt: ncam=3068 npt=310854 nobs=1653812 n=950970
+[R10] --dof9: refining f,k1 per camera (3068 cameras)
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+  [compact-fragments] active=2 saved_bytes=171996448 storage=fp32 camera_reads=contiguous
+  MFCG score_init=90993342.024340227 precision=fp64
+O1_INIT k=3 l2=90993342.024340227
+O1_SWEEP sweep=0 old_l2=90993342.024340227 candidate_l2=90993342.024340227 accepted=0 active=0 products=0 pcg=0 schur_residual=0 point_residual=0 rotation_reverts=0 reason=invalid_ray_or_nonPSD_block
+O1_QP sweep=0 surrogate_before=-1 surrogate_after=-1 feasibility_residual=0
+O1_FINAL k=3 accepted=0 l2=90993342.024340227 seconds=0.063736298 complete=0 reason=invalid_ray_or_nonPSD_block
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+ATTR_RADIUS o=0 raw_norm=8861.1709887307588 norm=8861.1709887307588 radius=8861.1709887307588 next_radius=17722.341977461518 lambda=0.10000000000000001 next_lambda=0.025000000000000001 rho=0.99545080656082663 accept=1
+CLASSICAL_LM o=0 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=83412716.69905898 rho=0.99545080656082663 accept=1
+  MFCG it   1 cost=7.960086e+06 lam=2.500e-02 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=2
+  MFCG: accepts=1 rejects=0 total_matvecs=2 negcurv=0 cand_evals=1 mean_cg_per_outer=2.0
+NUMERIC_REPAIR summary rebuilds=0 floor=9.9999999999999998e-17
+  [retry-cache] builds=1 reuses=0
+  [menu-backtrack] trials=0 rescues=0 evals=0 total_scored=1
+POINT_SAFE summary calls=0 evals=0 wins=0 frozen=0 seconds=0
+  [scoring] menu_evals=1 alpha_evals=0 backtrack_evals=0 total_scored=1
+RESULT algo=mfree_shifted_cg iters=1 final_cost=7960085.9088322520 solve_seconds=0.126324
+DIAGNOSTICS median_reproj_err_px 2.704502 -> 1.451726 | cheirality_violations(obs) 751 -> 751 | cheirality_violations(pts, of 310854) 725 -> 725

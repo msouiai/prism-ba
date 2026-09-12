@@ -1,0 +1,616 @@
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+  [compact-fragments] active=2 saved_bytes=171996448 storage=fp32 camera_reads=contiguous
+  MFCG score_init=90993342.024340242 precision=fp64
+O1_INIT k=10 l2=90993342.024340242
+O1_SWEEP sweep=0 old_l2=90993342.024340242 candidate_l2=90993342.024340242 accepted=0 active=0 products=1025 pcg=1024 schur_residual=0.080954972692086985 point_residual=0 rotation_reverts=0 reason=pcg_residual_cap
+O1_QP sweep=0 surrogate_before=22084592.393000372 surrogate_after=-1 feasibility_residual=0
+O1_FINAL k=10 accepted=0 l2=90993342.024340242 seconds=2.045919553 complete=0 reason=pcg_residual_cap
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+ATTR_RADIUS o=0 raw_norm=8861.1709887307588 norm=8861.1709887307588 radius=8861.1709887307588 next_radius=17722.341977461518 lambda=0.10000000000000001 next_lambda=0.025000000000000001 rho=0.99545080656082641 accept=1
+CLASSICAL_LM o=0 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=83412716.699058995 rho=0.99545080656082641 accept=1
+  MFCG it   1 cost=7.960086e+06 lam=2.500e-02 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=2
+PCG_PREP o=1 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=1 raw_norm=4659.7121206777865 norm=4659.7121206777865 radius=17722.341977461518 next_radius=17722.341977461518 lambda=0.025000000000000001 next_lambda=0.0025000000000000005 rho=0.99453896506499828 accept=1
+CLASSICAL_LM o=1 lambda=0.025000000000000001 tau=0.025000000000000001 prediction=4259951.5107679702 rho=0.99453896506499828 accept=1
+  MFCG it   2 cost=3.723398e+06 lam=2.500e-03 tau=0.00e+00 cg_it=4 shift=0 ckpt=5 alpha=0 acc mv=8
+PCG_PREP o=2 rebuild=1 drift=0 previous_depth=5
+ATTR_RADIUS o=2 raw_norm=6975.6779789561288 norm=6975.6779789561288 radius=17722.341977461518 next_radius=17722.341977461518 lambda=0.0025000000000000005 next_lambda=0.00025000000000000006 rho=0.87051061466538049 accept=1
+CLASSICAL_LM o=2 lambda=0.0025000000000000005 tau=0.0025000000000000005 prediction=1234099.5580717581 rho=0.87051061466538049 accept=1
+  MFCG it   3 cost=2.649101e+06 lam=2.500e-04 tau=0.00e+00 cg_it=9 shift=0 ckpt=10 alpha=0 acc mv=19
+PCG_PREP o=3 rebuild=1 drift=0 previous_depth=10
+ATTR_RADIUS o=3 raw_norm=10922.542500246976 norm=10922.542500246976 radius=17722.341977461518 next_radius=17722.341977461518 lambda=0.00025000000000000006 next_lambda=2.5000000000000008e-05 rho=0.71461554947703432 accept=1
+CLASSICAL_LM o=3 lambda=0.00025000000000000006 tau=0.00025000000000000006 prediction=596515.31226691836 rho=0.71461554947703432 accept=1
+  MFCG it   4 cost=2.222822e+06 lam=2.500e-05 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=21
+PCG_PREP o=4 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=4 frozen=1341 slope=-336469.79997842078 candidate=2043410.2460943237 original=2072225.5825954878 current=2222822.2595835868 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=4 raw_norm=25300.156685652179 norm=17722.341977461514 radius=17722.341977461518 next_radius=35444.683954923035 lambda=2.5000000000000008e-05 next_lambda=6.250000000000002e-06 rho=0.91745233701959683 accept=1
+CLASSICAL_LM o=4 lambda=2.5000000000000008e-05 tau=2.5000000000000008e-05 prediction=195554.58768800419 rho=0.91745233701959683 accept=1
+  MFCG it   5 cost=2.043410e+06 lam=6.250e-06 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=24
+PCG_PREP o=5 rebuild=1 drift=0 previous_depth=2
+POINT_SAFE o=5 frozen=1597 slope=-207540.66580096065 candidate=2178501.4251012099 original=2002349.3756357178 current=2043410.2460943237 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=5 raw_norm=42981.161381178936 norm=4430.5854943653831 radius=35444.683954923035 next_radius=35444.683954923035 lambda=6.250000000000002e-06 next_lambda=6.2500000000000026e-07 rho=0.91576896368978933 accept=1
+CLASSICAL_LM o=5 lambda=6.250000000000002e-06 tau=6.250000000000002e-06 prediction=44837.586865976198 rho=0.91576896368978933 accept=1
+  MFCG it   6 cost=2.002349e+06 lam=6.250e-07 tau=0.00e+00 cg_it=7 shift=0 ckpt=8 alpha=0 acc mv=33
+PCG_PREP o=6 rebuild=1 drift=0 previous_depth=8
+POINT_SAFE o=6 frozen=1716 slope=-116946.84387816416 candidate=4306788.7986446535 original=1973626.3263390828 current=2002349.3756357178 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=6 raw_norm=69318.419134080847 norm=8861.1709887307607 radius=35444.683954923035 next_radius=35444.683954923035 lambda=6.2500000000000026e-07 next_lambda=6.2500000000000024e-08 rho=0.49789877375546637 accept=1
+CLASSICAL_LM o=6 lambda=6.2500000000000026e-07 tau=6.2500000000000026e-07 prediction=57688.531907776414 rho=0.49789877375546637 accept=1
+  MFCG it   7 cost=1.973626e+06 lam=6.250e-08 tau=0.00e+00 cg_it=5 shift=0 ckpt=6 alpha=0 acc mv=40
+PCG_PREP o=7 rebuild=1 drift=0 previous_depth=6
+POINT_SAFE o=7 frozen=783 slope=-53118.349597924695 candidate=12650111.312938884 original=1973206.1547023857 current=1973626.3263390828 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=7 raw_norm=77234.0105488587 norm=553.8231867956722 radius=35444.683954923035 next_radius=8861.1709887307588 lambda=6.2500000000000024e-08 next_lambda=1.0000000000000004e-06 rho=0.16441592689502185 accept=1
+CLASSICAL_LM o=7 lambda=6.2500000000000024e-08 tau=6.2500000000000024e-08 prediction=2555.5409663287287 rho=0.16441592689502185 accept=1
+  MFCG it   8 cost=1.973206e+06 lam=1.000e-06 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=42
+PCG_PREP o=8 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=8 frozen=274 slope=-45227.519234902509 candidate=2004443.0946797181 original=1972184.2219086438 current=1973206.1547023857 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=8 raw_norm=30851.797333633611 norm=138.45579669891808 radius=8861.1709887307588 next_radius=8861.1709887307588 lambda=1.0000000000000004e-06 next_lambda=1.0000000000000005e-07 rho=0.4202370830388702 accept=1
+CLASSICAL_LM o=8 lambda=1.0000000000000004e-06 tau=1.0000000000000004e-06 prediction=2431.8006072950216 rho=0.4202370830388702 accept=1
+  MFCG it   9 cost=1.972184e+06 lam=1.000e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=44
+PCG_PREP o=9 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=9 frozen=159 slope=-38189.629617034559 candidate=2029676.1973959983 original=1971903.476454061 current=1972184.2219086438 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=9 raw_norm=70640.429493565607 norm=69.227898349459068 radius=8861.1709887307588 next_radius=2215.2927471826897 lambda=1.0000000000000005e-07 next_lambda=1.6000000000000008e-06 rho=0.24169927497471824 accept=1
+CLASSICAL_LM o=9 lambda=1.0000000000000005e-07 tau=1.0000000000000005e-07 prediction=1161.5486004756008 rho=0.24169927497471824 accept=1
+  MFCG it  10 cost=1.971903e+06 lam=1.600e-06 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=46
+PCG_PREP o=10 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=10 frozen=31 slope=-35910.453118142221 candidate=1955576.1458810607 original=1971600.837351206 current=1971903.476454061 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=10 raw_norm=25397.04489672407 norm=2215.2927471826906 radius=2215.2927471826897 next_radius=4430.5854943653794 lambda=1.6000000000000008e-06 next_lambda=4.0000000000000019e-07 rho=0.83471705672550711 accept=1
+CLASSICAL_LM o=10 lambda=1.6000000000000008e-06 tau=1.6000000000000008e-06 prediction=19560.317405098162 rho=0.83471705672550711 accept=1
+  MFCG it  11 cost=1.955576e+06 lam=4.000e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=48
+PCG_PREP o=11 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=11 frozen=500 slope=-8224.0372765964566 candidate=1961160.0046045317 original=1955197.4270428235 current=1955576.1458810607 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=11 raw_norm=47488.009966425416 norm=34.613949174729527 radius=4430.5854943653794 next_radius=4430.5854943653794 lambda=4.0000000000000019e-07 next_lambda=4.0000000000000021e-08 rho=0.40795634395084207 accept=1
+CLASSICAL_LM o=11 lambda=4.0000000000000019e-07 tau=4.0000000000000019e-07 prediction=928.3317782719929 rho=0.40795634395084207 accept=1
+  MFCG it  12 cost=1.955197e+06 lam=4.000e-08 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=50
+PCG_PREP o=12 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=12 frozen=315 slope=-6643.6871014554781 candidate=1959616.5226936587 original=inf current=1955197.4270428235 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=12 raw_norm=83827.967224392807 norm=4430.5854943653803 radius=4430.5854943653794 next_radius=1107.6463735913449 lambda=4.0000000000000021e-08 next_lambda=6.4000000000000033e-07 rho=-1 accept=0
+CLASSICAL_LM o=12 lambda=4.0000000000000021e-08 tau=4.0000000000000021e-08 prediction=4377.3207814348762 rho=-1 accept=0
+  MFCG it  13  retry 1/8  lam=6.400e-07 tau_eff=4.000e-08  (assembly reused)
+PCG_PREP o=12 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=12 frozen=86 slope=-5473.6893642216655 candidate=1953236.7192136948 original=inf current=1955197.4270428235 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=12 raw_norm=39776.216101154896 norm=1107.6463735913446 radius=1107.6463735913449 next_radius=1107.6463735913449 lambda=6.4000000000000033e-07 next_lambda=6.4000000000000033e-07 rho=0.59247512079739262 accept=1
+CLASSICAL_LM o=12 lambda=6.4000000000000033e-07 tau=6.4000000000000033e-07 prediction=3309.3504862953 rho=0.59247512079739262 accept=1
+  MFCG it  13 cost=1.953237e+06 lam=6.400e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=54
+PCG_PREP o=13 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=13 frozen=274 slope=-2909.201286662475 candidate=1952251.4085939075 original=1953215.5698240339 current=1953236.7192136948 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=13 raw_norm=38825.442038986053 norm=1107.6463735913446 radius=1107.6463735913449 next_radius=1107.6463735913449 lambda=6.4000000000000033e-07 next_lambda=6.4000000000000033e-07 rho=0.487178101531001 accept=1
+CLASSICAL_LM o=13 lambda=6.4000000000000033e-07 tau=6.4000000000000033e-07 prediction=2022.4854456530081 rho=0.487178101531001 accept=1
+  MFCG it  14 cost=1.952251e+06 lam=6.400e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=56
+PCG_PREP o=14 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=14 frozen=90 slope=-2233.1605695139542 candidate=1951555.3100819143 original=1952212.6709200903 current=1952251.4085939075 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=14 raw_norm=38496.154186158536 norm=1107.6463735913453 radius=1107.6463735913449 next_radius=1107.6463735913449 lambda=6.4000000000000033e-07 next_lambda=6.4000000000000033e-07 rho=0.41432414158748387 accept=1
+CLASSICAL_LM o=14 lambda=6.4000000000000033e-07 tau=6.4000000000000033e-07 prediction=1680.0819506343114 rho=0.41432414158748387 accept=1
+  MFCG it  15 cost=1.951555e+06 lam=6.400e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=58
+PCG_PREP o=15 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=15 frozen=215 slope=-1615.2710010680062 candidate=1950936.4517706991 original=1951199.8457663734 current=1951555.3100819143 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=15 raw_norm=38173.656711532189 norm=1107.6463735913444 radius=1107.6463735913449 next_radius=1107.6463735913449 lambda=6.4000000000000033e-07 next_lambda=6.4000000000000033e-07 rho=0.43216092774506998 accept=1
+CLASSICAL_LM o=15 lambda=6.4000000000000033e-07 tau=6.4000000000000033e-07 prediction=1432.0089380691186 rho=0.43216092774506998 accept=1
+  MFCG it  16 cost=1.950936e+06 lam=6.400e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=60
+PCG_PREP o=16 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=16 frozen=97 slope=-1419.9900211957806 candidate=1950252.9080802428 original=1950619.9617095452 current=1950936.4517706991 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=16 raw_norm=37787.746937862255 norm=1107.6463735913446 radius=1107.6463735913449 next_radius=1107.6463735913449 lambda=6.4000000000000033e-07 next_lambda=6.4000000000000033e-07 rho=0.53856040895064128 accept=1
+CLASSICAL_LM o=16 lambda=6.4000000000000033e-07 tau=6.4000000000000033e-07 prediction=1269.2052350973252 rho=0.53856040895064128 accept=1
+  MFCG it  17 cost=1.950253e+06 lam=6.400e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=62
+PCG_PREP o=17 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=17 frozen=215 slope=-1249.8383438339199 candidate=1949628.0912658528 original=1949594.0740542449 current=1950252.9080802428 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=17 raw_norm=37376.259288078771 norm=17.306974587364763 radius=1107.6463735913449 next_radius=1107.6463735913449 lambda=6.4000000000000033e-07 next_lambda=6.400000000000003e-08 rho=0.38015807700537363 accept=1
+CLASSICAL_LM o=17 lambda=6.4000000000000033e-07 tau=6.4000000000000033e-07 prediction=1733.0528163119591 rho=0.38015807700537363 accept=1
+  MFCG it  18 cost=1.949594e+06 lam=6.400e-08 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=64
+PCG_PREP o=18 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=18 frozen=130 slope=-731.90935480705718 candidate=1949606.9342252384 original=inf current=1949594.0740542449 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=18 raw_norm=69855.038305308248 norm=1107.6463735913442 radius=1107.6463735913449 next_radius=276.91159339783621 lambda=6.400000000000003e-08 next_lambda=1.0240000000000005e-06 rho=-1 accept=0
+CLASSICAL_LM o=18 lambda=6.400000000000003e-08 tau=6.400000000000003e-08 prediction=679.19190120625171 rho=-1 accept=0
+  MFCG it  19  retry 1/8  lam=1.024e-06 tau_eff=6.400e-08  (assembly reused)
+PCG_PREP o=18 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=18 frozen=50 slope=-507.27161157032117 candidate=1949240.48162701 original=inf current=1949594.0740542449 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=18 raw_norm=30344.676156211528 norm=276.91159339783644 radius=276.91159339783621 next_radius=553.82318679567243 lambda=1.0240000000000005e-06 next_lambda=2.5600000000000012e-07 rho=0.82400847468246219 accept=1
+CLASSICAL_LM o=18 lambda=1.0240000000000005e-06 tau=1.0240000000000005e-06 prediction=429.11261000212812 rho=0.82400847468246219 accept=1
+  MFCG it  19 cost=1.949240e+06 lam=2.560e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=68
+PCG_PREP o=19 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=19 frozen=522 slope=-499.90088871222952 candidate=1948946.7412663144 original=1949228.8088009888 current=1949240.48162701 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=19 raw_norm=50243.902638186686 norm=553.82318679567243 radius=553.82318679567243 next_radius=553.82318679567243 lambda=2.5600000000000012e-07 next_lambda=2.5600000000000012e-07 rho=0.63265969046615655 accept=1
+CLASSICAL_LM o=19 lambda=2.5600000000000012e-07 tau=2.5600000000000012e-07 prediction=464.29441471006635 rho=0.63265969046615655 accept=1
+  MFCG it  20 cost=1.948947e+06 lam=2.560e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=70
+PCG_PREP o=20 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=20 frozen=184 slope=-436.79258317828464 candidate=1948669.0631174399 original=1948926.1057867245 current=1948946.7412663144 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=20 raw_norm=49982.024627057974 norm=553.82318679567265 radius=553.82318679567243 next_radius=553.82318679567243 lambda=2.5600000000000012e-07 next_lambda=2.5600000000000012e-07 rho=0.64309251401231349 accept=1
+CLASSICAL_LM o=20 lambda=2.5600000000000012e-07 tau=2.5600000000000012e-07 prediction=431.78569618558885 rho=0.64309251401231349 accept=1
+  MFCG it  21 cost=1.948669e+06 lam=2.560e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=72
+PCG_PREP o=21 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=21 frozen=237 slope=-430.68500903928077 candidate=1948389.9093643343 original=1948403.1708116534 current=1948669.0631174399 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=21 raw_norm=49891.217292904556 norm=553.82318679567254 radius=553.82318679567243 next_radius=553.82318679567243 lambda=2.5600000000000012e-07 next_lambda=2.5600000000000012e-07 rho=0.65291970301575031 accept=1
+CLASSICAL_LM o=21 lambda=2.5600000000000012e-07 tau=2.5600000000000012e-07 prediction=427.54683587610623 rho=0.65291970301575031 accept=1
+  MFCG it  22 cost=1.948390e+06 lam=2.560e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=74
+PCG_PREP o=22 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=22 frozen=133 slope=-429.26108941113813 candidate=1948106.5227704386 original=1947996.3456492624 current=1948389.9093643343 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=22 raw_norm=49681.648744043792 norm=4.3267436468411899 radius=553.82318679567243 next_radius=553.82318679567243 lambda=2.5600000000000012e-07 next_lambda=2.5600000000000014e-08 rho=0.46067910411397434 accept=1
+CLASSICAL_LM o=22 lambda=2.5600000000000012e-07 tau=2.5600000000000012e-07 prediction=854.31206138343407 rho=0.46067910411397434 accept=1
+  MFCG it  23 cost=1.947996e+06 lam=2.560e-08 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=76
+PCG_PREP o=23 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=23 frozen=80 slope=-254.82650013873993 candidate=1948075.3822738363 original=inf current=1947996.3456492624 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=23 raw_norm=86209.159304888832 norm=553.82318679567277 radius=553.82318679567243 next_radius=138.45579669891811 lambda=2.5600000000000014e-08 next_lambda=4.0960000000000023e-07 rho=-1 accept=0
+CLASSICAL_LM o=23 lambda=2.5600000000000014e-08 tau=2.5600000000000014e-08 prediction=253.15543798659112 rho=-1 accept=0
+  MFCG it  24  retry 1/8  lam=4.096e-07 tau_eff=2.560e-08  (assembly reused)
+PCG_PREP o=23 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=23 frozen=49 slope=-126.40786992195366 candidate=1947909.5604779338 original=inf current=1947996.3456492624 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=23 raw_norm=42874.268692019767 norm=138.45579669891805 radius=138.45579669891811 next_radius=138.45579669891811 lambda=4.0960000000000023e-07 next_lambda=4.0960000000000023e-07 rho=0.69163514908422696 accept=1
+CLASSICAL_LM o=23 lambda=4.0960000000000023e-07 tau=4.0960000000000023e-07 prediction=125.47825460213777 rho=0.69163514908422696 accept=1
+  MFCG it  24 cost=1.947910e+06 lam=4.096e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=80
+PCG_PREP o=24 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=24 frozen=234 slope=-125.717281972918 candidate=1947794.9010338311 original=inf current=1947909.5604779338 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=24 raw_norm=42398.931148911273 norm=138.45579669891814 radius=138.45579669891811 next_radius=276.91159339783621 lambda=4.0960000000000023e-07 next_lambda=1.0240000000000006e-07 rho=0.91580611100042231 accept=1
+CLASSICAL_LM o=24 lambda=4.0960000000000023e-07 tau=4.0960000000000023e-07 prediction=125.20056671988264 rho=0.91580611100042231 accept=1
+  MFCG it  25 cost=1.947795e+06 lam=1.024e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=82
+PCG_PREP o=25 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=25 frozen=342 slope=-170.27160191130125 candidate=1947658.5891924752 original=inf current=1947794.9010338311 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=25 raw_norm=62835.828431976675 norm=276.91159339783616 radius=276.91159339783621 next_radius=553.82318679567243 lambda=1.0240000000000006e-07 next_lambda=2.5600000000000014e-08 rho=0.80261920052345692 accept=1
+CLASSICAL_LM o=25 lambda=1.0240000000000006e-07 tau=1.0240000000000006e-07 prediction=169.83376583436939 rho=0.80261920052345692 accept=1
+  MFCG it  26 cost=1.947659e+06 lam=2.560e-08 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=84
+PCG_PREP o=26 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=26 frozen=461 slope=-256.04667462684239 candidate=1947490.5255476939 original=1947630.8927933595 current=1947658.5891924752 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=26 raw_norm=83903.515529716766 norm=553.82318679567243 radius=553.82318679567243 next_radius=553.82318679567243 lambda=2.5600000000000014e-08 next_lambda=2.5600000000000014e-08 rho=0.65902272179186439 accept=1
+CLASSICAL_LM o=26 lambda=2.5600000000000014e-08 tau=2.5600000000000014e-08 prediction=255.01949966805802 rho=0.65902272179186439 accept=1
+  MFCG it  27 cost=1.947491e+06 lam=2.560e-08 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=86
+PCG_PREP o=27 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=27 frozen=174 slope=-248.68563760717177 candidate=1947330.8222332271 original=1947313.1639133757 current=1947490.5255476939 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=27 raw_norm=85738.25426507536 norm=2.1633718234205941 radius=553.82318679567243 next_radius=553.82318679567243 lambda=2.5600000000000014e-08 next_lambda=2.5600000000000015e-09 rho=0.41763382150469619 accept=1
+CLASSICAL_LM o=27 lambda=2.5600000000000014e-08 tau=2.5600000000000014e-08 prediction=424.68216218512555 rho=0.41763382150469619 accept=1
+  MFCG it  28 cost=1.947313e+06 lam=2.560e-09 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=88
+PCG_PREP o=28 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=28 frozen=34 slope=-59.847532989520168 candidate=1947254.1529904571 original=inf current=1947313.1639133757 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=28 raw_norm=375580.98780488939 norm=553.82318679567243 radius=553.82318679567243 next_radius=1107.6463735913449 lambda=2.5600000000000015e-09 next_lambda=6.4000000000000037e-10 rho=0.99196305525083794 accept=1
+CLASSICAL_LM o=28 lambda=2.5600000000000015e-09 tau=2.5600000000000015e-09 prediction=59.48903298988261 rho=0.99196305525083794 accept=1
+  MFCG it  29 cost=1.947254e+06 lam=6.400e-10 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=90
+PCG_PREP o=29 rebuild=1 drift=0 previous_depth=1
+NUMERIC_REPAIR o=29 lambda=6.4000000000000037e-10 rayleigh=-5.1997404318328695e-08 next_lambda=2.1054961727331477e-07 cg=1 rebuild=1
+PCG_PREP o=29 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=29 frozen=1247 slope=-842.21600078420818 candidate=1948479.6943020721 original=inf current=1947254.1529904571 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=29 raw_norm=49993.132076290349 norm=1107.6463735913446 radius=1107.6463735913449 next_radius=276.91159339783621 lambda=2.1054961727331477e-07 next_lambda=3.3687938763730363e-06 rho=-1 accept=0
+CLASSICAL_LM o=29 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=831.96042274991783 rho=-1 accept=0
+  MFCG it  30  retry 1/8  lam=3.369e-06 tau_eff=2.105e-07  (assembly reused)
+PCG_PREP o=29 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=29 frozen=771 slope=-630.19268963080799 candidate=1946793.088550787 original=inf current=1947254.1529904571 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=29 raw_norm=16855.691913659761 norm=276.9115933978361 radius=276.91159339783621 next_radius=276.91159339783621 lambda=3.3687938763730363e-06 next_lambda=3.3687938763730363e-06 rho=0.74682911866446866 accept=1
+CLASSICAL_LM o=29 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=617.36269803551579 rho=0.74682911866446866 accept=1
+  MFCG it  30 cost=1.946793e+06 lam=3.369e-06 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=96
+PCG_PREP o=30 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=30 frozen=161 slope=-589.45748086088952 candidate=1946231.9562607473 original=1946714.5993251705 current=1946793.088550787 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=30 raw_norm=17099.187907283645 norm=276.91159339783616 radius=276.91159339783621 next_radius=553.82318679567243 lambda=3.3687938763730363e-06 next_lambda=8.4219846909325908e-07 rho=0.96578918454464657 accept=1
+CLASSICAL_LM o=30 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=581.00908461119457 rho=0.96578918454464657 accept=1
+  MFCG it  31 cost=1.946232e+06 lam=8.422e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=98
+PCG_PREP o=31 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=31 frozen=370 slope=-622.10981544989977 candidate=1945768.6282843221 original=1945944.8579337562 current=1946231.9562607473 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=31 raw_norm=32286.7400516454 norm=553.8231867956722 radius=553.82318679567243 next_radius=1107.6463735913449 lambda=8.4219846909325908e-07 next_lambda=2.1054961727331477e-07 rho=0.75255416464043401 accept=1
+CLASSICAL_LM o=31 lambda=8.4219846909325908e-07 tau=8.4219846909325908e-07 prediction=615.6739251407289 rho=0.75255416464043401 accept=1
+  MFCG it  32 cost=1.945769e+06 lam=2.105e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=100
+PCG_PREP o=32 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=32 frozen=432 slope=-1163.47808030545 candidate=1944718.257551366 original=1945613.3863148401 current=1945768.6282843221 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=32 raw_norm=67300.582987067784 norm=1107.6463735913449 radius=1107.6463735913449 next_radius=2215.2927471826897 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.91133809308412506 accept=1
+CLASSICAL_LM o=32 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=1152.5587934127332 rho=0.91133809308412506 accept=1
+  MFCG it  33 cost=1.944718e+06 lam=2.105e-07 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=103
+PCG_PREP o=33 rebuild=1 drift=0 previous_depth=2
+POINT_SAFE o=33 frozen=317 slope=-2299.4805797893664 candidate=1942826.534589109 original=1943966.3206280761 current=1944718.257551366 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=33 raw_norm=67195.40216613849 norm=2215.2927471826893 radius=2215.2927471826897 next_radius=4430.5854943653794 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.83831425423644512 accept=1
+CLASSICAL_LM o=33 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=2256.5797404697705 rho=0.83831425423644512 accept=1
+  MFCG it  34 cost=1.942827e+06 lam=2.105e-07 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=106
+PCG_PREP o=34 rebuild=1 drift=0 previous_depth=2
+POINT_SAFE o=34 frozen=735 slope=-3163.1047001272445 candidate=1953257.2904581549 original=1941609.5303213482 current=1942826.534589109 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=34 raw_norm=49029.122515204297 norm=138.45579669891805 radius=4430.5854943653794 next_radius=4430.5854943653794 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.35348765872450072 accept=1
+CLASSICAL_LM o=34 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=3442.8479685885936 rho=0.35348765872450072 accept=1
+  MFCG it  35 cost=1.941610e+06 lam=2.105e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=108
+PCG_PREP o=35 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=35 frozen=731 slope=-3173.8944979350881 candidate=2044333.2065823432 original=1941457.6629735574 current=1941609.5303213482 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=35 raw_norm=48804.801412225468 norm=17.306974587364767 radius=4430.5854943653794 next_radius=4430.5854943653794 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.3555696946447699 accept=1
+CLASSICAL_LM o=35 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=427.10993112779744 rho=0.3555696946447699 accept=1
+  MFCG it  36 cost=1.941458e+06 lam=2.105e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=110
+PCG_PREP o=36 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=36 frozen=731 slope=-3181.2298899861421 candidate=2240703.5734951915 original=inf current=1941457.6629735574 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=36 raw_norm=48706.373701282922 norm=4430.5854943653803 radius=4430.5854943653794 next_radius=1107.6463735913449 lambda=2.1054961727331477e-07 next_lambda=3.3687938763730363e-06 rho=-1 accept=0
+CLASSICAL_LM o=36 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=3006.9801987500095 rho=-1 accept=0
+  MFCG it  37  retry 1/8  lam=3.369e-06 tau_eff=2.105e-07  (assembly reused)
+PCG_PREP o=36 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=36 frozen=207 slope=-2339.0484905155204 candidate=1940905.4345466248 original=inf current=1941457.6629735574 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=36 raw_norm=16124.263532603411 norm=1107.6463735913446 radius=1107.6463735913449 next_radius=276.91159339783621 lambda=3.3687938763730363e-06 next_lambda=5.3900702021968581e-05 rho=0.24663785187718457 accept=1
+CLASSICAL_LM o=36 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=2239.0254485656847 rho=0.24663785187718457 accept=1
+  MFCG it  37 cost=1.940905e+06 lam=5.390e-05 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=114
+PCG_PREP o=37 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=37 frozen=59 slope=-1663.7799969007042 candidate=1939335.0454304386 original=1940512.8595013812 current=1940905.4345466248 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=37 raw_norm=5262.0531135212423 norm=276.91159339783621 radius=276.91159339783621 next_radius=553.82318679567243 lambda=5.3900702021968581e-05 next_lambda=1.3475175505492145e-05 rho=1.006020793837423 accept=1
+CLASSICAL_LM o=37 lambda=5.3900702021968581e-05 tau=5.3900702021968581e-05 prediction=1560.9907129215503 rho=1.006020793837423 accept=1
+  MFCG it  38 cost=1.939335e+06 lam=1.348e-05 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=116
+PCG_PREP o=38 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=38 frozen=211 slope=-1689.8080087166368 candidate=1937668.4665457187 original=1938623.0513990279 current=1939335.0454304386 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=38 raw_norm=19690.576073123997 norm=553.82318679567243 radius=553.82318679567243 next_radius=1107.6463735913449 lambda=1.3475175505492145e-05 next_lambda=3.3687938763730363e-06 rho=1.0138227082757942 accept=1
+CLASSICAL_LM o=38 lambda=1.3475175505492145e-05 tau=1.3475175505492145e-05 prediction=1643.8563381108493 rho=1.0138227082757942 accept=1
+  MFCG it  39 cost=1.937668e+06 lam=3.369e-06 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=119
+PCG_PREP o=39 rebuild=1 drift=0 previous_depth=2
+POINT_SAFE o=39 frozen=137 slope=-2336.0925308386441 candidate=1935314.3843279036 original=1936634.2500945984 current=1937668.4665457187 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=39 raw_norm=28793.200212218562 norm=1107.6463735913449 radius=1107.6463735913449 next_radius=2215.2927471826897 lambda=3.3687938763730363e-06 next_lambda=8.4219846909325908e-07 rho=1.0309523543720363 accept=1
+CLASSICAL_LM o=39 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=2283.4054433572687 rho=1.0309523543720363 accept=1
+  MFCG it  40 cost=1.935314e+06 lam=8.422e-07 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=122
+PCG_PREP o=40 rebuild=1 drift=0 previous_depth=2
+POINT_SAFE o=40 frozen=212 slope=-3191.7515151928942 candidate=1931995.7284480326 original=1933668.3096214384 current=1935314.3843279036 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=40 raw_norm=42551.008574765707 norm=2215.2927471826893 radius=2215.2927471826897 next_radius=4430.5854943653794 lambda=8.4219846909325908e-07 next_lambda=2.1054961727331477e-07 rho=1.0761596215764795 accept=1
+CLASSICAL_LM o=40 lambda=8.4219846909325908e-07 tau=8.4219846909325908e-07 prediction=3083.7952041068488 rho=1.0761596215764795 accept=1
+  MFCG it  41 cost=1.931996e+06 lam=2.105e-07 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=125
+PCG_PREP o=41 rebuild=1 drift=0 previous_depth=2
+POINT_SAFE o=41 frozen=327 slope=-4140.0905164625929 candidate=1929204.2297462476 original=1929317.6479862072 current=1931995.7284480326 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=41 raw_norm=63773.254939055529 norm=4430.5854943653794 radius=4430.5854943653794 next_radius=4430.5854943653794 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.70693531584971558 accept=1
+CLASSICAL_LM o=41 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=3948.7328461299076 rho=0.70693531584971558 accept=1
+  MFCG it  42 cost=1.929204e+06 lam=2.105e-07 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=128
+PCG_PREP o=42 rebuild=1 drift=0 previous_depth=2
+POINT_SAFE o=42 frozen=246 slope=-7243.1264007029185 candidate=1928004.2203259883 original=1926769.302537845 current=1929204.2297462476 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=42 raw_norm=61578.715789125046 norm=553.82318679567231 radius=4430.5854943653794 next_radius=1107.6463735913449 lambda=2.1054961727331477e-07 next_lambda=3.3687938763730363e-06 rho=0.18024278711835354 accept=1
+CLASSICAL_LM o=42 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=13509.152001759736 rho=0.18024278711835354 accept=1
+  MFCG it  43 cost=1.926769e+06 lam=3.369e-06 tau=0.00e+00 cg_it=3 shift=0 ckpt=4 alpha=0 acc mv=133
+PCG_PREP o=43 rebuild=1 drift=0 previous_depth=4
+POINT_SAFE o=43 frozen=117 slope=-2284.0441751235235 candidate=1925233.8043359662 original=1925589.658150835 current=1926769.302537845 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=43 raw_norm=14697.630783597124 norm=1107.6463735913451 radius=1107.6463735913449 next_radius=2215.2927471826897 lambda=3.3687938763730363e-06 next_lambda=8.4219846909325908e-07 rho=0.75322224903519042 accept=1
+CLASSICAL_LM o=43 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=2038.5725512563865 rho=0.75322224903519042 accept=1
+  MFCG it  44 cost=1.925234e+06 lam=8.422e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=135
+PCG_PREP o=44 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=44 frozen=278 slope=-4216.9431223174452 candidate=1922076.4568938985 original=1922889.0972754152 current=1925233.8043359662 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=44 raw_norm=48465.971467522657 norm=2215.2927471826902 radius=2215.2927471826897 next_radius=4430.5854943653794 lambda=8.4219846909325908e-07 next_lambda=2.1054961727331477e-07 rho=0.77191597562156322 accept=1
+CLASSICAL_LM o=44 lambda=8.4219846909325908e-07 tau=8.4219846909325908e-07 prediction=4090.2734776609987 rho=0.77191597562156322 accept=1
+  MFCG it  45 cost=1.922076e+06 lam=2.105e-07 tau=0.00e+00 cg_it=3 shift=0 ckpt=4 alpha=0 acc mv=140
+PCG_PREP o=45 rebuild=1 drift=0 previous_depth=4
+POINT_SAFE o=45 frozen=594 slope=-2725.1088108031454 candidate=1930208.7612139019 original=1919384.1315376733 current=1922076.4568938985 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=45 raw_norm=42839.927429973068 norm=276.91159339783627 radius=4430.5854943653794 next_radius=4430.5854943653794 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.4160697506053278 accept=1
+CLASSICAL_LM o=45 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=6470.8509866633285 rho=0.4160697506053278 accept=1
+  MFCG it  46 cost=1.919384e+06 lam=2.105e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=142
+PCG_PREP o=46 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=46 frozen=586 slope=-2718.4379355338524 candidate=1934923.3255166602 original=1919263.0588207578 current=1919384.1315376733 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=46 raw_norm=42647.686689639748 norm=17.306974587364763 radius=4430.5854943653794 next_radius=4430.5854943653794 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.30551018533325558 accept=1
+CLASSICAL_LM o=46 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=396.2968265147893 rho=0.30551018533325558 accept=1
+  MFCG it  47 cost=1.919263e+06 lam=2.105e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=144
+PCG_PREP o=47 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=47 frozen=587 slope=-2730.9888340012608 candidate=1930834.1139468101 original=inf current=1919263.0588207578 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=47 raw_norm=42657.054446737253 norm=4430.5854943653785 radius=4430.5854943653794 next_radius=1107.6463735913449 lambda=2.1054961727331477e-07 next_lambda=3.3687938763730363e-06 rho=-1 accept=0
+CLASSICAL_LM o=47 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=2546.3760707546248 rho=-1 accept=0
+  MFCG it  48  retry 1/8  lam=3.369e-06 tau_eff=2.105e-07  (assembly reused)
+PCG_PREP o=47 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=47 frozen=205 slope=-1976.1509113930576 candidate=1919686.7556664129 original=inf current=1919263.0588207578 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=47 raw_norm=14624.250113732853 norm=1107.6463735913446 radius=1107.6463735913449 next_radius=276.91159339783621 lambda=3.3687938763730363e-06 next_lambda=5.3900702021968581e-05 rho=-1 accept=0
+CLASSICAL_LM o=47 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=1853.6386186324498 rho=-1 accept=0
+  MFCG it  48  retry 2/8  lam=5.390e-05 tau_eff=3.369e-06  (assembly reused)
+PCG_PREP o=47 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=47 frozen=119 slope=-1714.813666818721 candidate=1917704.5503767491 original=inf current=1919263.0588207578 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=47 raw_norm=4134.3480173883372 norm=276.91159339783621 radius=276.91159339783621 next_radius=553.82318679567243 lambda=5.3900702021968581e-05 next_lambda=1.3475175505492145e-05 rho=0.96087824599117622 accept=1
+CLASSICAL_LM o=47 lambda=5.3900702021968581e-05 tau=5.3900702021968581e-05 prediction=1621.9624603958014 rho=0.96087824599117622 accept=1
+  MFCG it  48 cost=1.917705e+06 lam=1.348e-05 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=150
+PCG_PREP o=48 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=48 frozen=205 slope=-1479.4891535262875 candidate=1916307.3110299697 original=1917696.2445289544 current=1917704.5503767491 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=48 raw_norm=16999.525986852677 norm=553.8231867956722 radius=553.82318679567243 next_radius=1107.6463735913449 lambda=1.3475175505492145e-05 next_lambda=3.3687938763730363e-06 rho=0.96394441484232174 accept=1
+CLASSICAL_LM o=48 lambda=1.3475175505492145e-05 tau=1.3475175505492145e-05 prediction=1449.5019891867646 rho=0.96394441484232174 accept=1
+  MFCG it  49 cost=1.916307e+06 lam=3.369e-06 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=153
+PCG_PREP o=49 rebuild=1 drift=0 previous_depth=2
+POINT_SAFE o=49 frozen=125 slope=-2543.1536712187062 candidate=1913890.0813492001 original=1915875.1628694902 current=1916307.3110299697 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=49 raw_norm=35804.027621669702 norm=1107.6463735913449 radius=1107.6463735913449 next_radius=2215.2927471826897 lambda=3.3687938763730363e-06 next_lambda=8.4219846909325908e-07 rho=0.96741398634935127 accept=1
+CLASSICAL_LM o=49 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=2498.6507481572676 rho=0.96741398634935127 accept=1
+  MFCG it  50 cost=1.913890e+06 lam=8.422e-07 tau=0.00e+00 cg_it=3 shift=0 ckpt=4 alpha=0 acc mv=158
+PCG_PREP o=50 rebuild=1 drift=0 previous_depth=4
+POINT_SAFE o=50 frozen=294 slope=-3892.3698897360005 candidate=1910897.025089615 original=1913727.6467502199 current=1913890.0813492001 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=50 raw_norm=47307.487326284026 norm=2215.2927471826902 radius=2215.2927471826897 next_radius=4430.5854943653794 lambda=8.4219846909325908e-07 next_lambda=2.1054961727331477e-07 rho=0.78906692167979786 accept=1
+CLASSICAL_LM o=50 lambda=8.4219846909325908e-07 tau=8.4219846909325908e-07 prediction=3793.1589543930422 rho=0.78906692167979786 accept=1
+  MFCG it  51 cost=1.910897e+06 lam=2.105e-07 tau=0.00e+00 cg_it=3 shift=0 ckpt=4 alpha=0 acc mv=163
+PCG_PREP o=51 rebuild=1 drift=0 previous_depth=4
+POINT_SAFE o=51 frozen=617 slope=-2367.0760582063231 candidate=1917500.6149041008 original=1909815.6324629034 current=1910897.025089615 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=51 raw_norm=41890.623777981724 norm=138.45579669891819 radius=4430.5854943653794 next_radius=4430.5854943653794 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.34797829496322458 accept=1
+CLASSICAL_LM o=51 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=3107.6439029794028 rho=0.34797829496322458 accept=1
+  MFCG it  52 cost=1.909816e+06 lam=2.105e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=165
+PCG_PREP o=52 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=52 frozen=605 slope=-2363.5897747670338 candidate=1918645.6110196428 original=1909680.0599841059 current=1909815.6324629034 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=52 raw_norm=41853.690931301549 norm=17.30697458736476 radius=4430.5854943653794 next_radius=4430.5854943653794 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.35151169757274364 accept=1
+CLASSICAL_LM o=52 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=385.68411729587893 rho=0.35151169757274364 accept=1
+  MFCG it  53 cost=1.909680e+06 lam=2.105e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=167
+PCG_PREP o=53 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=53 frozen=604 slope=-2412.2654038302448 candidate=1946408.3934462687 original=inf current=1909680.0599841059 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=53 raw_norm=42015.575109783837 norm=4430.5854943653803 radius=4430.5854943653794 next_radius=1107.6463735913449 lambda=2.1054961727331477e-07 next_lambda=3.3687938763730363e-06 rho=-1 accept=0
+CLASSICAL_LM o=53 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=2252.0413159975287 rho=-1 accept=0
+  MFCG it  54  retry 1/8  lam=3.369e-06 tau_eff=2.105e-07  (assembly reused)
+PCG_PREP o=53 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=53 frozen=223 slope=-1734.1536426056689 candidate=1910985.7543945725 original=inf current=1909680.0599841059 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=53 raw_norm=14319.665691791326 norm=1107.6463735913446 radius=1107.6463735913449 next_radius=276.91159339783621 lambda=3.3687938763730363e-06 next_lambda=5.3900702021968581e-05 rho=-1 accept=0
+CLASSICAL_LM o=53 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=1636.714810865735 rho=-1 accept=0
+  MFCG it  54  retry 2/8  lam=5.390e-05 tau_eff=3.369e-06  (assembly reused)
+PCG_PREP o=53 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=53 frozen=102 slope=-1628.3097967082417 candidate=1908149.9806981541 original=inf current=1909680.0599841059 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=53 raw_norm=3911.9750821849134 norm=276.91159339783627 radius=276.91159339783621 next_radius=553.82318679567243 lambda=5.3900702021968581e-05 next_lambda=1.3475175505492145e-05 rho=0.98852358498223325 accept=1
+CLASSICAL_LM o=53 lambda=5.3900702021968581e-05 tau=5.3900702021968581e-05 prediction=1547.8429743072818 rho=0.98852358498223325 accept=1
+  MFCG it  54 cost=1.908150e+06 lam=1.348e-05 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=173
+PCG_PREP o=54 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=54 frozen=128 slope=-1809.7711239991322 candidate=1906389.9885327867 original=inf current=1908149.9806981541 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=54 raw_norm=22715.45599134397 norm=553.82318679567243 radius=553.82318679567243 next_radius=1107.6463735913449 lambda=1.3475175505492145e-05 next_lambda=3.3687938763730363e-06 rho=0.98435044250317527 accept=1
+CLASSICAL_LM o=54 lambda=1.3475175505492145e-05 tau=1.3475175505492145e-05 prediction=1787.9731540443479 rho=0.98435044250317527 accept=1
+  MFCG it  55 cost=1.906390e+06 lam=3.369e-06 tau=0.00e+00 cg_it=3 shift=0 ckpt=4 alpha=0 acc mv=178
+PCG_PREP o=55 rebuild=1 drift=0 previous_depth=4
+POINT_SAFE o=55 frozen=87 slope=-2640.1439301885966 candidate=1903834.8735110706 original=1906275.4917169698 current=1906389.9885327867 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=55 raw_norm=37576.840217930767 norm=1107.6463735913444 radius=1107.6463735913449 next_radius=2215.2927471826897 lambda=3.3687938763730363e-06 next_lambda=8.4219846909325908e-07 rho=0.98225111530480924 accept=1
+CLASSICAL_LM o=55 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=2601.2849279618372 rho=0.98225111530480924 accept=1
+  MFCG it  56 cost=1.903835e+06 lam=8.422e-07 tau=0.00e+00 cg_it=4 shift=0 ckpt=5 alpha=0 acc mv=184
+PCG_PREP o=56 rebuild=1 drift=0 previous_depth=5
+POINT_SAFE o=56 frozen=163 slope=-3961.5812915085007 candidate=1900173.4492838529 original=1903554.8552147581 current=1903834.8735110706 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=56 raw_norm=50593.324982000922 norm=2215.2927471826902 radius=2215.2927471826897 next_radius=4430.5854943653794 lambda=8.4219846909325908e-07 next_lambda=2.1054961727331477e-07 rho=0.94574677953339903 accept=1
+CLASSICAL_LM o=56 lambda=8.4219846909325908e-07 tau=8.4219846909325908e-07 prediction=3871.4635951751343 rho=0.94574677953339903 accept=1
+  MFCG it  57 cost=1.900173e+06 lam=2.105e-07 tau=0.00e+00 cg_it=4 shift=0 ckpt=5 alpha=0 acc mv=190
+PCG_PREP o=57 rebuild=1 drift=0 previous_depth=5
+POINT_SAFE o=57 frozen=333 slope=-5610.3341143267571 candidate=1895967.6689902132 original=1899676.7348104094 current=1900173.4492838529 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=57 raw_norm=70049.905165783392 norm=4430.5854943653812 radius=4430.5854943653794 next_radius=8861.1709887307588 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.77940681321002026 accept=1
+CLASSICAL_LM o=57 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=5396.1297519559312 rho=0.77940681321002026 accept=1
+  MFCG it  58 cost=1.895968e+06 lam=2.105e-07 tau=0.00e+00 cg_it=4 shift=0 ckpt=5 alpha=0 acc mv=196
+PCG_PREP o=58 rebuild=1 drift=0 previous_depth=5
+POINT_SAFE o=58 frozen=681 slope=-4150.4878794078104 candidate=1958398.3395563907 original=1895513.2311976086 current=1895967.6689902132 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=58 raw_norm=39856.963446731395 norm=8861.1709887307552 radius=8861.1709887307588 next_radius=2215.2927471826897 lambda=2.1054961727331477e-07 next_lambda=3.3687938763730363e-06 rho=0.074423147749077392 accept=0
+CLASSICAL_LM o=58 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=6106.1350715334374 rho=0.074423147749077392 accept=0
+  MFCG it  59  retry 1/8  lam=3.369e-06 tau_eff=2.105e-07  (assembly reused)
+PCG_PREP o=58 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=58 frozen=265 slope=-2928.4860180331207 candidate=1896078.9740984282 original=1895417.6177563851 current=1895967.6689902132 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=58 raw_norm=13842.162510829638 norm=2215.2927471826893 radius=2215.2927471826897 next_radius=553.82318679567243 lambda=3.3687938763730363e-06 next_lambda=5.3900702021968581e-05 rho=0.091209354323967803 accept=0
+CLASSICAL_LM o=58 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=6030.644969531666 rho=0.091209354323967803 accept=0
+  MFCG it  59  retry 2/8  lam=5.390e-05 tau_eff=3.369e-06  (assembly reused)
+PCG_PREP o=58 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=58 frozen=101 slope=-2629.7050510111235 candidate=1893634.9573512522 original=1895418.3456681634 current=1895967.6689902132 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=58 raw_norm=3611.0999360841638 norm=553.82318679567231 radius=553.82318679567243 next_radius=1107.6463735913449 lambda=5.3900702021968581e-05 next_lambda=1.3475175505492145e-05 rho=0.99581201178411138 accept=1
+CLASSICAL_LM o=58 lambda=5.3900702021968581e-05 tau=5.3900702021968581e-05 prediction=2342.5220938856392 rho=0.99581201178411138 accept=1
+  MFCG it  59 cost=1.893635e+06 lam=1.348e-05 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=202
+PCG_PREP o=59 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=59 frozen=105 slope=-3301.597353226678 candidate=1890400.2340550488 original=1892548.0588292065 current=1893634.9573512522 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=59 raw_norm=23273.096749386939 norm=1107.6463735913455 radius=1107.6463735913449 next_radius=2215.2927471826897 lambda=1.3475175505492145e-05 next_lambda=3.3687938763730363e-06 rho=1.0031930963863962 accept=1
+CLASSICAL_LM o=59 lambda=1.3475175505492145e-05 tau=1.3475175505492145e-05 prediction=3224.4273887601707 rho=1.0031930963863962 accept=1
+  MFCG it  60 cost=1.890400e+06 lam=3.369e-06 tau=0.00e+00 cg_it=4 shift=0 ckpt=5 alpha=0 acc mv=208
+PCG_PREP o=60 rebuild=1 drift=0 previous_depth=5
+POINT_SAFE o=60 frozen=322 slope=-4468.0574539940508 candidate=1886251.869738742 original=1888824.5647303967 current=1890400.2340550488 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=60 raw_norm=41912.774072452376 norm=2215.2927471826893 radius=2215.2927471826897 next_radius=4430.5854943653794 lambda=3.3687938763730363e-06 next_lambda=8.4219846909325908e-07 rho=0.95482190146301793 accept=1
+CLASSICAL_LM o=60 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=4344.6472163557191 rho=0.95482190146301793 accept=1
+  MFCG it  61 cost=1.886252e+06 lam=8.422e-07 tau=0.00e+00 cg_it=5 shift=0 ckpt=6 alpha=0 acc mv=215
+PCG_PREP o=61 rebuild=1 drift=0 previous_depth=6
+POINT_SAFE o=61 frozen=436 slope=-6535.8400575452533 candidate=1881421.0012418539 original=1883853.55057419 current=1886251.869738742 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=61 raw_norm=58786.976152785828 norm=4430.5854943653767 radius=4430.5854943653794 next_radius=8861.1709887307588 lambda=8.4219846909325908e-07 next_lambda=2.1054961727331477e-07 rho=0.77323433237887051 accept=1
+CLASSICAL_LM o=61 lambda=8.4219846909325908e-07 tau=8.4219846909325908e-07 prediction=6247.6125213243222 rho=0.77323433237887051 accept=1
+  MFCG it  62 cost=1.881421e+06 lam=2.105e-07 tau=0.00e+00 cg_it=5 shift=0 ckpt=6 alpha=0 acc mv=222
+PCG_PREP o=62 rebuild=1 drift=0 previous_depth=6
+POINT_SAFE o=62 frozen=799 slope=-3393.0837944922223 candidate=1918775.9577351285 original=1879035.9192734687 current=1881421.0012418539 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=62 raw_norm=40078.920099305484 norm=1107.6463735913451 radius=8861.1709887307588 next_radius=2215.2927471826897 lambda=2.1054961727331477e-07 next_lambda=3.3687938763730363e-06 rho=0.20018922530758737 accept=1
+CLASSICAL_LM o=62 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=11914.137560203964 rho=0.20018922530758737 accept=1
+  MFCG it  63 cost=1.879036e+06 lam=3.369e-06 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=224
+PCG_PREP o=63 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=63 frozen=282 slope=-2439.3753705365689 candidate=1878560.4315119458 original=1878261.2536941988 current=1879035.9192734687 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=63 raw_norm=13320.418418582532 norm=138.45579669891805 radius=2215.2927471826897 next_radius=553.82318679567243 lambda=3.3687938763730363e-06 next_lambda=5.3900702021968581e-05 rho=0.13298025047990536 accept=1
+CLASSICAL_LM o=63 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=5825.4182592845445 rho=0.13298025047990536 accept=1
+  MFCG it  64 cost=1.878261e+06 lam=5.390e-05 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=226
+PCG_PREP o=64 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=64 frozen=86 slope=-2141.6284399199812 candidate=1876383.1263459376 original=1877432.0624968782 current=1878261.2536941988 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=64 raw_norm=3408.5548101060685 norm=553.82318679567231 radius=553.82318679567243 next_radius=1107.6463735913449 lambda=5.3900702021968581e-05 next_lambda=1.3475175505492145e-05 rho=1.0023488300476879 accept=1
+CLASSICAL_LM o=64 lambda=5.3900702021968581e-05 tau=5.3900702021968581e-05 prediction=1873.726283664972 rho=1.0023488300476879 accept=1
+  MFCG it  65 cost=1.876383e+06 lam=1.348e-05 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=228
+PCG_PREP o=65 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=65 frozen=104 slope=-2651.7859771668195 candidate=1873776.8415439869 original=1875559.582938123 current=1876383.1263459376 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=65 raw_norm=23651.748429888827 norm=1107.6463735913451 radius=1107.6463735913449 next_radius=2215.2927471826897 lambda=1.3475175505492145e-05 next_lambda=3.3687938763730363e-06 rho=1.00655690250559 accept=1
+CLASSICAL_LM o=65 lambda=1.3475175505492145e-05 tau=1.3475175505492145e-05 prediction=2589.3069686005197 rho=1.00655690250559 accept=1
+  MFCG it  66 cost=1.873777e+06 lam=3.369e-06 tau=0.00e+00 cg_it=4 shift=0 ckpt=5 alpha=0 acc mv=234
+PCG_PREP o=66 rebuild=1 drift=0 previous_depth=5
+POINT_SAFE o=66 frozen=341 slope=-3666.5566710728376 candidate=1870311.4470307501 original=1872721.4424424754 current=1873776.8415439869 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=66 raw_norm=42970.897225277688 norm=2215.2927471826897 radius=2215.2927471826897 next_radius=4430.5854943653794 lambda=3.3687938763730363e-06 next_lambda=8.4219846909325908e-07 rho=0.97282420122448332 accept=1
+CLASSICAL_LM o=66 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=3562.2001476474061 rho=0.97282420122448332 accept=1
+  MFCG it  67 cost=1.870311e+06 lam=8.422e-07 tau=0.00e+00 cg_it=5 shift=0 ckpt=6 alpha=0 acc mv=241
+PCG_PREP o=67 rebuild=1 drift=0 previous_depth=6
+POINT_SAFE o=67 frozen=477 slope=-5572.7433276066113 candidate=1865517.4738086124 original=1868859.8147493447 current=1870311.4470307501 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=67 raw_norm=59144.596500141699 norm=4430.5854943653794 radius=4430.5854943653794 next_radius=8861.1709887307588 lambda=8.4219846909325908e-07 next_lambda=2.1054961727331477e-07 rho=0.90314750194707916 accept=1
+CLASSICAL_LM o=67 lambda=8.4219846909325908e-07 tau=8.4219846909325908e-07 prediction=5308.0733897867431 rho=0.90314750194707916 accept=1
+  MFCG it  68 cost=1.865517e+06 lam=2.105e-07 tau=0.00e+00 cg_it=5 shift=0 ckpt=6 alpha=0 acc mv=248
+PCG_PREP o=68 rebuild=1 drift=0 previous_depth=6
+POINT_SAFE o=68 frozen=529 slope=-8067.8688298413235 candidate=1859474.5399272051 original=1864425.5448057193 current=1865517.4738086124 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=68 raw_norm=69463.076735429335 norm=8861.1709887307607 radius=8861.1709887307588 next_radius=17722.341977461518 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.83509324479495151 accept=1
+CLASSICAL_LM o=68 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=7236.2384908180529 rho=0.83509324479495151 accept=1
+  MFCG it  69 cost=1.859475e+06 lam=2.105e-07 tau=0.00e+00 cg_it=4 shift=0 ckpt=5 alpha=0 acc mv=254
+PCG_PREP o=69 rebuild=1 drift=0 previous_depth=5
+POINT_SAFE o=69 frozen=869 slope=-10226.447202814496 candidate=2495663.2564811623 original=1858535.7560248664 current=1859474.5399272051 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=69 raw_norm=29128.141942836319 norm=1107.6463735913451 radius=17722.341977461518 next_radius=4430.5854943653794 lambda=2.1054961727331477e-07 next_lambda=3.3687938763730363e-06 rho=0.15365536358316503 accept=1
+CLASSICAL_LM o=69 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=6109.6721939719009 rho=0.15365536358316503 accept=1
+  MFCG it  70 cost=1.858536e+06 lam=3.369e-06 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=256
+PCG_PREP o=70 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=70 frozen=295 slope=-7156.8899391405021 candidate=1863258.6324425016 original=1857469.9131350794 current=1858535.7560248664 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=70 raw_norm=10894.627296143011 norm=138.45579669891805 radius=4430.5854943653794 next_radius=4430.5854943653794 lambda=3.3687938763730363e-06 next_lambda=3.3687938763730365e-07 rho=0.35862736540104095 accept=1
+CLASSICAL_LM o=70 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=2972.0065801309793 rho=0.35862736540104095 accept=1
+  MFCG it  71 cost=1.857470e+06 lam=3.369e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=258
+PCG_PREP o=71 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=71 frozen=155 slope=-4398.4838175357709 candidate=1860977.4891984318 original=1857445.055704186 current=1857469.9131350794 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=71 raw_norm=24969.688779350883 norm=4430.5854943653803 radius=4430.5854943653794 next_radius=1107.6463735913449 lambda=3.3687938763730365e-07 next_lambda=5.3900702021968585e-06 rho=0.034673397003953998 accept=0
+CLASSICAL_LM o=71 lambda=3.3687938763730365e-07 tau=3.3687938763730365e-07 prediction=716.90209328574076 rho=0.034673397003953998 accept=0
+  MFCG it  72  retry 1/8  lam=5.390e-06 tau_eff=3.369e-07  (assembly reused)
+PCG_PREP o=71 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=71 frozen=59 slope=-3716.4755881617875 candidate=1855358.3822120854 original=1857457.6386778746 current=1857469.9131350794 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=71 raw_norm=8564.1826321378903 norm=1107.6463735913449 radius=1107.6463735913449 next_radius=2215.2927471826897 lambda=5.3900702021968585e-06 next_lambda=1.3475175505492146e-06 rho=0.83955979923809509 accept=1
+CLASSICAL_LM o=71 lambda=5.3900702021968585e-06 tau=5.3900702021968585e-06 prediction=2515.0452950584854 rho=0.83955979923809509 accept=1
+  MFCG it  72 cost=1.855358e+06 lam=1.348e-06 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=262
+PCG_PREP o=72 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=72 frozen=250 slope=-2815.4030030677309 candidate=1852710.0484322945 original=1854992.3223780165 current=1855358.3822120854 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=72 raw_norm=44793.745053488172 norm=2215.2927471826893 radius=2215.2927471826897 next_radius=4430.5854943653794 lambda=1.3475175505492146e-06 next_lambda=3.3687938763730365e-07 rho=0.97152984243176621 accept=1
+CLASSICAL_LM o=72 lambda=1.3475175505492146e-06 tau=1.3475175505492146e-06 prediction=2725.941771548727 rho=0.97152984243176621 accept=1
+  MFCG it  73 cost=1.852710e+06 lam=3.369e-07 tau=0.00e+00 cg_it=4 shift=0 ckpt=5 alpha=0 acc mv=268
+PCG_PREP o=73 rebuild=1 drift=0 previous_depth=5
+POINT_SAFE o=73 frozen=377 slope=-4741.1930740566731 candidate=1849867.402829814 original=1852078.4216953486 current=1852710.0484322945 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=73 raw_norm=63950.980830818451 norm=4430.5854943653785 radius=4430.5854943653794 next_radius=4430.5854943653794 lambda=3.3687938763730365e-07 next_lambda=3.3687938763730365e-07 rho=0.63859497070131999 accept=1
+CLASSICAL_LM o=73 lambda=3.3687938763730365e-07 tau=3.3687938763730365e-07 prediction=4451.4061852987161 rho=0.63859497070131999 accept=1
+  MFCG it  74 cost=1.849867e+06 lam=3.369e-07 tau=0.00e+00 cg_it=5 shift=0 ckpt=6 alpha=0 acc mv=275
+PCG_PREP o=74 rebuild=1 drift=0 previous_depth=6
+POINT_SAFE o=74 frozen=168 slope=-5264.9332457878245 candidate=1845830.6652469893 original=1848018.4157225403 current=1849867.402829814 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=74 raw_norm=63338.070154058245 norm=4430.5854943653776 radius=4430.5854943653794 next_radius=8861.1709887307588 lambda=3.3687938763730365e-07 next_lambda=2.1054961727331477e-07 rho=0.86595922177999041 accept=1
+CLASSICAL_LM o=74 lambda=3.3687938763730365e-07 tau=3.3687938763730365e-07 prediction=4661.5792999202577 rho=0.86595922177999041 accept=1
+  MFCG it  75 cost=1.845831e+06 lam=2.105e-07 tau=0.00e+00 cg_it=5 shift=0 ckpt=6 alpha=0 acc mv=282
+PCG_PREP o=75 rebuild=1 drift=0 previous_depth=6
+POINT_SAFE o=75 frozen=687 slope=-8796.8298336544485 candidate=1840886.9327662732 original=1844135.0818977342 current=1845830.6652469893 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=75 raw_norm=58414.643982245369 norm=8861.1709887307625 radius=8861.1709887307588 next_radius=8861.1709887307588 lambda=2.1054961727331477e-07 next_lambda=2.1054961727331477e-07 rho=0.66486586516529389 accept=1
+CLASSICAL_LM o=75 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=7435.6840074608435 rho=0.66486586516529389 accept=1
+  MFCG it  76 cost=1.840887e+06 lam=2.105e-07 tau=0.00e+00 cg_it=4 shift=0 ckpt=5 alpha=0 acc mv=288
+PCG_PREP o=76 rebuild=1 drift=0 previous_depth=5
+POINT_SAFE o=76 frozen=618 slope=-7554.3844792690616 candidate=1857994.9535931135 original=1840333.6676950594 current=1840886.9327662732 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=76 raw_norm=26692.03557417776 norm=8861.1709887307588 radius=8861.1709887307588 next_radius=2215.2927471826897 lambda=2.1054961727331477e-07 next_lambda=3.3687938763730363e-06 rho=0.093316156219830859 accept=0
+CLASSICAL_LM o=76 lambda=2.1054961727331477e-07 tau=2.1054961727331477e-07 prediction=5928.9312121938347 rho=0.093316156219830859 accept=0
+  MFCG it  77  retry 1/8  lam=3.369e-06 tau_eff=2.105e-07  (assembly reused)
+PCG_PREP o=76 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=76 frozen=189 slope=-6072.1176286564569 candidate=1837847.5323025561 original=1839650.6011206415 current=1840886.9327662732 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=76 raw_norm=10086.584353698268 norm=2215.2927471826897 radius=2215.2927471826897 next_radius=2215.2927471826897 lambda=3.3687938763730363e-06 next_lambda=3.3687938763730363e-06 rho=0.74974535190834191 accept=1
+CLASSICAL_LM o=76 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=4053.9103790117688 rho=0.74974535190834191 accept=1
+  MFCG it  77 cost=1.837848e+06 lam=3.369e-06 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=292
+PCG_PREP o=77 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=77 frozen=200 slope=-2727.6584215435105 candidate=1836406.9833546148 original=1836394.8291491943 current=1837847.5323025561 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=77 raw_norm=10236.70289281813 norm=69.227898349459068 radius=2215.2927471826897 next_radius=2215.2927471826897 lambda=3.3687938763730363e-06 next_lambda=3.3687938763730365e-07 rho=0.50781256848926803 accept=1
+CLASSICAL_LM o=77 lambda=3.3687938763730363e-06 tau=3.3687938763730363e-06 prediction=2860.7073623316596 rho=0.50781256848926803 accept=1
+  MFCG it  78 cost=1.836395e+06 lam=3.369e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=294
+PCG_PREP o=78 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=78 frozen=203 slope=-1242.9886634401464 candidate=1835772.4728103799 original=inf current=1836394.8291491943 won=1 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=78 raw_norm=26229.577406172622 norm=2215.2927471826906 radius=2215.2927471826897 next_radius=2215.2927471826897 lambda=3.3687938763730365e-07 next_lambda=3.3687938763730365e-07 rho=0.56882369793159759 accept=1
+CLASSICAL_LM o=78 lambda=3.3687938763730365e-07 tau=3.3687938763730365e-07 prediction=1094.1111298235792 rho=0.56882369793159759 accept=1
+  MFCG it  79 cost=1.835772e+06 lam=3.369e-07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=296
+PCG_PREP o=79 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=79 frozen=106 slope=-972.11686345246778 candidate=1843685.3485026017 original=inf current=1835772.4728103799 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=79 raw_norm=37554.464123659767 norm=2215.2927471826897 radius=2215.2927471826897 next_radius=553.82318679567243 lambda=3.3687938763730365e-07 next_lambda=5.3900702021968585e-06 rho=-1 accept=0
+CLASSICAL_LM o=79 lambda=3.3687938763730365e-07 tau=3.3687938763730365e-07 prediction=932.75013792246864 rho=-1 accept=0
+  MFCG it  80  retry 1/8  lam=5.390e-06 tau_eff=3.369e-07  (assembly reused)
+PCG_PREP o=79 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=79 frozen=143 slope=-5851.5471246347115 candidate=2432384.4278717814 original=inf current=1835772.4728103799 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=79 raw_norm=10583.386495935376 norm=553.82318679567254 radius=553.82318679567243 next_radius=138.45579669891811 lambda=5.3900702021968585e-06 next_lambda=8.6241123235149736e-05 rho=-1 accept=0
+CLASSICAL_LM o=79 lambda=5.3900702021968585e-06 tau=5.3900702021968585e-06 prediction=5672.0719624940411 rho=-1 accept=0
+  MFCG it  80  retry 2/8  lam=8.624e-05 tau_eff=5.390e-06  (assembly reused)
+PCG_PREP o=79 rebuild=1 drift=0 previous_depth=2
+POINT_SAFE o=79 frozen=34 slope=-6195.5200640347721 candidate=2421597.3544164435 original=inf current=1835772.4728103799 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=79 raw_norm=2173.217434252053 norm=138.45579669891814 radius=138.45579669891811 next_radius=34.613949174729527 lambda=8.6241123235149736e-05 next_lambda=0.0013798579717623958 rho=-1 accept=0
+CLASSICAL_LM o=79 lambda=8.6241123235149736e-05 tau=8.6241123235149736e-05 prediction=5980.516529385899 rho=-1 accept=0
+  MFCG it  80  retry 3/8  lam=1.380e-03 tau_eff=8.624e-05  (assembly reused)
+PCG_PREP o=79 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=79 frozen=12 slope=-6148.5200226579709 candidate=2421792.825617698 original=inf current=1835772.4728103799 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=79 raw_norm=533.86679346786468 norm=34.613949174729534 radius=34.613949174729527 next_radius=8.6534872936823817 lambda=0.0013798579717623958 next_lambda=0.022077727548198332 rho=-1 accept=0
+CLASSICAL_LM o=79 lambda=0.0013798579717623958 tau=0.0013798579717623958 prediction=5933.6702441369944 rho=-1 accept=0
+  MFCG it  80  retry 4/8  lam=2.208e-02 tau_eff=1.380e-03  (assembly reused)
+PCG_PREP o=79 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=79 frozen=2 slope=-2921.6784612490942 candidate=2528072.8615784384 original=inf current=1835772.4728103799 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=79 raw_norm=274.40082679309438 norm=8.6534872936823817 radius=8.6534872936823817 next_radius=2.1633718234205954 lambda=0.022077727548198332 next_lambda=0.35324364077117332 rho=-1 accept=0
+CLASSICAL_LM o=79 lambda=0.022077727548198332 tau=0.022077727548198332 prediction=2862.7363539108273 rho=-1 accept=0
+  MFCG it  80  retry 5/8  lam=3.532e-01 tau_eff=2.208e-02  (assembly reused)
+PCG_PREP o=79 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=79 frozen=8 slope=-856.72839623142715 candidate=3469774.9612401067 original=inf current=1835772.4728103799 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=79 raw_norm=194.09237801446969 norm=2.1633718234205959 radius=2.1633718234205954 next_radius=0.54084295585514885 lambda=0.35324364077117332 next_lambda=5.6518982523387731 rho=-1 accept=0
+CLASSICAL_LM o=79 lambda=0.35324364077117332 tau=0.35324364077117332 prediction=844.96372304980878 rho=-1 accept=0
+  MFCG it  80  retry 6/8  lam=5.652e+00 tau_eff=3.532e-01  (assembly reused)
+PCG_PREP o=79 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=79 frozen=324 slope=-231.60512908862731 candidate=2772414.4719495378 original=inf current=1835772.4728103799 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=79 raw_norm=53.813919010907014 norm=0.5408429558551493 radius=0.54084295585514885 next_radius=0.13521073896378721 lambda=5.6518982523387731 next_lambda=90.430372037420369 rho=-1 accept=0
+CLASSICAL_LM o=79 lambda=5.6518982523387731 tau=5.6518982523387731 prediction=230.6444863052177 rho=-1 accept=0
+  MFCG it  80  retry 7/8  lam=9.043e+01 tau_eff=5.652e+00  (assembly reused)
+PCG_PREP o=79 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=79 frozen=32811 slope=-57.191907379030667 candidate=1841438.2738541374 original=1835772.2833686096 current=1835772.4728103799 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=79 raw_norm=4.5315713082932918 norm=0.0010563338981545876 radius=0.13521073896378721 next_radius=0.13521073896378721 lambda=90.430372037420369 next_lambda=9.0430372037420366 rho=0.42352655829962355 accept=1
+CLASSICAL_LM o=79 lambda=90.430372037420369 tau=90.430372037420369 prediction=0.44729608238912338 rho=0.42352655829962355 accept=1
+  MFCG it  80 cost=1.835772e+06 lam=9.043e+00 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=313
+PCG_PREP o=80 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=80 frozen=6386 slope=-60.308112076951126 candidate=1837806.9115932148 original=1835771.9521658742 current=1835772.2833686096 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=80 raw_norm=37.365666131719422 norm=0.0021126677963091748 radius=0.13521073896378721 next_radius=0.13521073896378721 lambda=9.0430372037420366 next_lambda=0.9043037203742037 rho=0.34958151925435316 accept=1
+CLASSICAL_LM o=80 lambda=9.0430372037420366 tau=9.0430372037420366 prediction=0.94742632886415112 rho=0.34958151925435316 accept=1
+  MFCG it  81 cost=1.835772e+06 lam=9.043e-01 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=315
+PCG_PREP o=81 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=81 frozen=1685 slope=-69.782591306495362 candidate=1836920.9931919586 original=1835771.0422149072 current=1835771.9521658742 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=81 raw_norm=147.1474066369675 norm=0.0042253355926183513 radius=0.13521073896378721 next_radius=0.13521073896378721 lambda=0.9043037203742037 next_lambda=0.090430372037420381 rho=0.37554223681462012 accept=1
+CLASSICAL_LM o=81 lambda=0.9043037203742037 tau=0.9043037203742037 prediction=2.4230322923595997 rho=0.37554223681462012 accept=1
+  MFCG it  82 cost=1.835771e+06 lam=9.043e-02 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=317
+PCG_PREP o=82 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=82 frozen=838 slope=-74.011286230696712 candidate=1836212.4616259877 original=1835771.0173926542 current=1835771.0422149072 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=82 raw_norm=240.85589231973117 norm=0.13521073896378719 radius=0.13521073896378721 next_radius=0.033802684740946803 lambda=0.090430372037420381 next_lambda=1.4468859525987261 rho=0.0075823565249776388 accept=0
+CLASSICAL_LM o=82 lambda=0.090430372037420381 tau=0.090430372037420381 prediction=3.273685819654153 rho=0.0075823565249776388 accept=0
+  MFCG it  83  retry 1/8  lam=1.447e+00 tau_eff=9.043e-02  (assembly reused)
+PCG_PREP o=82 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=82 frozen=13812 slope=-25.832266688048581 candidate=1835776.3223218708 original=1835770.2491648244 current=1835771.0422149072 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=82 raw_norm=121.04448454183313 norm=0.033802684740946783 radius=0.033802684740946803 next_radius=0.0084506711852367009 lambda=1.4468859525987261 next_lambda=23.150175241579618 rho=0.094507074628277926 accept=0
+CLASSICAL_LM o=82 lambda=1.4468859525987261 tau=1.4468859525987261 prediction=8.3914361542285008 rho=0.094507074628277926 accept=0
+  MFCG it  83  retry 2/8  lam=2.315e+01 tau_eff=1.447e+00  (assembly reused)
+PCG_PREP o=82 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=82 raw_norm=16.561086620194281 norm=0.0084506711852367026 radius=0.0084506711852367009 next_radius=0.0084506711852367009 lambda=23.150175241579618 next_lambda=23.150175241579618 rho=0.55772953847156104 accept=1
+CLASSICAL_LM o=82 lambda=23.150175241579618 tau=23.150175241579618 prediction=5.5282023836139151 rho=0.55772953847156104 accept=1
+  MFCG it  83 cost=1.835768e+06 lam=2.315e+01 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=323
+PCG_PREP o=83 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=83 raw_norm=16.557157726495213 norm=0.0084506711852366974 radius=0.0084506711852367009 next_radius=0.0084506711852367009 lambda=23.150175241579618 next_lambda=23.150175241579618 rho=0.56026182389523582 accept=1
+CLASSICAL_LM o=83 lambda=23.150175241579618 tau=23.150175241579618 prediction=5.8251912919181352 rho=0.56026182389523582 accept=1
+  MFCG it  84 cost=1.835765e+06 lam=2.315e+01 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=325
+PCG_PREP o=84 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=84 raw_norm=16.55974146687425 norm=0.0084506711852366957 radius=0.0084506711852367009 next_radius=0.0084506711852367009 lambda=23.150175241579618 next_lambda=23.150175241579618 rho=0.54244096731823344 accept=1
+CLASSICAL_LM o=84 lambda=23.150175241579618 tau=23.150175241579618 prediction=5.227043580365895 rho=0.54244096731823344 accept=1
+  MFCG it  85 cost=1.835762e+06 lam=2.315e+01 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=327
+PCG_PREP o=85 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=85 raw_norm=16.553337107683589 norm=0.0084506711852366974 radius=0.0084506711852367009 next_radius=0.0084506711852367009 lambda=23.150175241579618 next_lambda=23.150175241579618 rho=0.49938280857111905 accept=1
+CLASSICAL_LM o=85 lambda=23.150175241579618 tau=23.150175241579618 prediction=5.3153840822631633 rho=0.49938280857111905 accept=1
+  MFCG it  86 cost=1.835759e+06 lam=2.315e+01 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=329
+PCG_PREP o=86 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=86 raw_norm=16.560392449902771 norm=0.0084506711852366957 radius=0.0084506711852367009 next_radius=0.0084506711852367009 lambda=23.150175241579618 next_lambda=23.150175241579618 rho=0.56456210805103613 accept=1
+CLASSICAL_LM o=86 lambda=23.150175241579618 tau=23.150175241579618 prediction=5.1248873545211273 rho=0.56456210805103613 accept=1
+  MFCG: converged (OCA_FTOL: 8 outers < 1.0e-05 rel)
+  [menu-backtrack] confirming stop with original retry policy at outer 87
+  MFCG it  87 cost=1.835756e+06 lam=2.315e+01 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=331
+PCG_PREP o=87 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=87 raw_norm=16.549171800373276 norm=0.0084506711852366991 radius=0.0084506711852367009 next_radius=0.0084506711852367009 lambda=23.150175241579618 next_lambda=23.150175241579618 rho=0.32467457263363464 accept=1
+CLASSICAL_LM o=87 lambda=23.150175241579618 tau=23.150175241579618 prediction=4.8042858612992667 rho=0.32467457263363464 accept=1
+  MFCG it  88 cost=1.835755e+06 lam=2.315e+01 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=333
+PCG_PREP o=88 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=88 raw_norm=16.57056854459422 norm=0.0084506711852366939 radius=0.0084506711852367009 next_radius=0.0084506711852367009 lambda=23.150175241579618 next_lambda=23.150175241579618 rho=0.6494519593249356 accept=1
+CLASSICAL_LM o=88 lambda=23.150175241579618 tau=23.150175241579618 prediction=5.6236694457602905 rho=0.6494519593249356 accept=1
+  MFCG it  89 cost=1.835751e+06 lam=2.315e+01 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=335
+PCG_PREP o=89 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=89 raw_norm=16.548433693828873 norm=0.0084506711852367026 radius=0.0084506711852367009 next_radius=0.0021126677963091752 lambda=23.150175241579618 next_lambda=370.40280386527388 rho=-1 accept=0
+CLASSICAL_LM o=89 lambda=23.150175241579618 tau=23.150175241579618 prediction=4.1982564000924141 rho=-1 accept=0
+  MFCG it  90  retry 1/8  lam=3.704e+02 tau_eff=2.315e+01  (assembly reused)
+PCG_PREP o=89 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=89 raw_norm=1.1260866367970295 norm=0.0021126677963091761 radius=0.0021126677963091752 next_radius=0.0005281669490772938 lambda=370.40280386527388 next_lambda=5926.4448618443821 rho=-1 accept=0
+CLASSICAL_LM o=89 lambda=370.40280386527388 tau=370.40280386527388 prediction=0.93133228436850779 rho=-1 accept=0
+  MFCG it  90  retry 2/8  lam=5.926e+03 tau_eff=3.704e+02  (assembly reused)
+PCG_PREP o=89 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=89 raw_norm=0.070777189102097307 norm=0.00052816694907729348 radius=0.0005281669490772938 next_radius=0.0005281669490772938 lambda=5926.4448618443821 next_lambda=5926.4448618443821 rho=0.74255241887278323 accept=1
+CLASSICAL_LM o=89 lambda=5926.4448618443821 tau=5926.4448618443821 prediction=0.22444600697909423 rho=0.74255241887278323 accept=1
+  MFCG it  90 cost=1.835751e+06 lam=5.926e+03 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=341
+PCG_PREP o=90 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=90 raw_norm=0.069013338150522213 norm=0.00052816694907729402 radius=0.0005281669490772938 next_radius=0.00013204173726932345 lambda=5926.4448618443821 next_lambda=94823.117789510114 rho=-1 accept=0
+CLASSICAL_LM o=90 lambda=5926.4448618443821 tau=5926.4448618443821 prediction=0.21856883596478816 rho=-1 accept=0
+  MFCG it  91  retry 1/8  lam=9.482e+04 tau_eff=5.926e+03  (assembly reused)
+PCG_PREP o=90 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=90 raw_norm=0.0043149976169849485 norm=0.00013204173726932351 radius=0.00013204173726932345 next_radius=3.3010434317330863e-05 lambda=94823.117789510114 next_lambda=1517169.8846321618 rho=-1 accept=0
+CLASSICAL_LM o=90 lambda=94823.117789510114 tau=94823.117789510114 prediction=0.054181458506847795 rho=-1 accept=0
+  MFCG it  91  retry 2/8  lam=1.517e+06 tau_eff=9.482e+04  (assembly reused)
+PCG_PREP o=90 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=90 raw_norm=0.00026969385401571881 norm=3.301043431733089e-05 radius=3.3010434317330863e-05 next_radius=8.2526085793327157e-06 lambda=1517169.8846321618 next_lambda=24274718.154114589 rho=-1 accept=0
+CLASSICAL_LM o=90 lambda=1517169.8846321618 tau=1517169.8846321618 prediction=0.013516551791442719 rho=-1 accept=0
+  MFCG it  91  retry 3/8  lam=2.427e+07 tau_eff=1.517e+06  (assembly reused)
+PCG_PREP o=90 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=90 raw_norm=1.6855891278885318e-05 norm=8.2526085793327225e-06 radius=8.2526085793327157e-06 next_radius=2.0631521448331789e-06 lambda=24274718.154114589 next_lambda=388395490.46583343 rho=-1 accept=0
+CLASSICAL_LM o=90 lambda=24274718.154114589 tau=24274718.154114589 prediction=0.0033773370735337292 rho=-1 accept=0
+  MFCG it  91  retry 4/8  lam=3.884e+08 tau_eff=2.427e+07  (assembly reused)
+PCG_PREP o=90 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=90 raw_norm=1.053493304160603e-06 norm=1.053493304160603e-06 radius=2.0631521448331789e-06 next_radius=2.0631521448331789e-06 lambda=388395490.46583343 next_lambda=38839549.046583347 rho=0.79876003181794641 accept=1
+CLASSICAL_LM o=90 lambda=388395490.46583343 tau=388395490.46583343 prediction=0.00043109753834867816 rho=0.79876003181794641 accept=1
+  MFCG it  91 cost=1.835751e+06 lam=3.884e+07 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=351
+PCG_PREP o=91 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=91 raw_norm=8.4456804639355846e-06 norm=2.0631521448331781e-06 radius=2.0631521448331789e-06 next_radius=5.1578803620829473e-07 lambda=38839549.046583347 next_lambda=621432784.74533355 rho=-1 accept=0
+CLASSICAL_LM o=91 lambda=38839549.046583347 tau=38839549.046583347 prediction=0.00067714434986884708 rho=-1 accept=0
+  MFCG it  92  retry 1/8  lam=6.214e+08 tau_eff=3.884e+07  (assembly reused)
+PCG_PREP o=91 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=91 raw_norm=5.278550590800932e-07 norm=5.1578803620829494e-07 radius=5.1578803620829473e-07 next_radius=5.1578803620829473e-07 lambda=621432784.74533355 next_lambda=621432784.74533355 rho=0.61293893509315278 accept=1
+CLASSICAL_LM o=91 lambda=621432784.74533355 tau=621432784.74533355 prediction=0.00016921560706872495 rho=0.61293893509315278 accept=1
+  MFCG it  92 cost=1.835751e+06 lam=6.214e+08 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=355
+PCG_PREP o=92 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=92 raw_norm=6.2783634062697501e-07 norm=5.1578803620829473e-07 radius=5.1578803620829473e-07 next_radius=5.1578803620829473e-07 lambda=621432784.74533355 next_lambda=621432784.74533355 rho=0.72579451615216684 accept=1
+CLASSICAL_LM o=92 lambda=621432784.74533355 tau=621432784.74533355 prediction=0.00020126240776127398 rho=0.72579451615216684 accept=1
+  MFCG it  93 cost=1.835751e+06 lam=6.214e+08 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=357
+PCG_PREP o=93 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=93 raw_norm=5.0430622728520448e-07 norm=5.0430622728520459e-07 radius=5.1578803620829473e-07 next_radius=5.1578803620829473e-07 lambda=621432784.74533355 next_lambda=621432784.74533355 rho=0.73790298981232638 accept=1
+CLASSICAL_LM o=93 lambda=621432784.74533355 tau=621432784.74533355 prediction=0.00015806924782495131 rho=0.73790298981232638 accept=1
+  MFCG it  94 cost=1.835751e+06 lam=6.214e+08 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=359
+PCG_PREP o=94 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=94 raw_norm=6.1122003549089944e-07 norm=5.1578803620829462e-07 radius=5.1578803620829473e-07 next_radius=5.1578803620829473e-07 lambda=621432784.74533355 next_lambda=621432784.74533355 rho=0.6584994985165028 accept=1
+CLASSICAL_LM o=94 lambda=621432784.74533355 tau=621432784.74533355 prediction=0.00019593641725473989 rho=0.6584994985165028 accept=1
+  MFCG: converged (OCA_FTOL: 8 outers < 1.0e-05 rel)
+  MFCG: accepts=95 rejects=29 total_matvecs=361 negcurv=1 cand_evals=124 mean_cg_per_outer=3.8
+NUMERIC_REPAIR summary rebuilds=1 floor=2.1054961727331477e-07
+  [retry-cache] builds=125 reuses=0
+  [menu-backtrack] trials=100 rescues=84 evals=710 total_scored=834
+POINT_SAFE summary calls=100 evals=100 wins=54 frozen=87948 seconds=1.19047552
+  [scoring] menu_evals=124 alpha_evals=0 backtrack_evals=710 total_scored=834
+RESULT algo=mfree_shifted_cg iters=95 final_cost=1835750.9326143039 solve_seconds=8.232362
+DIAGNOSTICS median_reproj_err_px 2.704502 -> 0.555463 | cheirality_violations(obs) 751 -> 761 | cheirality_violations(pts, of 310854) 725 -> 733

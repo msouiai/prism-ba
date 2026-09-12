@@ -1,0 +1,107 @@
+{
+  "passed": true,
+  "rows": [
+    {
+      "mode": 0,
+      "passed": true,
+      "ray_error": 5.551115123125783e-17,
+      "weight_error": 9.312550730555813e-13,
+      "block_error": 1.8687950522523651e-13,
+      "rhs_error": 3.373730148976399e-13,
+      "dense_step_relative_error": 2.7693095050262623e-13,
+      "stationarity": 4.646592452323215e-13,
+      "feasibility": 0.0,
+      "equality": 6.505213034913027e-19,
+      "dual_sign_error": 0.0,
+      "active": [],
+      "sha256": "c31e90af02ba6f1ff415a8643bb1486b1898f6f7ef64182705885143987586d0"
+    },
+    {
+      "mode": 1,
+      "passed": true,
+      "ray_error": 5.551115123125783e-17,
+      "weight_error": 9.312550730555813e-13,
+      "block_error": 1.8687950522523651e-13,
+      "rhs_error": 6.245957999419574e-14,
+      "dense_step_relative_error": 1.171650492324787e-13,
+      "stationarity": 1.125391500848308e-14,
+      "feasibility": 0.0,
+      "equality": 1.405096455538773e-16,
+      "dual_sign_error": 0.0,
+      "active": [
+        3
+      ],
+      "sha256": "90b017932f98e1d751a611dd08672652526a4c3a0ee53cd4371e0b0dd5227b08"
+    },
+    {
+      "mode": 2,
+      "passed": true,
+      "ray_error": 5.551115123125783e-17,
+      "weight_error": 9.312550730555813e-13,
+      "block_error": 1.8687950522523651e-13,
+      "rhs_error": 3.373730148976399e-13,
+      "dense_step_relative_error": 2.7371643741627507e-14,
+      "stationarity": 3.659120807242614e-12,
+      "feasibility": 0.0,
+      "equality": 5.61887904301826e-16,
+      "dual_sign_error": 508.6831563236121,
+      "active": [
+        0,
+        1
+      ],
+      "sha256": "2b5c9b53aed9dfa0cfde11b8e76f4c75639296d43343a4595badb4e8e3e6115e"
+    },
+    {
+      "mode": 3,
+      "passed": true,
+      "ray_error": 1.1102230246251565e-16,
+      "weight_error": 3.4505731605349865e-13,
+      "block_error": 1.3866451245417396e-13,
+      "rhs_error": 3.02758613629804e-13,
+      "dense_step_relative_error": 3.209906396417371e-13,
+      "stationarity": 3.2789743678939105e-13,
+      "feasibility": 0.0,
+      "equality": 7.589415207398531e-19,
+      "dual_sign_error": 0.0,
+      "active": [],
+      "sha256": "bbe4c0475306ccf3691346068de3bf457d00016a80261af23308c216d601ae16"
+    },
+    {
+      "mode": 4,
+      "passed": true,
+      "scope": "unsupported fourth point constraint fails explicitly, not a solved QP",
+      "reason": "more_than_three_active_point_constraints",
+      "sha256": "fd811f823dfae276c8313ab67f988d6f43a042b13f613f77958921ff68ef0134"
+    },
+    {
+      "mode": 5,
+      "passed": true,
+      "ray_error": 2.237726045655905e-16,
+      "weight_error": 8.826273045769994e-13,
+      "block_error": 2.636134588986466e-13,
+      "rhs_error": 4.2032368212713666e-13,
+      "dense_step_relative_error": 5.343430227018707e-13,
+      "stationarity": 1.1570847431723117e-12,
+      "feasibility": 0.0,
+      "equality": 5.421010862427522e-19,
+      "dual_sign_error": 0.0,
+      "active": [],
+      "sha256": "b8b9ce2d1cb2ffc9234c8d1cf585510ee946008a8bfe5c475fe0048ee97a283f",
+      "rotation_error": 1.5016284355856876e-14,
+      "intrinsics_error": 3.18414992930668e-15
+    }
+  ],
+  "binary_sha256": "197e4714762dcb83d93adc96620f39678aa3dcb0990c33c8a8087ad41aeacfb0",
+  "header_sha256": "b2f380e4a7b28c97512c882d86787d5dc69259afb6526994726c2f49377f4da0",
+  "command": [
+    "nvcc",
+    "-O3",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "/tmp/prism-ba-coarse/research/eta2_wave4/build/o1-schur-test.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave4/build/o1-schur-test",
+    "-lcublas"
+  ]
+}

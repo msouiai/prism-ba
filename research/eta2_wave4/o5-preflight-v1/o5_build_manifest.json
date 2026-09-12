@@ -1,0 +1,40 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave2",
+    "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "/tmp/prism-ba-coarse/research/eta2_wave4/build/o5.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave4/build/prism-o5",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "source_sha256": "3b3e1d41161dd81379e376bbb01bc5bbd621a9ac3dae35c2bfdb6e1f8b3e356c",
+  "binary_sha256": "605e0a0d354eb8a3828534f43b87cf4d8240a55893d2f09c5634ee7be0bbf0d6",
+  "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "reversible_patch_count": 47,
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave3/build.py": "11a3907d75bef41f1cc02a8b880dc958cbcbd20abf7073f0d31ee3d55fe54ed5",
+    "/tmp/prism-ba-coarse/research/eta2_wave3/local_actuators.cuh": "a1b7af056b79e2620e0672582039e1813498b4943f89d2b333b9356e05463015",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/build.py": "655b646321fc68f1205f294a118df60947311676d292e236ce1ef73552ba2ca7",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/wave_trace.cuh": "e866f4e5071aba8da6e03b082035e3ebc8d9011d37117f8dedb27f80ba2184e7",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/composition_capture.cuh": "4799691149ce31798063fc4afed1374259a76afd37eeda46e080f500e3528784",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/build.py": "d2c46774fcef0e9f279bc0cc0a197fca844cf3bd067e5f0e5e6dc8a7dc551049",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/frontload.cuh": "7a4a7de108e5616bb76ace88476d29ce1fa6ab605888127f56c4c201830efaee",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/coherent_rows.cuh": "38c042aa5a5f55c8cc740b901de7a92afe54f8fb9cf26920cc9c821bada6d6ce",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/attempt_trace.h": "43400101d54c0ccf94464025497105ef825e16c7e7cbb1d21f7dff019619daf6",
+    "/tmp/prism-ba-coarse/research/eta2_wave4/build_o5.py": "7184c43e67eb6c84c777ce58f1040433d0523510a3e5321014536932b837c53f",
+    "/tmp/prism-ba-coarse/research/eta2_wave4/o5_headers/robust_stage.cuh": "bcaa5371be2e18adc3aa688f0c601bb4b24c4557988d656da91d768cd9cfee6c",
+    "/tmp/prism-ba-coarse/research/eta2_wave4/o5_headers/full_step_model.cuh": "c3f85e795fe9869b3989374cfb2af5b5afe6ebcfff52ceea62cc3bbc80b73c4c",
+    "/tmp/prism-ba-coarse/research/eta2_wave4/o5_headers/point_safeguard.cuh": "6b0b617279abb5a7a9c5e5235c03726ae0856805b9d4f70d04917e1be2d7f560"
+  },
+  "protocol_sha256": "d961c27581ef5a254a2f63dfed0c9422df8ca00df36fa64dad77376cf1329bee"
+}

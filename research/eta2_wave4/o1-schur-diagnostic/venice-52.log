@@ -1,0 +1,27 @@
+[R10] --zero_k2: all k2 set to 0 at load
+Loaded /workspace/bal/venice-52.txt: ncam=52 npt=64053 nobs=347173 n=192471
+[R10] --dof9: refining f,k1 per camera (52 cameras)
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+  [compact-fragments] active=2 saved_bytes=36105992 storage=fp32 camera_reads=contiguous
+  MFCG score_init=11152062.772762466 precision=fp64
+O1_INIT k=3 l2=11152062.772762466
+O1_SWEEP sweep=0 old_l2=11152062.772762466 candidate_l2=1658846.2281140219 accepted=1 active=0 products=35 pcg=34 schur_residual=2.9808448816786489e-09 point_residual=2.0503001686067925e-14 rotation_reverts=0 reason=accepted
+O1_QP sweep=0 surrogate_before=4568866.9135254417 surrogate_after=1697705.0843689307 feasibility_residual=0
+O1_SWEEP sweep=1 old_l2=1658846.2281140219 candidate_l2=1525672.3041313097 accepted=1 active=0 products=35 pcg=34 schur_residual=1.7208261258909214e-09 point_residual=8.1142595058319908e-14 rotation_reverts=0 reason=accepted
+O1_QP sweep=1 surrogate_before=1566751.7645997871 surrogate_after=1523091.797135666 feasibility_residual=0
+O1_SWEEP sweep=2 old_l2=1525672.3041313097 candidate_l2=1485843.4810393627 accepted=1 active=0 products=34 pcg=33 schur_residual=6.7759312201040492e-09 point_residual=1.6886613261431076e-13 rotation_reverts=0 reason=accepted
+O1_QP sweep=2 surrogate_before=1498595.226547596 surrogate_after=1481369.7853491027 feasibility_residual=0
+O1_FINAL k=3 accepted=3 l2=1485843.4810393627 seconds=0.147113754 complete=1 reason=schedule_complete
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+ATTR_RADIUS o=0 raw_norm=676.74317695328318 norm=676.74317695328318 radius=676.74317695328318 next_radius=1353.4863539065664 lambda=0.10000000000000001 next_lambda=0.025000000000000001 rho=0.99917344460052782 accept=1
+CLASSICAL_LM o=0 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=57020.378350215011 rho=0.99917344460052782 accept=1
+  MFCG it   1 cost=1.428870e+06 lam=2.500e-02 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=2
+  MFCG: accepts=1 rejects=0 total_matvecs=2 negcurv=0 cand_evals=1 mean_cg_per_outer=2.0
+NUMERIC_REPAIR summary rebuilds=0 floor=9.9999999999999998e-17
+  [retry-cache] builds=1 reuses=0
+  [menu-backtrack] trials=0 rescues=0 evals=0 total_scored=1
+POINT_SAFE summary calls=0 evals=0 wins=0 frozen=0 seconds=0
+  [scoring] menu_evals=1 alpha_evals=0 backtrack_evals=0 total_scored=1
+RESULT algo=mfree_shifted_cg iters=1 final_cost=1428870.2331907530 solve_seconds=0.173742
+DIAGNOSTICS median_reproj_err_px 3.252455 -> 1.520943 | cheirality_violations(obs) 0 -> 0 | cheirality_violations(pts, of 64053) 0 -> 0

@@ -1,0 +1,199 @@
+{
+  "build_manifest": {
+    "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "source_manifest_sha256": "81d514ef6c7babc9d048a21bf44cb4ede99025ed1809e88cefe5a58b7551f692",
+    "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+    "derived": {
+      "prism_o2.cu": "e0e673c333519516a809199e4b40da185f516795539cf7378705880339d99475",
+      "full_step_model.cuh": "53b08553ced578f3963d335a269df5bac6f33eae641b018a9f520d0e88ce6138",
+      "point_safeguard.cuh": "5eb4dd64421cb44d1dc7f7199f74939d33135b4a500003045cca788497697cc5"
+    },
+    "local_headers": {
+      "projection.h": "96e890f619d8478280254e9746a161cc43e373a7ea0034f48d51650962ab5fe5",
+      "projection.cuh": "6f0ca8715d7aacd79e8dc824087e0f0de4b067a3d19860bcece2c510685febae",
+      "runtime.cuh": "2b2c2086d0cd51c6fd9f02070ede5949819883d537ad8751666d628ed39281ec",
+      "audit.cuh": "19ff3f40ea4e49d2419b178cfeceea7544de02e9fc1cfe0f40de3bb07d66c618",
+      "wave_trace.h": "2b7fc812cdab4f887de161f633c3c465d7174219cbd7eea9f9bb7367a23a4733",
+      "attempt_trace.h": "43400101d54c0ccf94464025497105ef825e16c7e7cbb1d21f7dff019619daf6"
+    },
+    "protocol_sha256": "602ede16f17135de8ed313ce7dc3f9f6957411916104e6a3a3a2e3c82dc6d7a7",
+    "inverse_patch_source_and_header_parity": true,
+    "substitutions": 32,
+    "substitution_kinds": [
+      "shared_projection",
+      "cost",
+      "cost",
+      "assembly_residual_jacobian_regularizer",
+      "original_score_and_runtime",
+      "full_model",
+      "point_safeguard",
+      "configuration_instrumentation",
+      "target_original_stage_only",
+      "configuration_instrumentation",
+      "stage_initialization",
+      "original_score",
+      "stage_numeric_history",
+      "stage_transition",
+      "instrumentation",
+      "instrumentation",
+      "instrumentation",
+      "stage_attempts",
+      "original_score",
+      "original_json_score",
+      "stage_stop",
+      "stage_accounting",
+      "tiny_correctness_audit",
+      "wave_instrumentation",
+      "wave_instrumentation",
+      "wave_instrumentation",
+      "wave_instrumentation",
+      "wave_instrumentation",
+      "wave_instrumentation",
+      "wave_instrumentation",
+      "wave_instrumentation",
+      "wave_instrumentation"
+    ],
+    "flag": "OCA_O2=1",
+    "default": "off",
+    "status": "correctness_validated_no_scored_o2_grid",
+    "binary_sha256": "4b05ad4ee261e7a346dbf43cfc0d207366bdf7544734b31b288c10f4bbcdbd10",
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave4/o2/build",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave4/o2",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism_o2.cu",
+      "-o",
+      "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    "validation_manifest_sha256": "f43e2b3f7f231486ec7423a55a9040708cbbc07a1bba8d97dd43d73449f564e1",
+    "cpu_tests_sha256": "e70d812bb35db834003ee329080e1bf2f03ce21c0e7a9b9a7fcc42039be93a11",
+    "build_driver_sha256": "98731342f573d04b8134286773eacee998dd8d48d807eaecd20e3a494263a41d",
+    "handoff_sha256": "0ecc067a6181ba36626c7e643c5673ed3571ffe1011fbc63d940d4a54a91f727",
+    "wave_trace_schema": "OCA_WAVE_TRACE top-level JSON array; gauge unmeasured"
+  },
+  "arms": {
+    "off": {},
+    "homotopy": {
+      "OCA_O2": "1"
+    }
+  },
+  "cells": {
+    "venice-52": {
+      "scene": "venice-52",
+      "path": "/workspace/bal/venice-52.txt",
+      "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "target": 243740.27,
+      "cap": 60
+    },
+    "final-3068": {
+      "scene": "final-3068",
+      "path": "/workspace/bal/final-3068.txt",
+      "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+      "target": 1744796.9841897595,
+      "cap": 60
+    },
+    "dubrovnik-88": {
+      "scene": "dubrovnik-88",
+      "path": "/workspace/bal/dubrovnik-88.txt",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "target": 0,
+      "cap": 60
+    }
+  },
+  "practical": [
+    {
+      "scene": "ladybug-539",
+      "multiplier": 1.005,
+      "target": 164797.8493852759,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cell": "ladybug-539-1.005"
+    },
+    {
+      "scene": "ladybug-539",
+      "multiplier": 1.01,
+      "target": 165617.73918321263,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cell": "ladybug-539-1.01"
+    },
+    {
+      "scene": "ladybug-539",
+      "multiplier": 1.02,
+      "target": 167257.518779086,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cell": "ladybug-539-1.02"
+    },
+    {
+      "scene": "trafalgar-138",
+      "multiplier": 1.005,
+      "target": 103088.39569543337,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+      "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+      "cell": "trafalgar-138-1.005"
+    },
+    {
+      "scene": "trafalgar-138",
+      "multiplier": 1.01,
+      "target": 103601.27328595793,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+      "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+      "cell": "trafalgar-138-1.01"
+    },
+    {
+      "scene": "trafalgar-138",
+      "multiplier": 1.02,
+      "target": 104627.02846700703,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+      "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+      "cell": "trafalgar-138-1.02"
+    },
+    {
+      "scene": "final-394",
+      "multiplier": 1.005,
+      "target": 306349.5931045434,
+      "cap": 8,
+      "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+      "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+      "cell": "final-394-1.005"
+    },
+    {
+      "scene": "final-394",
+      "multiplier": 1.01,
+      "target": 307873.7204334218,
+      "cap": 8,
+      "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+      "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+      "cell": "final-394-1.01"
+    },
+    {
+      "scene": "final-394",
+      "multiplier": 1.02,
+      "target": 310921.97509117844,
+      "cap": 8,
+      "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+      "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+      "cell": "final-394-1.02"
+    }
+  ],
+  "states": "/tmp/prism-ba-coarse/research/eta2_wave4/durable_states",
+  "native_binary": "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+  "protocol_sha256": "602ede16f17135de8ed313ce7dc3f9f6957411916104e6a3a3a2e3c82dc6d7a7",
+  "native_protocol_sha256": "c65c07522fa8ea8de97bc813665924aa100d6329e7e89357439baa163df47afa",
+  "runner_sha256": "88f23b7425f8d6a8c2bd70a80d63d9ccb3dc33fdc299eaa45e9c215b4df899fc"
+}

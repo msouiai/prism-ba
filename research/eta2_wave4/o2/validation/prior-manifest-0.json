@@ -1,0 +1,276 @@
+{
+  "baseline_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+  "candidate_sha256": "ebdeb8616439d7496010d6672b7b465919be26e5c4a07f1a08abb1ac6bde3dbe",
+  "rows": [
+    {
+      "label": "tiny-on-audit",
+      "binary_sha256": "ebdeb8616439d7496010d6672b7b465919be26e5c4a07f1a08abb1ac6bde3dbe",
+      "input_sha256": "fbad2845b0c8603b1a60a16c258a1b31a892a10a7a6e30945834c3d50e9bd5e5",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "97",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/toy.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "40",
+        "--state_out",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/validation/tiny-on-audit.state"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=37 final_cost=0.9670273155 solve_seconds=0.756162",
+      "flags": {
+        "OCA_O2": "1",
+        "OCA_O2_AUDIT": "1"
+      },
+      "log_sha256": "fba763429cf3391c7786a4138eadef8d331a4a759b937b9f5e28acb056a80157",
+      "memcheck_errors": 0,
+      "independent_original_cost": 0.9670273154850425,
+      "audit_lines": [
+        "O2_AUDIT stage=0 cost_rel=1.351045536630967e-16 Hcc_rel=9.7953638279673565e-17 Cdiag_rel=9.9076634306257146e-17 bc_rel=4.3314249723095274e-16 bp_rel=5.3107469552149476e-16 cross_rel=0 rows_rel=0 model_rel=1.0232301577414104e-15 point_solve_rel=3.1017840403799663e-16 mask_frozen=13 passed=1",
+        "O2_AUDIT stage=0.25 cost_rel=1.1416838111784493e-15 Hcc_rel=1.2211140437202589e-16 Cdiag_rel=1.5272088062141473e-16 bc_rel=1.5641706065317931e-14 bp_rel=3.2220350223349454e-15 cross_rel=0 rows_rel=0 model_rel=4.144562342672589e-15 point_solve_rel=2.7374106745033918e-16 mask_frozen=15 passed=1",
+        "O2_AUDIT stage=0.5 cost_rel=5.6107864355748363e-15 Hcc_rel=1.37574797634904e-16 Cdiag_rel=1.0879051795229497e-16 bc_rel=1.6489201575332962e-15 bp_rel=5.7478755331274547e-15 cross_rel=0 rows_rel=0 model_rel=2.6878149904003738e-15 point_solve_rel=1.4597763170754062e-16 mask_frozen=17 passed=1",
+        "O2_AUDIT stage=0.75 cost_rel=5.5714027815744339e-15 Hcc_rel=1.1843492552216275e-16 Cdiag_rel=1.0484384568932224e-16 bc_rel=1.239795311426339e-14 bp_rel=1.6817141732730497e-14 cross_rel=0 rows_rel=0 model_rel=2.781290694508147e-15 point_solve_rel=1.6736412758302201e-16 mask_frozen=21 passed=1",
+        "O2_AUDIT stage=0.90000000000000002 cost_rel=0 Hcc_rel=1.3559067252575498e-16 Cdiag_rel=1.3761492023353681e-16 bc_rel=3.2702021709254873e-14 bp_rel=3.5393115616696615e-14 cross_rel=0 rows_rel=0 model_rel=3.2621462971630895e-14 point_solve_rel=2.3321516962535857e-16 mask_frozen=24 passed=1",
+        "O2_AUDIT stage=1 cost_rel=1.5316133436965053e-14 Hcc_rel=1.0375197718527307e-16 Cdiag_rel=1.1989526508820276e-16 bc_rel=2.4576231259335935e-14 bp_rel=7.116453577399958e-14 cross_rel=0 rows_rel=0 model_rel=7.2709111943936068e-15 point_solve_rel=3.0386845014279628e-16 mask_frozen=24 passed=1"
+      ],
+      "stages_checked": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        1.0
+      ]
+    },
+    {
+      "label": "tiny-off-memcheck",
+      "binary_sha256": "ebdeb8616439d7496010d6672b7b465919be26e5c4a07f1a08abb1ac6bde3dbe",
+      "input_sha256": "fbad2845b0c8603b1a60a16c258a1b31a892a10a7a6e30945834c3d50e9bd5e5",
+      "command": [
+        "/usr/local/cuda/bin/compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "97",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/toy.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "12"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=12 final_cost=0.9673785392 solve_seconds=0.207870",
+      "flags": {},
+      "log_sha256": "7f889e7c203347689d923c9c510647f64729d94c2108e6e26c48e6446c5ecc65",
+      "memcheck_errors": 0
+    },
+    {
+      "label": "compat-original-0",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-rl-actor/build/prism-tr",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358945.3042037657 solve_seconds=0.438561",
+      "flags": {},
+      "log_sha256": "e2c7e945c37770b2ad76ce34db94082e205ae5a36b1cec3f86a999e24b99fe77"
+    },
+    {
+      "label": "compat-off-0",
+      "binary_sha256": "ebdeb8616439d7496010d6672b7b465919be26e5c4a07f1a08abb1ac6bde3dbe",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358945.8756591745 solve_seconds=0.443162",
+      "flags": {},
+      "log_sha256": "cac2150a6b6cdc3a3d7bdee5f4d1ffd75d63f212eed656f0f933ff29ba430e47"
+    },
+    {
+      "label": "compat-off-1",
+      "binary_sha256": "ebdeb8616439d7496010d6672b7b465919be26e5c4a07f1a08abb1ac6bde3dbe",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358944.6216060696 solve_seconds=0.434459",
+      "flags": {},
+      "log_sha256": "3aa95f174ff77d8b006a0f35f54c0c3c58a4287c0a850226a1f0b81744ec418b"
+    },
+    {
+      "label": "compat-original-1",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-rl-actor/build/prism-tr",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358945.4279868418 solve_seconds=0.423389",
+      "flags": {},
+      "log_sha256": "289b1e0a71732fc68d4d5848fd64c50a3640a951f57643ab276a057956639f4d"
+    },
+    {
+      "label": "compat-original-2",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-rl-actor/build/prism-tr",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358946.0440041937 solve_seconds=0.420317",
+      "flags": {},
+      "log_sha256": "69a5ef25ae883b30b3de27d73838cbd4652da8369404ff44d6da57f6635d2dcb"
+    },
+    {
+      "label": "compat-off-2",
+      "binary_sha256": "ebdeb8616439d7496010d6672b7b465919be26e5c4a07f1a08abb1ac6bde3dbe",
+      "input_sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/workspace/bal/dubrovnik-88.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "600"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=33 final_cost=358945.6611403199 solve_seconds=0.423108",
+      "flags": {},
+      "log_sha256": "f4e7b2c06a77d5adb2c70b9a41ada31fb0ddd188a001e099ba4ecb13804e5eee"
+    },
+    {
+      "label": "target-cap-edge",
+      "binary_sha256": "ebdeb8616439d7496010d6672b7b465919be26e5c4a07f1a08abb1ac6bde3dbe",
+      "input_sha256": "2a44e0dbca4cf5ccd58492841afaddd5e73dea8cc6fdd89a06e0e5e95b371d7d",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/zero-residual.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "6",
+        "--state_out",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/validation/target-cap-edge.state"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=2 final_cost=0.0000000000 solve_seconds=0.023217",
+      "flags": {
+        "OCA_O2": "1",
+        "OCA_TARGET_COST": "1"
+      },
+      "log_sha256": "5c51d6ac7e39369098fb0d454424013399545913d7a253576e45397dfc10af4e",
+      "independent_original_cost": 0.0
+    },
+    {
+      "label": "partial-stage-target-edge",
+      "binary_sha256": "ebdeb8616439d7496010d6672b7b465919be26e5c4a07f1a08abb1ac6bde3dbe",
+      "input_sha256": "2a44e0dbca4cf5ccd58492841afaddd5e73dea8cc6fdd89a06e0e5e95b371d7d",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/prism-o2",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/zero-residual.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "1",
+        "--state_out",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/validation/partial-stage-target-edge.state"
+      ],
+      "returncode": 0,
+      "result": "RESULT algo=mfree_shifted_cg iters=1 final_cost=0.0000000000 solve_seconds=0.019900",
+      "flags": {
+        "OCA_O2": "1",
+        "OCA_TARGET_COST": "1"
+      },
+      "log_sha256": "52691f8085b8bb8d70ac9234e30718bea64096780a1313d190bd8cd68c03b2a5",
+      "independent_original_cost": 0.0
+    }
+  ],
+  "source_and_header_identity": true,
+  "gpu_lock": "/tmp/prism_gpu.lock",
+  "kind": "correctness_not_performance",
+  "edge_checks_passed": true
+}

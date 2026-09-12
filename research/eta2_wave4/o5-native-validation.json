@@ -1,0 +1,92 @@
+{
+  "passed": true,
+  "binary_sha256": "edd7495c3449b3dfddb6465857fb581153f44b5ac004db3bb2d7fb8e22764b4f",
+  "compatibility_relative_median": 5.91362926405381e-07,
+  "rows": [
+    {
+      "label": "tiny",
+      "command": [
+        "compute-sanitizer",
+        "--tool",
+        "memcheck",
+        "--error-exitcode",
+        "97",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/build/prism-o5",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/toy.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "40",
+        "--state_out",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o5-validation/tiny.state"
+      ],
+      "input_sha256": "fbad2845b0c8603b1a60a16c258a1b31a892a10a7a6e30945834c3d50e9bd5e5",
+      "log_sha256": "6f5bb3bcb918dff9684af7c8ae2c6e94f18847f6d169453ce251744d6de52821",
+      "state_sha256": "fa1b9203e2f25079cc51762719aae517c86be1bd7a8ec9b31d010de24578498a",
+      "cost": 0.9668080390927407,
+      "native_cost": 0.9668080391,
+      "passed": true
+    },
+    {
+      "label": "partial",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/build/prism-o5",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/zero-residual.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "1",
+        "--state_out",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o5-validation/partial.state"
+      ],
+      "input_sha256": "2a44e0dbca4cf5ccd58492841afaddd5e73dea8cc6fdd89a06e0e5e95b371d7d",
+      "log_sha256": "54f6145df866b93c402624511c81545984087288c1995dd616ab2b2ea7802808",
+      "state_sha256": "63b08befe7fdee260aee344ab5566e4f7280eb34d44bff0442eb7ebf77c1782b",
+      "cost": 0.0,
+      "native_cost": 0.0,
+      "passed": true
+    },
+    {
+      "label": "cap",
+      "command": [
+        "/tmp/prism-ba-coarse/research/eta2_wave4/build/prism-o5",
+        "--problem",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o2/build/zero-residual.txt",
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        ".1",
+        "--max_iter",
+        "6",
+        "--state_out",
+        "/tmp/prism-ba-coarse/research/eta2_wave4/o5-validation/cap.state"
+      ],
+      "input_sha256": "2a44e0dbca4cf5ccd58492841afaddd5e73dea8cc6fdd89a06e0e5e95b371d7d",
+      "log_sha256": "d27af7ae071ef652662e567e663dbd54c3366ff10d211c548b235af87458d866",
+      "state_sha256": "63b08befe7fdee260aee344ab5566e4f7280eb34d44bff0442eb7ebf77c1782b",
+      "cost": 0.0,
+      "native_cost": 0.0,
+      "passed": true
+    }
+  ],
+  "kernel_validation_sha256": "35b6c810602ef9637b7e6bea27a67ae3ee4f5441d165bbdba227a0df9942309f",
+  "scope": "native correctness only; no performance inference",
+  "opening_stages": [
+    1,
+    2,
+    3,
+    4
+  ]
+}
