@@ -1,0 +1,25 @@
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+  [compact-fragments] active=2 saved_bytes=58628336 storage=fp32 camera_reads=contiguous
+  MFCG score_init=45428699.329526156 precision=fp64
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+ATTR_RADIUS o=0 raw_norm=2917.1137059847119 norm=2917.1137059847119 radius=2917.1137059847119 next_radius=5834.2274119694239 lambda=0.10000000000000001 next_lambda=0.025000000000000001 rho=0.84191577321986033 accept=1
+CLASSICAL_LM o=0 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=44254931.082093716 rho=0.84191577321986033 accept=1
+  MFCG it   1 cost=8.169775e+06 lam=2.500e-02 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=2
+PCG_PREP o=1 rebuild=1 drift=0 previous_depth=1
+BRIEF0_DIRECTION arm=eta2 rep=0 cost=2054200.9555375862 pred=7658461.7553554643 rho=0.79853814624581276 cg=5 residual=0.10588145276787338 certified=0 seconds=0
+BRIEF0_DIRECTION arm=exact rep=0 cost=2002780.5044970147 pred=7662720.7107347613 rho=0.80480478632311236 cg=79 residual=9.5559678423495548e-11 certified=1 seconds=0.235843
+BRIEF0_DIRECTION arm=exact_clip rep=0 cost=2002780.5044970152 pred=7662720.7107347632 rho=0.80480478632311214 cg=79 residual=9.5559678423495548e-11 certified=1 seconds=0.235843
+BRIEF0_DIRECTION arm=exact rep=1 cost=2002780.5044970152 pred=7662720.7107347632 rho=0.80480478632311214 cg=79 residual=9.5559678423495548e-11 certified=1 seconds=0.227911
+BRIEF0_DIRECTION arm=exact_clip rep=1 cost=2002780.5044970149 pred=7662720.710734765 rho=0.80480478632311192 cg=79 residual=9.5559678423495548e-11 certified=1 seconds=0.227911
+BRIEF0_DIRECTION arm=exact rep=2 cost=2002780.5044970147 pred=7662720.7107347632 rho=0.80480478632311214 cg=79 residual=9.5559678423495548e-11 certified=1 seconds=0.228099
+BRIEF0_DIRECTION arm=exact_clip rep=2 cost=2002780.5044970147 pred=7662720.7107347632 rho=0.80480478632311214 cg=79 residual=9.5559678423495548e-11 certified=1 seconds=0.228099
+BRIEF0_COMPLETE outer=1 terminal=0 directory=/tmp/prism-ba-coarse/research/eta2_research_20260912/evidence/collect/ladybug-1197-capture-2
+  MFCG: accepts=1 rejects=0 total_matvecs=8 negcurv=0 cand_evals=2 mean_cg_per_outer=8.0
+NUMERIC_REPAIR summary rebuilds=0 floor=9.9999999999999998e-17
+  [retry-cache] builds=2 reuses=0
+  [menu-backtrack] trials=0 rescues=0 evals=0 total_scored=2
+POINT_SAFE summary calls=0 evals=0 wins=0 frozen=0 seconds=0
+  [scoring] menu_evals=2 alpha_evals=0 backtrack_evals=0 total_scored=2
+RESULT algo=mfree_shifted_cg iters=1 final_cost=8169774.8087535920 solve_seconds=0.791932
+DIAGNOSTICS median_reproj_err_px 1.529854 -> 0.852127 | cheirality_violations(obs) 179 -> 179 | cheirality_violations(pts, of 126327) 123 -> 123

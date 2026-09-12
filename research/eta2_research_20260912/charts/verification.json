@@ -1,0 +1,179 @@
+{
+  "status": "reference implementation verified; no BAL performance verdict",
+  "environment": {
+    "python": "3.12.3",
+    "numpy": "2.1.2",
+    "scipy": "1.18.1"
+  },
+  "baseline": {
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "verified_headers": 44,
+    "champion_config": {
+      "label": "sustained-eta2-lambda0.1",
+      "status": "best tested global configuration on six-scene fixed-target panel; defaults unchanged",
+      "binary": "/tmp/prism-rl-sustained/build/prism-tr",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "initial_lambda": 0.1,
+      "flags": {
+        "OCA_ATTR_RADIUS": "1",
+        "OCA_ATTR_RESCUE": "1",
+        "OCA_ATTR_STRICT": "1",
+        "OCA_BACKTRACK_REARM": "1",
+        "OCA_CAMERA_TR": "0",
+        "OCA_CG_STOP": "0",
+        "OCA_CLASSICAL_LM": "1",
+        "OCA_COMPACT_FRAGMENTS": "2",
+        "OCA_DEMAND_MENU": "0",
+        "OCA_DIAG_NORM": "1",
+        "OCA_FORCE_UNSHARED": "1",
+        "OCA_FTOL": "1e-5",
+        "OCA_FTOL_K": "8",
+        "OCA_GRID_DOWN": "2",
+        "OCA_MENU_BACKTRACK": "8",
+        "OCA_MENU_GATE": "1e-2",
+        "OCA_MULTI_RHS": "1",
+        "OCA_NSHIFTS": "1",
+        "OCA_PCG": "1",
+        "OCA_POINT_SAFEGUARD": "1",
+        "OCA_RETRY_CACHE": "1",
+        "OCA_RHO_LAMBDA": "1",
+        "OCA_RHO_SHIFT": "1",
+        "OCA_SCHUR_NUMERIC_GUARD": "1",
+        "OCA_SWITCH_RESTART": "0",
+        "OCA_TR_RECURRENCE": "0",
+        "OCA_RLA_FIXED_ETA": "2"
+      },
+      "cli": [
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        "0.1",
+        "--max_iter",
+        "600"
+      ],
+      "evidence": "/tmp/prism-rl-sustained/verdict.json",
+      "limitations": [
+        "Muell lambda10 + eta2 is a counterexample",
+        "Largest tighter-target gain is only1.035x",
+        "Not a learned RL improvement"
+      ]
+    },
+    "arithmetic_note": "Native Scalar=double with FP32 compact cross blocks/point rows; this CPU reference is Gram-consistent FP64"
+  },
+  "finite_differences": {
+    "euclidean": {
+      "camera_columns_relative_error": [
+        1.366902295976219e-11,
+        1.872704918042351e-11,
+        4.196252538967592e-11,
+        7.832433828406335e-11,
+        8.21187978550416e-11,
+        2.5217122482236746e-10,
+        2.9672559269936326e-08,
+        8.874570330943027e-11
+      ],
+      "point_columns_relative_error": [
+        1.1800373464491134e-10,
+        1.2093179872426338e-10,
+        4.0518029380159827e-10
+      ]
+    },
+    "homogeneous": {
+      "camera_columns_relative_error": [
+        1.5411000477991652e-11,
+        1.8207735855570555e-11,
+        4.995491176776263e-11,
+        8.58283327466815e-11,
+        1.119181700676151e-10,
+        1.9978708540337983e-10,
+        2.8060827611904456e-08,
+        8.242015013041308e-11
+      ],
+      "point_columns_relative_error": [
+        2.013398104656514e-11,
+        1.9956483570551208e-11,
+        2.81322150626132e-11
+      ]
+    },
+    "inverse_depth": {
+      "camera_columns_relative_error": [
+        1.6551911401518502e-11,
+        2.2843642006790226e-11,
+        6.45040660657753e-11,
+        7.418398834255725e-11,
+        9.063811712522257e-11,
+        2.3712696465484856e-10,
+        2.9579961628756274e-08,
+        8.813587623501142e-11
+      ],
+      "point_columns_relative_error": [
+        1.901232737337988e-11,
+        1.7747847403411256e-11,
+        3.06020402399271e-11
+      ]
+    }
+  },
+  "geometry": {
+    "householder": {
+      "orthonormality_max_abs": 4.440892098500626e-16,
+      "tangent_max_abs": 4.440892098500626e-16,
+      "angle_identity_max_abs": 4.440892098500626e-16
+    },
+    "homogeneous": {
+      "camera_jacobian_invariance_error": 1.7124886357207534e-16,
+      "point_coordinate_chain_error": 3.6453796066648134e-16
+    },
+    "inverse_depth": {
+      "camera_jacobian_invariance_error": 1.4100743169454979e-16,
+      "point_coordinate_chain_error": 4.210106463967811e-16
+    },
+    "s3_euclidean_fling_counterexample": {
+      "tangent_norm": 0.000999999998999999,
+      "euclidean_displacement": 999999852474.4679
+    },
+    "projection_singularity": {
+      "finite_at_regular_infinite_direction": true,
+      "singular_at_image_horizon": true
+    },
+    "cheirality_blindness": {
+      "opposite_camera_rays_have_identical_pixels": true
+    },
+    "at_infinity_point_jacobian_relative_errors": [
+      9.113257279940094e-12,
+      1.3081286554705126e-11,
+      2.6181899503441115e-11
+    ]
+  },
+  "conditional_solve": {
+    "euclidean": {
+      "augmented_lstsq_max_relative_error": 5.0475658266220606e-15,
+      "normal_equation_relative_residual": 1.5294534393383592e-16,
+      "true_cost": 214.1111057821932,
+      "prediction": -149.75654472197647,
+      "rho": 1.0004257451415297
+    },
+    "homogeneous": {
+      "augmented_lstsq_max_relative_error": 1.5466726952131856e-14,
+      "normal_equation_relative_residual": 8.019511068260929e-17,
+      "true_cost": 213.7266898758959,
+      "prediction": -149.38444860515946,
+      "rho": 1.0003443352526162,
+      "undamped_physical_tangent_invariance_error": 5.705010755940715e-14
+    },
+    "inverse_depth": {
+      "augmented_lstsq_max_relative_error": 8.63249497684469e-15,
+      "normal_equation_relative_residual": 4.044556742862652e-17,
+      "true_cost": 213.64812708514796,
+      "prediction": -149.31026759183032,
+      "rho": 1.0003151595344835,
+      "undamped_physical_tangent_invariance_error": 5.423195975918208e-14
+    }
+  },
+  "adapters": {
+    "prisms01_roundtrip_bit_exact": true,
+    "known_parallax_degrees": 90.0
+  },
+  "source_sha256": "35a14def911bd478b0ea309c2b47b6c1742ff79a2f9f2880959f1236d79569ec"
+}

@@ -1,0 +1,23 @@
+========= COMPUTE-SANITIZER
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+  [compact-fragments] active=2 saved_bytes=9984 storage=fp32 camera_reads=contiguous
+  MFCG score_init=364516.19390409789 precision=fp64
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+BRIEF0_DIRECTION arm=eta2 rep=0 cost=2492408.9048091886 pred=355912.55825184693 rho=-5.978695220412467 cg=1 residual=0.48692571417353181 certified=0 seconds=0
+BRIEF0_DIRECTION arm=exact rep=0 cost=744279.12739154953 pred=358215.67294140393 rho=-1.0601516409628797 cg=18 residual=3.3128087385347504e-11 certified=1 seconds=0.029137
+BRIEF0_DIRECTION arm=exact_clip rep=0 cost=1347872.6363437013 pred=354979.94293202984 rho=-2.770174659214176 cg=18 residual=3.3128087385347504e-11 certified=1 seconds=0.029137
+BRIEF0_DIRECTION arm=exact rep=1 cost=744279.12739154953 pred=358215.67294140393 rho=-1.0601516409628797 cg=18 residual=3.3128087385347504e-11 certified=1 seconds=0.0283139
+BRIEF0_DIRECTION arm=exact_clip rep=1 cost=1347872.6363437013 pred=354979.94293202984 rho=-2.770174659214176 cg=18 residual=3.3128087385347504e-11 certified=1 seconds=0.0283139
+BRIEF0_DIRECTION arm=exact rep=2 cost=744279.12739154953 pred=358215.67294140393 rho=-1.0601516409628797 cg=18 residual=3.3128087385347504e-11 certified=1 seconds=0.0283375
+BRIEF0_DIRECTION arm=exact_clip rep=2 cost=1347872.6363437013 pred=354979.94293202984 rho=-2.770174659214176 cg=18 residual=3.3128087385347504e-11 certified=1 seconds=0.0283375
+BRIEF0_COMPLETE outer=0 terminal=0 directory=/tmp/prism-ba-coarse/research/eta2_research_20260912/evidence/toy/toy-capture-1
+  MFCG: accepts=0 rejects=0 total_matvecs=2 negcurv=0 cand_evals=1 mean_cg_per_outer=2.0
+NUMERIC_REPAIR summary rebuilds=0 floor=9.9999999999999998e-17
+  [retry-cache] builds=1 reuses=0
+  [menu-backtrack] trials=0 rescues=0 evals=0 total_scored=1
+POINT_SAFE summary calls=0 evals=0 wins=0 frozen=0 seconds=0
+  [scoring] menu_evals=1 alpha_evals=0 backtrack_evals=0 total_scored=1
+RESULT algo=mfree_shifted_cg iters=0 final_cost=364516.1939040979 solve_seconds=0.142482
+DIAGNOSTICS median_reproj_err_px 33.770689 -> 33.770689 | cheirality_violations(obs) 0 -> 0 | cheirality_violations(pts, of 24) 0 -> 0
+========= ERROR SUMMARY: 0 errors
