@@ -332,6 +332,10 @@ def analyze(path: Path, label: str, exact=False, projections=PROJECTIONS, seed=S
         camera_row(int(i), observation_count, stats, core, score, stderr, score_rank, count_rank, gate)
         for i in selected
     ]
+    all_rows = [
+        camera_row(i, observation_count, stats, core, score, stderr, score_rank, count_rank, gate)
+        for i in range(ncam)
+    ]
     report = {
         "schema": 1,
         "label": label,
@@ -362,6 +366,7 @@ def analyze(path: Path, label: str, exact=False, projections=PROJECTIONS, seed=S
             "rows": selected_rows,
         },
         "top_effective_resistance": top_rows,
+        "all_cameras": all_rows,
         "summary_statistics": {
             "observation_count": {
                 "min": int(observation_count.min()),

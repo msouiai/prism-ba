@@ -1,0 +1,282 @@
+{
+  "registered_predictions": {
+    "all_scene_gate_counts_within_ceiling": true,
+    "final_camera_550_resistance_rank": 8,
+    "final_camera_550_selected": true,
+    "final_camera_550_track_count_rank": 7,
+    "venice_camera_34_not_selected": true,
+    "venice_estimator_gate_passes": true
+  },
+  "scenes": [
+    {
+      "analysis_seconds": 0.3457703939639032,
+      "cameras": 539,
+      "edges": 41132,
+      "registered_ceiling": 6,
+      "resistance_vs_negative_track_count_spearman": 0.8488919385138589,
+      "scene": "ladybug-539",
+      "selected": 6,
+      "selected_cameras": [
+        488,
+        509,
+        522,
+        523,
+        528,
+        529
+      ]
+    },
+    {
+      "analysis_seconds": 6.156565417069942,
+      "cameras": 3068,
+      "edges": 989046,
+      "registered_ceiling": 31,
+      "resistance_vs_negative_track_count_spearman": 0.975548179122574,
+      "scene": "final-3068",
+      "selected": 31,
+      "selected_cameras": [
+        534,
+        550,
+        666,
+        705,
+        927,
+        1218,
+        1750,
+        2040,
+        2150,
+        2583,
+        2883,
+        2891,
+        2898,
+        2909,
+        2914,
+        2919,
+        2936,
+        2954,
+        2957,
+        2962,
+        2968,
+        2994,
+        2996,
+        2998,
+        3041,
+        3044,
+        3048,
+        3049,
+        3059,
+        3060,
+        3067
+      ]
+    },
+    {
+      "analysis_seconds": 0.2822156557813287,
+      "cameras": 52,
+      "edges": 1296,
+      "registered_ceiling": 1,
+      "resistance_vs_negative_track_count_spearman": 0.9707162981302826,
+      "scene": "venice-52",
+      "selected": 1,
+      "selected_cameras": [
+        41
+      ]
+    },
+    {
+      "analysis_seconds": 0.3103444869630039,
+      "cameras": 88,
+      "edges": 3335,
+      "registered_ceiling": 1,
+      "resistance_vs_negative_track_count_spearman": 0.975714134761016,
+      "scene": "dubrovnik-88",
+      "selected": 1,
+      "selected_cameras": [
+        51
+      ]
+    }
+  ],
+  "schema": 1,
+  "venice_exact_validation": {
+    "max_relative_error": 0.23338918458371694,
+    "median_relative_error": 0.04594193202656657,
+    "passes_registered_gate": true,
+    "spearman_rank": 0.9725091778365917,
+    "top_1pct_set_equal": true
+  },
+  "verdict": {
+    "effective_resistance_adds_failure_linked_information_over_count": false,
+    "native_choice": "Do not put the 256-projection effective-resistance estimator in Eta2. If a sparse local prior is tested, use a fixed count gate and preregister it separately.",
+    "reason": "For the pre-registered failure-linked camera 550, resistance rank 8 and track-count rank 7 are effectively the same; scene-wide rank correlations are 0.849 to 0.976. Structural outliers exist on control scenes, but no measured Eta2 failure is linked to them.",
+    "registered_gate_validated": true
+  },
+  "watched_cameras": {
+    "dubrovnik-88": [],
+    "final-3068": [
+      {
+        "camera": 550,
+        "core_number": 197,
+        "effective_resistance_diag": 0.07463917640423853,
+        "effective_resistance_rank_desc": 8,
+        "effective_resistance_relative_stderr": 0.08861300122793993,
+        "mean_track_length": 31.23076923076923,
+        "observation_count": 13,
+        "selected": true,
+        "tracks_ge3": 13,
+        "unique_track_count": 13,
+        "unique_track_count_rank_asc": 7,
+        "unweighted_degree": 229,
+        "weighted_degree": 13.000000000000002
+      },
+      {
+        "camera": 853,
+        "core_number": 26,
+        "effective_resistance_diag": 0.0032414681225692663,
+        "effective_resistance_rank_desc": 1627,
+        "effective_resistance_relative_stderr": 0.07842363616050081,
+        "mean_track_length": 5.935153583617748,
+        "observation_count": 293,
+        "selected": false,
+        "tracks_ge3": 261,
+        "unique_track_count": 293,
+        "unique_track_count_rank_asc": 1450,
+        "unweighted_degree": 26,
+        "weighted_degree": 292.99999999999994
+      },
+      {
+        "camera": 1458,
+        "core_number": 13,
+        "effective_resistance_diag": 0.010754676909952418,
+        "effective_resistance_rank_desc": 633,
+        "effective_resistance_relative_stderr": 0.08150341532399176,
+        "mean_track_length": 5.628571428571429,
+        "observation_count": 105,
+        "selected": false,
+        "tracks_ge3": 52,
+        "unique_track_count": 105,
+        "unique_track_count_rank_asc": 615,
+        "unweighted_degree": 13,
+        "weighted_degree": 105.0
+      },
+      {
+        "camera": 2816,
+        "core_number": 60,
+        "effective_resistance_diag": 0.0029058994073437,
+        "effective_resistance_rank_desc": 1739,
+        "effective_resistance_relative_stderr": 0.08986172950302124,
+        "mean_track_length": 4.789227166276347,
+        "observation_count": 427,
+        "selected": false,
+        "tracks_ge3": 245,
+        "unique_track_count": 427,
+        "unique_track_count_rank_asc": 1864,
+        "unweighted_degree": 65,
+        "weighted_degree": 427.0
+      },
+      {
+        "camera": 3041,
+        "core_number": 153,
+        "effective_resistance_diag": 0.06229403037897096,
+        "effective_resistance_rank_desc": 20,
+        "effective_resistance_relative_stderr": 0.07988165772493638,
+        "mean_track_length": 20.941176470588236,
+        "observation_count": 17,
+        "selected": true,
+        "tracks_ge3": 17,
+        "unique_track_count": 17,
+        "unique_track_count_rank_asc": 25,
+        "unweighted_degree": 154,
+        "weighted_degree": 16.999999999999996
+      },
+      {
+        "camera": 534,
+        "core_number": 534,
+        "effective_resistance_diag": 0.05904906968573989,
+        "effective_resistance_rank_desc": 28,
+        "effective_resistance_relative_stderr": 0.07930885929559035,
+        "mean_track_length": 151.33333333333334,
+        "observation_count": 18,
+        "selected": true,
+        "tracks_ge3": 18,
+        "unique_track_count": 18,
+        "unique_track_count_rank_asc": 29,
+        "unweighted_degree": 539,
+        "weighted_degree": 18.000000000000004
+      },
+      {
+        "camera": 379,
+        "core_number": 26,
+        "effective_resistance_diag": 0.0022317710178756246,
+        "effective_resistance_rank_desc": 2006,
+        "effective_resistance_relative_stderr": 0.07697235539407953,
+        "mean_track_length": 4.373376623376624,
+        "observation_count": 616,
+        "selected": false,
+        "tracks_ge3": 439,
+        "unique_track_count": 616,
+        "unique_track_count_rank_asc": 2191,
+        "unweighted_degree": 26,
+        "weighted_degree": 616.0
+      },
+      {
+        "camera": 1645,
+        "core_number": 421,
+        "effective_resistance_diag": 0.001303878009167888,
+        "effective_resistance_rank_desc": 2504,
+        "effective_resistance_relative_stderr": 0.08289324455982343,
+        "mean_track_length": 14.503634475597092,
+        "observation_count": 963,
+        "selected": false,
+        "tracks_ge3": 797,
+        "unique_track_count": 963,
+        "unique_track_count_rank_asc": 2566,
+        "unweighted_degree": 534,
+        "weighted_degree": 963.0
+      },
+      {
+        "camera": 1476,
+        "core_number": 137,
+        "effective_resistance_diag": 0.028199420223773627,
+        "effective_resistance_rank_desc": 212,
+        "effective_resistance_relative_stderr": 0.07524728504313337,
+        "mean_track_length": 18.47222222222222,
+        "observation_count": 36,
+        "selected": false,
+        "tracks_ge3": 25,
+        "unique_track_count": 36,
+        "unique_track_count_rank_asc": 198,
+        "unweighted_degree": 143,
+        "weighted_degree": 36.0
+      }
+    ],
+    "ladybug-539": [],
+    "venice-52": [
+      {
+        "camera": 34,
+        "core_number": 40,
+        "effective_resistance_diag": 0.00026098708639388755,
+        "effective_resistance_rank_desc": 13,
+        "effective_resistance_relative_stderr": 0.08976340986153415,
+        "mean_track_length": 10.016559648529908,
+        "observation_count": 2959,
+        "selected": false,
+        "tracks_ge3": 2626,
+        "unique_track_count": 2959,
+        "unique_track_count_rank_asc": 9,
+        "unweighted_degree": 40,
+        "weighted_degree": 2959.0000000000064
+      },
+      {
+        "camera": 49,
+        "core_number": 41,
+        "effective_resistance_diag": 0.0003734978293782418,
+        "effective_resistance_rank_desc": 8,
+        "effective_resistance_relative_stderr": 0.08385147467988643,
+        "mean_track_length": 8.9730784237222,
+        "observation_count": 2563,
+        "selected": false,
+        "tracks_ge3": 2037,
+        "unique_track_count": 2563,
+        "unique_track_count_rank_asc": 7,
+        "unweighted_degree": 42,
+        "weighted_degree": 2563.000000000004
+      }
+    ]
+  }
+}
