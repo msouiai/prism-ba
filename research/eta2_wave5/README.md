@@ -29,6 +29,7 @@ Current decisions:
 - B3's phase-switched Schur-Jacobi arm is rejected despite selected product
   savings: it is slower overall and loses tail reliability.  Nystrom is not
   pursued on that base.
-- B1 factored Jacobian storage is the next speed experiment because it attacks
-  bandwidth in Krylov, reduced-RHS, point-factor, and prediction kernels while
-  preserving the mathematical operator.
+- B1 factored Jacobian storage preserves products, outers, and endpoints, but
+  version 1 is 3.85% slower on the panel because reconstruction raises register
+  pressure and Krylov time.  One preregistered algebraic contraction follow-up
+  is in progress before the family is closed.
