@@ -1,0 +1,28 @@
+{
+  "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "derived_source_sha256": "a93a3d343b3ad33ba84fc54c8dc772e45d412e30260c77270e39dba034a0c03d",
+  "substitutions": 17,
+  "inverse_patch_source_parity": true,
+  "local_headers": {
+    "boundary.h": "5c7c7645d138196cb4ebd2b602aba7c5d7e065baed600f87d3162ac3d4e55c60",
+    "metric.cuh": "36127a552a016873a76027a091c824d790babe07c83cddc51653e96ce6175024",
+    "attempt_trace.h": "43400101d54c0ccf94464025497105ef825e16c7e7cbb1d21f7dff019619daf6"
+  },
+  "protocol_draft_sha256": "a5760bb32ff66daf1b9ba988a421ff66b1ead5860c51e83e8f79cf4ff84f57ba",
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/steihaug",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/steihaug/build/prism_stcg.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/steihaug/build/prism-stcg",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "binary_sha256": "d633bae5a855cd7c9f0aaa6e51a63f9befa5c6766aa1b3649e157f6943fcf699"
+}
