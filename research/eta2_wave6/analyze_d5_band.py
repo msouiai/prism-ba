@@ -24,7 +24,7 @@ ARCHIVE_RECORD = ROOT / "research/eta2_curvature_audit/evidence/capture-0/ARCHIV
 RESTORE = Path("/dev/shm/eta2-wave6-d5-capture-0")
 BANDS = (1, 2, 4, 8, 16, 32, 64, 128)
 SCENES = (
-    ("ladybug-539", Path("/workspace/bal/ladybug-539.txt"), "sequence"),
+    ("ladybug-539", Path("/tmp/prism-speed-novelty/inputs/ladybug-539.txt"), "sequence"),
     ("ladybug-1197", Path("/workspace/bal/ladybug-1197.txt"), "sequence"),
     ("venice-52", Path("/workspace/bal/venice-52.txt"), "sequence"),
     ("venice-951", Path("/workspace/bal/venice-951.txt"), "sequence"),
