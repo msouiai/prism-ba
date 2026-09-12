@@ -24,6 +24,9 @@ Current high-level results:
   (RCM band 32 improves conditioning 106.6x), but the registered structural
   gate fails: no sequence scene retains 80% normalized coupling at band 16,
   and required widths grow to 138--215 cameras on the larger sequences.
+- exact gauge-quotient posterior variance identifies geometric starvation at
+  Venice camera 34 in 5/5 terminal states, but the cheap local Schur-block
+  score gives the identical top-one decision; no probing/prior arm is earned.
 
-See `D5_BAND_RESULTS.md` for the current decision.  The scientific champion remains
+See `D6_COVARIANCE_RESULTS.md` for the current decision.  The scientific champion remains
 unchanged.
