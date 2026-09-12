@@ -145,13 +145,21 @@ def summarize(rows):
              - curves["fp32"]["first_outer_outside_linear_slope"])
     drop = (curves["fp32"]["median_D10_by_dose"][str(1e-12)]
             / curves["fp64"]["median_D10_by_dose"][str(1e-12)])
+    def entry_outer(entry):
+        if entry is None:
+            return None
+        fields = entry.split(":")
+        if fields[0] in ("accept", "retry"):
+            return int(fields[1]) - 1
+        return int(fields[0])
     def first_split(group):
-        indices = []
+        outers = []
         for row in group:
             for difference in row["trace_differences"].values():
                 if difference is not None:
-                    indices.append(difference["index"])
-        return min(indices) if indices else None
+                    values = [entry_outer(difference.get(side)) for side in ("base", "perturbed")]
+                    outers.extend(value for value in values if value is not None)
+        return min(outers) if outers else None
     fp32_first = first_split(fp32)
     fp64_first = first_split(rows)
     no_earlier = fp64_first is None or (fp32_first is not None and fp64_first >= fp32_first)
@@ -167,6 +175,7 @@ def summarize(rows):
             "global_splits": sum(row["trace_differences"]["global"] is not None for row in group),
             "cg_splits": sum(row["trace_differences"]["cg"] is not None for row in group),
             "point_safe_splits": sum(row["trace_differences"]["point_safe"] is not None for row in group),
+            "first_discrete_split_outer": first_split(group),
         })
     result = {
         "schema": 1,
