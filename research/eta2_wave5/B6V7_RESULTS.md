@@ -1,14 +1,15 @@
 # B6v7: occupancy-gated deterministic preparation
 
-## Interim verdict
+## Final verdict
 
 The fixed `ncam >= 128` dispatch preserves B6v6's speed and makes Venice52
 execute the dots-only path exactly.  It is **8.66% faster** than dots-only on
 the nine-cell panel and **4.05% faster** on Muell, with identical stable-cell
-work.  The preregistered pooled Final3068 screen is 11/20 hits for gated versus
-12/20 for dots.  Because the protocol required no lower pooled hit count, this
-one-run deficit prevents immediate promotion and triggers a separately
-registered non-inferiority cohort.
+work.  The fixed N=150-per-arm Final3068 extension establishes hit-rate
+non-inferiority at the preregistered 15-point margin: gated records 100/150
+hits versus 89/150, and the one-sided 95% lower bound on the difference is
+-1.83 percentage points.  B6v7 is promoted as the **wave-5 optimized Eta2
+candidate**.  The frozen scientific champion remains untouched.
 
 ## Rule and compatibility
 
@@ -55,15 +56,32 @@ median can manufacture an apparent endpoint regression even when the code path
 is identical.  Those rows are a same-distribution calibration, not evidence
 for or against the gated kernel.
 
-## Next registered decision
+## Final non-inferiority result
 
-The stable speed evidence is already sufficient.  The remaining decision is a
-Final3068 hit-rate non-inferiority test.  A new protocol pools the existing 20
-runs per arm, adds 80 per arm without early stopping, and tests a predeclared
-15-percentage-point margin using a one-sided 95% Newcombe-Wilson interval.
-Until that cohort completes, B6v7 remains the fastest research candidate and
-the frozen champion remains unchanged.
+The separately committed extension protocol pooled the existing 20 runs per
+arm and added 130 fresh runs per arm without early stopping.
+
+| Metric | Dots | Gated |
+|---|---:|---:|
+| Target hits | 89/150 (59.33%) | **100/150 (66.67%)** |
+| Two-sided Wilson 95% interval | 51.33--66.87% | 58.79--73.71% |
+| Conditional target-time median | 3.669 s | **3.269 s** |
+| All-run native wall mean | 3.778 s | **3.423 s** |
+| All-run native wall median | 3.552 s | **3.286 s** |
+| Endpoint median | 1,743,746.77 | 1,743,660.24 |
+| Products / outers / rejects, median | 298.5 / 61 / 8 | 305.5 / 64.5 / 6 |
+
+The hit-rate point estimate favors gated by 7.33 points, but superiority is not
+established (two-sided Fisher `p=0.2317`).  The registered one-sided
+Newcombe-Wilson lower bound is -1.826 points, which clears the -15-point margin.
+Conditional crossing time is 10.88% lower and mean wall over all runs, including
+misses, is 9.38% lower.  Median endpoint movement is -0.00496%.
+
+The final summarizer initially stopped after all 300 valid runs because the
+older rows name the work field `matvecs`, not `products`.  Correcting that key
+normalization produced the table without rerunning or changing any score.
 
 Compact evidence: `B6V7_PROTOCOL.md`, `b6v7-registration.json`,
 `b6v7-panel-summary.json`, `b6v7-muell-summary.json`,
-`b6v7-tails-summary.json`, and `b6v7-final-pooled-summary.json`.
+`b6v7-tails-summary.json`, `b6v7-final-pooled-summary.json`,
+`B6V7_EXTENSION_PROTOCOL.md`, and `b6v7-extension-summary.json`.

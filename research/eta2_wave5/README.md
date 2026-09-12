@@ -77,6 +77,22 @@ Current decisions:
   registered follow-up.
 - B6v7 enables that reduction only for `ncam >= 128`.  The fresh panel and
   Muell gains are 8.66% and 4.05%, while Venice runs the dots-only path.  Its
-  pooled Final3068 screen is 11/20 versus 12/20 for dots, so it remains the
-  fastest research candidate while a preregistered N=100-per-arm
-  non-inferiority cohort settles reliability.
+  fixed N=150-per-arm Final3068 cohort gives 100/150 hits versus 89/150 for
+  dots; the one-sided 95% lower difference bound is -1.83 points against a
+  -15-point margin.  Conditional target time is 10.9% lower and all-run mean
+  wall is 9.38% lower.  B6v7 is the wave-5 optimized Eta2 candidate.
+
+## Rebuild the optimized candidate
+
+From the repository root:
+
+```bash
+python3 research/eta2_wave5/build_b6v7.py
+```
+
+Run with all flags from `research/eta2_champion/champion.json` plus the four
+entries in `optimized_candidate.json`.  `build_b6v7.py` verifies the frozen
+source manifest before deriving the candidate; it does not modify the champion
+source or binary.  `run_b6v7.py` reproduces the compatibility, panel, Muell and
+tail screens, while `run_b6v7_extension.py` verifies the fixed Final3068
+non-inferiority cohort from its checkpointed rows.

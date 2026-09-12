@@ -1,0 +1,37 @@
+{
+  "label": "eta2-wave5-b6v7-optimized",
+  "status": "optimized Eta2 candidate; frozen scientific champion unchanged",
+  "base": "research/eta2_champion/champion.json",
+  "base_binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+  "derived_binary": "research/eta2_wave5/build/prism-b6v7",
+  "derived_binary_sha256": "b1b125b55a5d4ff1415fd379a8fee269609f42dffe9409fe0f9b831e41629799",
+  "build_script": "research/eta2_wave5/build_b6v7.py",
+  "flags_overlay": {
+    "OCA_W5_CG_DOTS": "1",
+    "OCA_W5_PREP_FUSE": "1",
+    "OCA_W5_PREP_CAMERA": "1",
+    "OCA_W5_PREP_MIN_CAMS": "128"
+  },
+  "measured_results": {
+    "practical_panel_time_ratio": 0.9133918814101822,
+    "muell_time_ratio": 0.9594581726420037,
+    "final3068_dots_hits": "89/150",
+    "final3068_optimized_hits": "100/150",
+    "final3068_hit_delta_one_sided_95_lower": -0.018262450670121055,
+    "registered_noninferiority_margin": -0.15,
+    "final3068_conditional_target_time_ratio": 0.8911953114351916,
+    "final3068_all_run_mean_wall_ratio": 0.9061681531561335
+  },
+  "evidence": [
+    "research/eta2_wave5/B6V7_RESULTS.md",
+    "research/eta2_wave5/B6V7_EXTENSION_RESULTS.md",
+    "research/eta2_wave5/b6v7-panel-summary.json",
+    "research/eta2_wave5/b6v7-muell-summary.json",
+    "research/eta2_wave5/b6v7-extension-summary.json"
+  ],
+  "limitations": [
+    "The 128-camera threshold is registered for a 22-SM RTX 2000 Ada and requires cross-GPU calibration.",
+    "Final3068 superiority is not established; the two-sided Fisher exact p-value is 0.2317.",
+    "This is an implementation optimization of Eta2, not a new nonlinear optimization algorithm."
+  ]
+}

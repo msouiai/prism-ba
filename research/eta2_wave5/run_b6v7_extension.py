@@ -68,7 +68,7 @@ def arm_summary(rows, arm):
         "native_seconds_mean": statistics.fmean(r["native_seconds"] for r in g),
         "endpoint_median": statistics.median(r["cost"] for r in g),
         "endpoint_range": [min(r["cost"] for r in g), max(r["cost"] for r in g)],
-        "products_median": statistics.median(r["products"] for r in g),
+        "products_median": statistics.median(r["matvecs"] for r in g),
         "outers_median": statistics.median(r["outers"] for r in g),
         "rejects_median": statistics.median(r["rejects"] for r in g),
     }

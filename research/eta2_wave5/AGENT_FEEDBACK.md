@@ -9,15 +9,16 @@ compact protocols, source overlays, raw rows and summaries are retained here.
 
 ## Executive verdict
 
-Wave 5 found one useful systems candidate and no algorithmic replacement for
-Eta2.  The current candidate combines batched returns for independent FP64 CG
-dot products with removal of preparation work that classical LM immediately
-discards.  It is **7.78% faster** in geometric-mean time to target on the nine
-practical cells and **2.35% faster** on Muell, with identical work counts on
-those stable tests.  On the stochastic Final3068 target it records **17/30**
-hits versus **18/30** for dots-only.  That supports continued use as a research
-candidate, but the confidence intervals remain too broad to claim equivalent
-tail reliability.  The frozen champion remains the published reference.
+Wave 5 found one useful optimized systems candidate and no algorithmic
+replacement for Eta2.  B6v7 combines batched returns for independent FP64 CG
+dot products with a fixed camera-owned reduced-RHS preparation, activated at
+`ncam >= 128`.  It is **8.66% faster** in geometric-mean time to target on the
+nine practical cells and **4.05% faster** on Muell, with identical work counts
+on those stable tests.  On the stochastic Final3068 target it records
+**100/150** hits versus **89/150** for dots-only; the one-sided 95% lower bound
+on the difference is -1.83 points against the registered -15-point margin.
+Conditional target time is 10.9% lower and all-run mean wall is 9.38% lower.
+The frozen scientific champion remains the published reference.
 
 The algebraic proposals produced valuable negative results.  Better point
 solutions, a cleaner Gram operator, a stronger preconditioner, an exact dense
@@ -44,7 +45,7 @@ algorithm; matching the exact linear-system fixed point is insufficient.
 | B6v4, preparation pruning | Preparation bucket on Muell falls 0.242 to 0.160 s.  Prep alone is -6.73% panel and -2.00% Muell; with dots it is -7.78% panel and -2.35% Muell.  Final3068 N=30 is 14/30 versus off 19/30 (`p=0.299`) and dots+prep 17/30 versus dots 18/30 (`p=1.0`). | Prep alone is not promoted.  Dots+prep is the strongest research candidate; no equivalence claim yet. |
 | B6v5, reduction-order-safe preparation fusion | Three bitwise fusions give -1.79% panel but no measurable Muell change. | Useful implementation asset; confirms that B6v4's large-scene gain comes from deleted dead diagonal work. |
 | B6v6, camera-owned reduced RHS | Fixed per-camera reductions cut the Muell preparation bucket 0.241 to 0.074 s, improve the panel 8.23% and Muell 3.93% versus dots-only, and sample Final3068 at 6/10 versus 3/10.  Venice remains 0/10 with a +0.253% endpoint movement. | Always-on arm fails the strict quality gate; retain for a preregistered camera-count dispatch. |
-| B6v7, occupancy-gated camera RHS | A fixed `ncam >= 128` rule is 8.66% faster on the panel and 4.05% on Muell, while Venice executes dots-only exactly.  The preregistered pooled Final3068 screen is 11/20 versus 12/20. | Fastest research candidate; N=100-per-arm non-inferiority extension registered before promotion. |
+| B6v7, occupancy-gated camera RHS | A fixed `ncam >= 128` rule is 8.66% faster on the panel and 4.05% on Muell, while Venice executes dots-only exactly.  Final3068 is 100/150 versus 89/150, with a -1.83-point one-sided lower bound against the -15-point margin; conditional crossing is 10.9% faster. | Passes the registered non-inferiority gate; wave-5 optimized candidate. |
 | B8, long shots | Literature and existing-repo audit found direct BA prior art for two-grid/deflation, inverse power-series Schur solves, square-root marginalisation, object-space variable projection and matrix-free GPU BA. | No build justified from this menu after the measured base failures. |
 
 Negative percentages above mean faster or lower cost; positive percentages mean
@@ -100,9 +101,10 @@ dead diagonal work is removed.  “No significant loss” is not equivalence.
 
 The post-handoff B6v6/B6v7 continuation replaces those atomics with a fixed
 camera-owned reduction and gates it at `ncam >= 128`.  B6v7 improves the panel
-by 8.66% and Muell by 4.05%; its pooled Final3068 screen is 11/20 versus 12/20.
-It is now the fastest research candidate, pending the registered N=100-per-arm
-non-inferiority extension.
+by 8.66% and Muell by 4.05%.  Its fixed Final3068 cohort gives 100/150 hits
+versus 89/150, passes the registered non-inferiority bound, cuts conditional
+target time by 10.9%, and cuts all-run mean wall by 9.38%.  It is now the
+wave-5 optimized Eta2 candidate.
 
 ## Novelty boundary
 
@@ -126,22 +128,20 @@ or object-space variable projection.  The source-by-source boundaries are in
 
 ## Recommended continuation
 
-1. Keep dots+prep in a separate research/optimized configuration and preserve
-   the original Eta2 source and binary.
-2. If it is to become the shipped implementation, run a larger preregistered
-   Final3068 equivalence cohort or develop a deterministic RHS reduction and
-   repeat the tail gate.  The current N=30 result is adequate for prioritizing
-   work, not for proving equal reliability.
-3. Validate the candidate with an end-to-end GPU trace on Muell.  The internal
+1. Keep B6v7 in a separate optimized configuration and preserve the original
+   Eta2 source and binary.
+2. Validate the candidate with an end-to-end GPU trace on Muell.  The internal
    phase timers already identify the saving, but a trace should verify that it
    comes from fewer observation-kernel instructions rather than timer effects.
-4. Re-run the frozen same-target Caspar/Ceres comparison with the optimized
-   binary only after the reliability gate.  Reusing the registered targets will
-   isolate implementation speed from endpoint quality.
+3. Re-run the frozen same-target Caspar/Ceres comparison with the optimized
+   binary.  Reusing the registered targets will isolate implementation speed
+   from endpoint quality.
+4. Repeat the stable-panel timing on a second GPU and derive its camera-count
+   threshold from SM occupancy before making a hardware-independent claim.
 5. Do not reopen Nyström, dense Schur, square-root production, FP32 refinement,
    global exact triangulation, adaptive robust exit or the lower acceptance
    threshold without a new mechanism that addresses their measured failure.
 
 The compact evidence needed to reproduce every statement is in this directory;
-`B6V4_RESULTS.md` contains the final candidate decision and N=30 distribution
-table.
+`B6V7_RESULTS.md` and `B6V7_EXTENSION_RESULTS.md` contain the final optimized
+candidate decision.
