@@ -325,6 +325,8 @@ def audit(folder: Path, ci, pi, uv):
             row["captured_direction"]["healthy_clipped_physical_norm"]
             / max(additive["captured_direction"]["healthy_clipped_physical_norm"], 1e-300))
     return dict(metadata=model["meta"], score_init=model["score"],
+                native_captured_raw_radius_ratio=float(
+                    np.linalg.norm(model["raw_capture"])/model["meta"]["radius"]),
                 coherent_E_relative_error=coherent_E_error,
                 coherent_E_max_coordinate_relative_error=coherent_E_max_relative,
                 charts=compact)
@@ -367,6 +369,7 @@ def opening_case(index, ci, pi, uv):
 
 def main():
     started = time.time()
+    baseline = CHART.verify_frozen_baseline()
     ci, pi, uv, dimensions = CHART.load_observations(BAL)
     if dimensions != (52, 64053, 347173):
         raise ValueError(dimensions)
@@ -418,7 +421,8 @@ def main():
                           terminal_indices=list(range(5)), opening_indices=list(range(3)),
                           opening_archive_member="2 (selected attempt2)",
                           arithmetic="coherent FP64 dense diagnostic"),
-        cases=cases, gates=gates, elapsed_seconds=time.time()-started)
+        baseline=baseline, cases=cases, gates=gates,
+        elapsed_seconds=time.time()-started)
     write(P/"d7-intrinsics-chart-results.json", output)
     print(json.dumps(gates, indent=2), flush=True)
 
