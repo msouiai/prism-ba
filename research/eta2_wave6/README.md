@@ -17,6 +17,9 @@ Current high-level results:
 - FP64 fragments reduce an `epsilon=1e-12` ten-outer separation by 216,602x on
   Venice and 443,916x on Final3068, but the paired full-convergence test fails:
   23/35 versus 25/35 hits and 1.63x median target time on double hits.
+- monotone soft acceptance makes 206/213 low-rho proposals locally better,
+  yet its 60-pair Final3068 cohort is unresolved: 41/60 versus 38/60 hits,
+  12 versus 9 discordant wins, and 1.077x median target time on double hits.
 
-See `D3_RESULTS.md` for the current decision.  The scientific champion remains
+See `D4_RESULTS.md` for the current decision.  The scientific champion remains
 unchanged.
