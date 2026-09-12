@@ -5,6 +5,7 @@ from grid_common import P,F,run,write,sha
 CONFIGS={
  'stcg':dict(binary='steihaug/build/prism-stcg',manifest='steihaug/build_manifest.json',flag='OCA_STEIHAUG',trace='OCA_STCG_ATTEMPTS'),
  'pi':dict(binary='pi_radius/build/prism-pi',manifest='pi_radius/build/manifest.json',flag='OCA_PI_RADIUS',trace='OCA_STCG_ATTEMPTS'),
+ 'frontload':dict(binary='frontload/build/prism-frontload',manifest='frontload/build_manifest.json',flag='OCA_FRONTLOAD',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_05_NATIVE.md'),
  'coarse':dict(binary='coarse/native/build/prism-coarse',manifest='coarse/native/build_manifest.json',flag='OCA_COARSE',trace='OCA_ATTEMPT_TRACE')}
 def coarse_trace(folder,row):
     text=(folder/'stdout.log').read_text();rows=[];previous=None
@@ -43,14 +44,23 @@ def main():
     c=CONFIGS[a.candidate];binary=P/c['binary'];bm=json.loads((P/c['manifest']).read_text());assert sha(binary)==bm['binary_sha256']
     assert proto['protocol_sha256']==sha(P/'PROTOCOL_NATIVE_PANEL.md')
     rows=[]
+    registered_cells=list(proto[a.stage])
+    if a.candidate=='frontload' and a.stage=='tail':
+        extra_path='/workspace/bal/ladybug-1197.txt'
+        extra=dict(scene='ladybug-1197',target=369997.000889023,cap=60,path=extra_path,input_sha256=sha(extra_path),cell='ladybug-1197')
+        registration=P/'frontload-tail-extra.json'
+        if registration.exists():assert json.loads(registration.read_text())==extra
+        else:write(registration,extra)
+        registered_cells.append(extra)
+    protocol=P/c.get('protocol','PROTOCOL_NATIVE_PANEL.md')
     for rep in range(3 if a.stage=='practical' else 5):
-        cells=proto[a.stage] if rep%2==0 else list(reversed(proto[a.stage]))
+        cells=registered_cells if rep%2==0 else list(reversed(registered_cells))
         for cell in cells:
             assert sha(cell['path'])==cell['input_sha256']
             for arm in (['off','on'] if rep%2==0 else ['on','off']):
                 folder=P/'evidence'/a.candidate/a.stage/f"{cell['cell']}-{arm}-{rep}"
                 flags={c['flag']:str(int(arm=='on')),c['trace']:'1' if a.candidate=='coarse' else str(folder/'attempts.json')}
-                r=run(folder,cell['scene'],arm,rep,binary,flags,P/'PROTOCOL_NATIVE_PANEL.md',cell['target'],cell['cap'],cell['path'],build_manifest=bm)
+                r=run(folder,cell['scene'],arm,rep,binary,flags,protocol,cell['target'],cell['cap'],cell['path'],build_manifest=bm)
                 r['cell']=cell['cell'];r['candidate']=a.candidate;r['stage']=a.stage
                 trace=coarse_trace(folder,r) if a.candidate=='coarse' else json.loads((folder/'attempts.json').read_text())
                 totals=trace['totals'];assert totals['accepted']==r['accepts'],(totals,r)
@@ -60,7 +70,7 @@ def main():
                 r['failed_fraction_native']=totals['not_accepted_seconds']/r['native_seconds']
                 write(folder/'result.json',r);rows.append(r)
                 write(P/(a.candidate+'-'+a.stage+'-results.json'),rows)
-    for cell in proto[a.stage]:
+    for cell in registered_cells:
         ss=[r['score_init'] for r in rows if r['cell']==cell['cell']]
         assert max(ss)-min(ss)<=1e-9*max(1,max(ss)),(cell,ss)
     print('COMPLETE',a.candidate,a.stage,len(rows),flush=True)
