@@ -98,13 +98,13 @@ def derive():
     if(prep_fused){''', r'''    const bool prep_fused = CD==9 && use_equil && !e_dead && !rhs_diag_camera;
     if(w5_factored_on && !prep_fused)throw std::runtime_error("wave5 factored path requires fused RHS/diagonal preparation");
     if(prep_fused){''')
-    patch('      MFRhsDiagFused<<<GridSize(nobs),256>>>(mf_fp32?Gp32:Gp,fragment_cams,fragment_points,Rf,uu,nobs,corr,dk);', r'''      if(w5_factored_on)MFRhsDiagFusedFactored9<Fragment><<<GridSize(nobs),256>>>(w5_factored,fragment_cams,fragment_points,s.R,Rf,uu,nobs,corr,dk);
+    patch('      MFRhsDiagFused<<<GridSize(nobs),256>>>(mf_fp32?Gp32:Gp,fragment_cams,fragment_points,Rf,uu,nobs,corr,dk);', r'''      if(w5_factored_on)MFRhsDiagFusedFactored9<Fragment><<<(nobs+127)/128,128>>>(w5_factored,fragment_cams,fragment_points,s.R,Rf,uu,nobs,corr,dk);
       else MFRhsDiagFused<<<GridSize(nobs),256>>>(mf_fp32?Gp32:Gp,fragment_cams,fragment_points,Rf,uu,nobs,corr,dk);''')
     patch(r'''      else       { MFPass1<CD,Fragment><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,vf,nobs,tacc);
                    MFVinvApply<<<GridSize(npt),256>>>(Rf,tacc,npt,uu);
                    MFPass2<CD,Fragment><<<ncam,256>>>(Gc?Gc:Gp,p.mf_cspt,p.mf_coff,uu,Hcc,vf,nobs,wf,fragment_slots); }''', r'''      else if(w5_factored_on){ MFPass1Factored9<Fragment><<<GridSize(nobs),256>>>(w5_factored,fragment_cams,fragment_points,s.R,vf,nobs,tacc);
                    MFVinvApply<<<GridSize(npt),256>>>(Rf,tacc,npt,uu);
-                   MFPass2Factored9<Fragment><<<ncam,256>>>(w5_factored,p.mf_cspt,p.mf_coff,s.R,uu,Hcc,vf,nobs,wf); }
+                   MFPass2Factored9<Fragment><<<ncam,128>>>(w5_factored,p.mf_cspt,p.mf_coff,s.R,uu,Hcc,vf,nobs,wf); }
       else       { MFPass1<CD,Fragment><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,vf,nobs,tacc);
                    MFVinvApply<<<GridSize(npt),256>>>(Rf,tacc,npt,uu);
                    MFPass2<CD,Fragment><<<ncam,256>>>(Gc?Gc:Gp,p.mf_cspt,p.mf_coff,uu,Hcc,vf,nobs,wf,fragment_slots); }''')
@@ -134,13 +134,13 @@ def main():
     source, count = derive()
     build = P / "build"
     build.mkdir(exist_ok=True)
-    src = build / "b1.cu"
-    binary = build / "prism-b1"
+    src = build / "b1v2.cu"
+    binary = build / "prism-b1v2"
     src.write_text(source)
     command = ["nvcc", "-O3", "-DNDEBUG", "-std=c++17", "-arch=sm_89",
                "-I/usr/include/eigen3", "-I" + str(F / "source" / "headers"),
                "-I" + str(P), str(src), "-o", str(binary), "-lcublas", "-lcusolver"]
-    with (build / "b1-build.log").open("w") as log:
+    with (build / "b1v2-build.log").open("w") as log:
         subprocess.run(command, env=dict(os.environ, TMPDIR="/dev/shm"),
                        stdout=log, stderr=subprocess.STDOUT, check=True)
     manifest = {
@@ -149,10 +149,10 @@ def main():
         "champion_sha256": sha(F / "champion.json"), "reversible_patch_count": count,
         "sources": {str(P / "build_b1.py"): sha(P / "build_b1.py"),
                     str(P / "factored_fragments.cuh"): sha(P / "factored_fragments.cuh")},
-        "protocol_sha256": sha(P / "B1_PROTOCOL.md"),
+        "protocol_sha256": sha(P / "B1V2_PROTOCOL.md"),
     }
-    (P / "b1-build-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print("BUILT B1", manifest["binary_sha256"], flush=True)
+    (P / "b1v2-build-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    print("BUILT B1V2", manifest["binary_sha256"], flush=True)
 
 
 if __name__ == "__main__":

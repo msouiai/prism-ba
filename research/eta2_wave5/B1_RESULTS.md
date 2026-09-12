@@ -58,3 +58,52 @@ be registered as version 2 before timing.
 Raw version-1 evidence is in `b1-panel-results.json` and
 `b1-profile-results.json`; summaries are in `b1-panel-summary.json` and
 `b1-profile-summary.json`.
+
+## Version 2: overhead reduced, production family rejected
+
+Version 2 implements the one preregistered follow-up.  Pass 1 and Pass 2 use
+the associative contractions
+
+```
+W^T v = R^T P^T (Jc v),       W u = Jc^T P (R u),
+```
+
+and the fused preparation kernel forms `Jp V^-1 Jp^T` with two triangular
+solves per observation rather than solving once for each of the nine camera
+coordinates.  Pass 2 uses 128 threads and 9 KiB shared memory.  This restores
+Pass 1 to 40 registers, although Pass 2 still uses 72 and fused preparation
+uses 84.
+
+The disabled path again matches the frozen champion exactly at the reported
+precision.  The all-observation Ladybug49 audit is unchanged: relative
+Frobenius error `7.47e-8`, maximum absolute error `1.45e3` against a maximum
+reference magnitude of `1.48e10`.  All 54 panel runs hit their registered
+targets, every cell has identical product counts, and the largest median
+endpoint movement is `0.0020%`.
+
+The panel geometric-mean target-time ratio is `1.0034`, so version 2 recovers
+almost all of version 1's 3.85% loss but does not provide a speedup.  The nine
+cell ratios are mixed: Final394 `+0.95%, +0.47%, +0.47%`; Ladybug539 `+8.24%,
+-3.51%, -4.12%`; Trafalgar138 `-3.89%, +2.47%, +2.61%`.  Several sub-second
+ranges overlap, so the phase profile is the decisive evidence.
+
+On Muell, both arms use exactly 980 products, 16 outers, and no rejects.
+Factoring raises median target time from 4.2249 to 4.3633 s (`+3.28%`).
+Preparation rises from 0.243 to 0.287 s (`+18.1%`) and Krylov from 3.052 to
+3.151 s (`+3.24%`); assembly is essentially unchanged, 0.735 versus 0.731 s.
+On Trafalgar138 1.005, target time rises from 0.2967 to 0.3023 s (`+1.89%`),
+with preparation 0.013 to 0.015 s and Krylov 0.243 to 0.247 s.
+
+The B1 production family is therefore rejected.  Its mathematical result is
+still useful: a 13-value camera factor plus the retained six-value point rows
+represents the 27-value cross fragment with negligible numerical movement and
+nearly halves fragment traffic.  On this RTX 2000 Ada implementation, extra
+contractions and register pressure consume more time than the saved traffic.
+The code remains a possible substrate for B2's consistent low-precision
+operator with FP64 iterative refinement, where reduced bytes have a larger
+ceiling.  No more B1 kernel variants will be tuned.
+
+Version-2 raw evidence is in `b1v2-panel-results.json` and
+`b1v2-profile-results.json`; summaries and the immutable registration are in
+`b1v2-panel-summary.json`, `b1v2-profile-summary.json`, and
+`b1v2-registration.json`.

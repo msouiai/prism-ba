@@ -47,6 +47,30 @@ __device__ __forceinline__ void W5PointRows(
   by[2]=R[2]*(Scalar)a.yx+R[5]*(Scalar)a.yy+R[8]*(Scalar)a.yz;
 }
 
+// Jp u = P (R u).  This associativity avoids constructing the six entries of
+// Jp when only its action is needed.
+__device__ __forceinline__ void W5PointApply(
+    const W5FactoredObs& a,const Scalar* __restrict__ R,
+    const Scalar* __restrict__ u,Scalar& x,Scalar& y) {
+  const Scalar q0=R[0]*u[0]+R[1]*u[1]+R[2]*u[2];
+  const Scalar q1=R[3]*u[0]+R[4]*u[1]+R[5]*u[2];
+  const Scalar q2=R[6]*u[0]+R[7]*u[1]+R[8]*u[2];
+  x=(Scalar)a.px*q0+(Scalar)a.py*q1+(Scalar)a.pz*q2;
+  y=(Scalar)a.yx*q0+(Scalar)a.yy*q1+(Scalar)a.yz*q2;
+}
+
+// Jp^T [x,y] = R^T P^T [x,y].
+__device__ __forceinline__ void W5PointTransposeApply(
+    const W5FactoredObs& a,const Scalar* __restrict__ R,
+    Scalar x,Scalar y,Scalar* __restrict__ out) {
+  const Scalar p0=(Scalar)a.px*x+(Scalar)a.yx*y;
+  const Scalar p1=(Scalar)a.py*x+(Scalar)a.yy*y;
+  const Scalar p2=(Scalar)a.pz*x+(Scalar)a.yz*y;
+  out[0]=R[0]*p0+R[3]*p1+R[6]*p2;
+  out[1]=R[1]*p0+R[4]*p1+R[7]*p2;
+  out[2]=R[2]*p0+R[5]*p1+R[8]*p2;
+}
+
 __device__ __forceinline__ void W5CameraRow(
     const W5FactoredObs& a, int i, Scalar& ax, Scalar& ay) {
   switch(i) {
@@ -123,13 +147,13 @@ __global__ void MFPass1Factored9(
     const Scalar* __restrict__ v,int nobs,Scalar* __restrict__ tacc) {
   int k=blockIdx.x*blockDim.x+threadIdx.x;if(k>=nobs)return;
   const int c=scam[k],p=spt[k];const Scalar* Rc=R+9*c;
-  const W5FactoredObs a=W5LoadFactored(F,nobs,k);Scalar bx[3],by[3];
-  W5PointRows(a,Rc,bx,by);
+  const W5FactoredObs a=W5LoadFactored(F,nobs,k);
   const Scalar* vc=v+9*c;Scalar avx=0.0,avy=0.0;
 #pragma unroll
   for(int i=0;i<9;++i){Scalar ax,ay;W5CameraRow(a,i,ax,ay);avx+=ax*vc[i];avy+=ay*vc[i];}
+  Scalar out[3];W5PointTransposeApply(a,Rc,avx,avy,out);
 #pragma unroll
-  for(int j=0;j<3;++j)atomicAdd(&tacc[3*p+j],bx[j]*avx+by[j]*avy);
+  for(int j=0;j<3;++j)atomicAdd(&tacc[3*p+j],out[j]);
 }
 
 template <class HT>
@@ -140,13 +164,13 @@ __global__ void MFPass1MultiFactored9(
     Scalar* __restrict__ TACC,int n_p) {
   int k=blockIdx.x*blockDim.x+threadIdx.x;if(k>=nobs)return;
   const int c=scam[k],p=spt[k];const Scalar* Rc=R+9*c;
-  const W5FactoredObs a=W5LoadFactored(F,nobs,k);Scalar bx[3],by[3];
-  W5PointRows(a,Rc,bx,by);
+  const W5FactoredObs a=W5LoadFactored(F,nobs,k);
   for(int l=0;l<nl;++l){const Scalar* vc=XCU+(size_t)l*n_cf+9*c;Scalar avx=0.0,avy=0.0;
 #pragma unroll
     for(int i=0;i<9;++i){Scalar ax,ay;W5CameraRow(a,i,ax,ay);avx+=ax*vc[i];avy+=ay*vc[i];}
+    Scalar out[3];W5PointTransposeApply(a,Rc,avx,avy,out);
 #pragma unroll
-    for(int j=0;j<3;++j)atomicAdd(&TACC[(size_t)l*n_p+3*p+j],bx[j]*avx+by[j]*avy);
+    for(int j=0;j<3;++j)atomicAdd(&TACC[(size_t)l*n_p+3*p+j],out[j]);
   }
 }
 
@@ -160,18 +184,16 @@ __global__ void MFPass2Factored9(
   Scalar acc[9]={};
   for(int k=s+threadIdx.x;k<e;k+=blockDim.x){
     const int p=cspt[k];const W5FactoredObs a=W5LoadFactored(F,nobs,k);
-    Scalar bx[3],by[3];W5PointRows(a,Rc,bx,by);
     const Scalar* up=u+3*p;
-    Scalar bux=bx[0]*up[0]+bx[1]*up[1]+bx[2]*up[2];
-    Scalar buy=by[0]*up[0]+by[1]*up[1]+by[2]*up[2];
+    Scalar bux,buy;W5PointApply(a,Rc,up,bux,buy);
 #pragma unroll
     for(int i=0;i<9;++i){Scalar ax,ay;W5CameraRow(a,i,ax,ay);acc[i]+=ax*bux+ay*buy;}
   }
-  __shared__ Scalar sh[9][256];
+  __shared__ Scalar sh[9][128];
 #pragma unroll
   for(int i=0;i<9;++i)sh[i][threadIdx.x]=acc[i];
   __syncthreads();
-  for(int st=128;st>0;st>>=1){if(threadIdx.x<st)
+  for(int st=64;st>0;st>>=1){if(threadIdx.x<st)
 #pragma unroll
     for(int i=0;i<9;++i)sh[i][threadIdx.x]+=sh[i][threadIdx.x+st];__syncthreads();}
   if(threadIdx.x==0)
@@ -191,21 +213,21 @@ __global__ void MFRhsDiagFusedFactored9(
   const int p=pt[k],c=cam[k];const Scalar* Rc=Rcam+9*c;
   const Scalar* rp=Rf+6*p;const Scalar* up=ub+3*p;
   const bool valid=rp[0]>0.0&&rp[3]>0.0&&rp[5]>0.0;
-  const W5FactoredObs a=W5LoadFactored(F,nobs,k);Scalar bx[3],by[3];
-  W5PointRows(a,Rc,bx,by);
+  const W5FactoredObs a=W5LoadFactored(F,nobs,k);
+  Scalar bux,buy;W5PointApply(a,Rc,up,bux,buy);
+  Scalar cxx=0.0,cxy=0.0,cyy=0.0;
+  if(valid){
+    Scalar bx[3],by[3],ux[3],uy[3];W5PointRows(a,Rc,bx,by);
+    MFVinv(rp,bx,ux);MFVinv(rp,by,uy);
+    cxx=bx[0]*ux[0]+bx[1]*ux[1]+bx[2]*ux[2];
+    cxy=bx[0]*uy[0]+bx[1]*uy[1]+bx[2]*uy[2];
+    cyy=by[0]*uy[0]+by[1]*uy[1]+by[2]*uy[2];
+  }
 #pragma unroll
   for(int i=0;i<9;++i){
     Scalar ax,ay;W5CameraRow(a,i,ax,ay);
-    Scalar g[3];
-#pragma unroll
-    for(int j=0;j<3;++j)g[j]=ax*bx[j]+ay*by[j];
-    atomicAdd(&corr[9*c+i],g[0]*up[0]+g[1]*up[1]+g[2]*up[2]);
-    if(valid&&dk){
-      const Scalar y0=g[0]/rp[0];
-      const Scalar y1=(g[1]-rp[1]*y0)/rp[3];
-      const Scalar y2=(g[2]-rp[2]*y0-rp[4]*y1)/rp[5];
-      atomicAdd(&dk[9*c+i],-(y0*y0+y1*y1+y2*y2));
-    }
+    atomicAdd(&corr[9*c+i],ax*bux+ay*buy);
+    if(valid&&dk)atomicAdd(&dk[9*c+i],-(ax*ax*cxx+2.0*ax*ay*cxy+ay*ay*cyy));
   }
 }
 

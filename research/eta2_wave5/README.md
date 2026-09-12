@@ -29,7 +29,8 @@ Current decisions:
 - B3's phase-switched Schur-Jacobi arm is rejected despite selected product
   savings: it is slower overall and loses tail reliability.  Nystrom is not
   pursued on that base.
-- B1 factored Jacobian storage preserves products, outers, and endpoints, but
-  version 1 is 3.85% slower on the panel because reconstruction raises register
-  pressure and Krylov time.  One preregistered algebraic contraction follow-up
-  is in progress before the family is closed.
+- B1 factored Jacobian storage preserves products, outers, and endpoints.
+  Version 2 recovers almost all of version 1's 3.85% panel loss, but remains
+  0.34% slower on the panel and 3.28% slower on profiled Muell.  The production
+  family is rejected; the representation is retained as a possible B2
+  low-precision substrate.
