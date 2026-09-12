@@ -1,0 +1,152 @@
+{
+  "arms": {
+    "off": {},
+    "direct1536": {
+      "OCA_W5_DIRECT_MAX": "1536"
+    }
+  },
+  "audit": {
+    "scene": "ladybug-49",
+    "cell": "ladybug-49-audit",
+    "path": "/workspace/bal/ladybug-49.txt",
+    "input_sha256": "96ca2845519d89d0727953d983427ab38a42c54991cd4d73e46a4221da3c61b4",
+    "target": 13713.770267554755,
+    "cap": 12
+  },
+  "practical": [
+    {
+      "scene": "ladybug-539",
+      "multiplier": 1.005,
+      "target": 164797.8493852759,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cell": "ladybug-539-1.005"
+    },
+    {
+      "scene": "ladybug-539",
+      "multiplier": 1.01,
+      "target": 165617.73918321263,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cell": "ladybug-539-1.01"
+    },
+    {
+      "scene": "ladybug-539",
+      "multiplier": 1.02,
+      "target": 167257.518779086,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cell": "ladybug-539-1.02"
+    },
+    {
+      "scene": "trafalgar-138",
+      "multiplier": 1.005,
+      "target": 103088.39569543337,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+      "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+      "cell": "trafalgar-138-1.005"
+    },
+    {
+      "scene": "trafalgar-138",
+      "multiplier": 1.01,
+      "target": 103601.27328595793,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+      "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+      "cell": "trafalgar-138-1.01"
+    },
+    {
+      "scene": "trafalgar-138",
+      "multiplier": 1.02,
+      "target": 104627.02846700703,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+      "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+      "cell": "trafalgar-138-1.02"
+    },
+    {
+      "scene": "final-394",
+      "multiplier": 1.005,
+      "target": 306349.5931045434,
+      "cap": 8,
+      "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+      "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+      "cell": "final-394-1.005"
+    },
+    {
+      "scene": "final-394",
+      "multiplier": 1.01,
+      "target": 307873.7204334218,
+      "cap": 8,
+      "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+      "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+      "cell": "final-394-1.01"
+    },
+    {
+      "scene": "final-394",
+      "multiplier": 1.02,
+      "target": 310921.97509117844,
+      "cap": 8,
+      "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+      "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+      "cell": "final-394-1.02"
+    }
+  ],
+  "tails": {
+    "venice-52": {
+      "scene": "venice-52",
+      "path": "/workspace/bal/venice-52.txt",
+      "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "target": 243740.27,
+      "cap": 60
+    },
+    "final-3068": {
+      "scene": "final-3068",
+      "path": "/workspace/bal/final-3068.txt",
+      "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+      "target": 1744796.9841897595,
+      "cap": 60
+    }
+  },
+  "panel_repetitions": 3,
+  "tail_repetitions": 5,
+  "threshold_camera_dimension": 1536,
+  "binary": "/tmp/prism-ba-coarse/research/eta2_wave5/build/prism-b4",
+  "binary_sha256": "24f5df717f608fc3283ede5d519d8bbeee50e79dcdf8fa5c74d145f29891a1a3",
+  "parent_binary": "/tmp/prism-rl-sustained/build/prism-tr",
+  "parent_binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+  "build_manifest": {
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+      "/tmp/prism-ba-coarse/research/eta2_wave5/build/b4.cu",
+      "-o",
+      "/tmp/prism-ba-coarse/research/eta2_wave5/build/prism-b4",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    "source_sha256": "2073b2660c2de8dc685d1649837e19f85a2f637d935e8d9b3c0064039e44c1fc",
+    "binary_sha256": "24f5df717f608fc3283ede5d519d8bbeee50e79dcdf8fa5c74d145f29891a1a3",
+    "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+    "reversible_patch_count": 5,
+    "sources": {
+      "/tmp/prism-ba-coarse/research/eta2_wave5/build_b4.py": "2789211bb0bb74fee829d6f0f2fd6ddfcb01aefc7178d535f4939d2ee26eb880",
+      "/tmp/prism-ba-coarse/research/eta2_wave5/direct_schur.cuh": "6ab464cad6fd56b875d938f5c97b03a5ef1ba14f83782c660e062ae8177d7ea3"
+    },
+    "protocol_sha256": "b1cc76ac854698724848cc5e60e825cee002d00abf2f8244e16d466c7d23fd2e"
+  },
+  "protocol_sha256": "b1cc76ac854698724848cc5e60e825cee002d00abf2f8244e16d466c7d23fd2e",
+  "cohort_rule": "Fresh paired rows; alternating arms and reversed cells on odd repetitions",
+  "registered_arm": "FP64 explicit equilibrated Schur plus cuSOLVER when 9*ncam <= 1536"
+}

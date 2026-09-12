@@ -34,3 +34,7 @@ Current decisions:
   0.34% slower on the panel and 3.28% slower on profiled Muell.  The production
   family is rejected; the representation is retained as a possible B2
   low-precision substrate.
+- B4 exact dense Schur dispatch is rejected.  It is operator-equivalent to
+  `3.53e-16`, yet Trafalgar target time is 1.49--2.77x slower.  On Venice52,
+  Schur formation alone consumes 56.72 of 60.12 seconds and the exact step
+  follows a worse clipped trajectory; FP64 Cholesky is only 0.84 seconds.
