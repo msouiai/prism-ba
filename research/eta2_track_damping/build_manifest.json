@@ -1,0 +1,34 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_track_damping",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "/tmp/prism-ba-coarse/research/eta2_track_damping/build/prism_track_tau.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_track_damping/build/prism-track-tau",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "derived_source_sha256": "e806e3431a15dc4ca6e9df6eb7d765c7f6869710dd4f8116b80672e2efe18dc6",
+  "binary_sha256": "37b262dc44c6f75cbd971f24bbb261735c793ff929ba92962bcc0bde27837679",
+  "protocol_sha256": "e882aa4ed571c1889b0477d2a252c976d56c47f8b74f82a779c80fcaa1a6dd4a",
+  "headers": {
+    "attempt_trace.h": "43400101d54c0ccf94464025497105ef825e16c7e7cbb1d21f7dff019619daf6",
+    "track_factor.cuh": "60da1912f74d5eaaa13a8bd796f1a2379c227e6d50f7ff62854e060f25c7cefe"
+  },
+  "inverse_source_parity": true,
+  "substitutions": 9,
+  "default": "off",
+  "rule": [
+    1,
+    1,
+    0.3
+  ]
+}
