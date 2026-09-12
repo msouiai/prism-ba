@@ -38,6 +38,27 @@ def derive():
         '#include "bal_hessian_generated.cuh"',
         '#include "deterministic_blas.cuh"\n#include "bal_hessian_generated.cuh"',
     )
+    patch(
+        'static void DumpBalState(const std::string& path, const BalData& bal,\n'
+        '                         const DeviceState& s, int ncam, int npt) {',
+        'static void DumpBalState(const std::string& path, const BalData& bal,\n'
+        '                         const DeviceState& s, int ncam, int npt) {\n'
+        '  if(PrismW6DeterministicEnabled() && std::getenv("OCA_W6_BINARY_DUMPS")){\n'
+        '    if(!s.intr) throw std::runtime_error("wave6 binary dumps require dof9 state");\n'
+        '    FILE* out=std::fopen(path.c_str(),"wb");\n'
+        '    if(!out) throw std::runtime_error("cannot open wave6 binary state");\n'
+        '    auto write=[&](const void* data,size_t bytes){\n'
+        '      if(std::fwrite(data,1,bytes,out)!=bytes) throw std::runtime_error("wave6 binary state write failed");};\n'
+        '    const char magic[8]={\'P\',\'R\',\'I\',\'S\',\'M\',\'S\',\'0\',\'1\'};write(magic,8);\n'
+        '    const uint64_t dims[3]={(uint64_t)ncam,(uint64_t)npt,(uint64_t)bal.nobs};write(dims,sizeof dims);\n'
+        '    auto device=[&](const Scalar* ptr,size_t count){std::vector<Scalar> host(count);\n'
+        '      CUDA_CHECK(cudaMemcpy(host.data(),ptr,count*sizeof(Scalar),cudaMemcpyDeviceToHost));\n'
+        '      write(host.data(),count*sizeof(Scalar));};\n'
+        '    device(s.R,9ul*ncam);device(s.t,3ul*ncam);device(s.X,3ul*npt);device(s.intr,3ul*ncam);\n'
+        '    if(std::fclose(out)) throw std::runtime_error("wave6 binary state close failed");\n'
+        '    return;\n'
+        '  }',
+    )
     patch('#include "full_step_model.cuh"', '#include "deterministic_full_model.cuh"')
     patch(
         'Scalar ComputeCost(const DeviceProblem& p, const DeviceState& s,\n'

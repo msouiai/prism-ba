@@ -1,0 +1,68 @@
+{
+  "protocol_sha256": "3eb254f956c65094312a2acc2e9cb0af9b73648e8766fefea7fd30091338ed1c",
+  "binary": "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-deterministic",
+  "binary_sha256": "47e0cc61a6d8e19de832c5b1aed5555fd89dcfd7a6a75d9c9deab67fa7d10a17",
+  "build_manifest_sha256": "947ce41ca9fdfc704ff72e3cb000a83b801f785c1fd6387ddb0d55239be98cb7",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "optimized_candidate_sha256": "53ba1cae00a42d3e84f40250a9a2362e5f8e58000157637c4d8050af2689961a",
+  "tool_sha256": {
+    "run_d2.py": "db87459c057be504811b0885df8875812b5b877cd384686c2d5b8423eb15d08b",
+    "bal_perturb.py": "dd1fe13030ca90959303adaf339e0cffdfeacd480436d01c3aab5c85d6461d1d"
+  },
+  "scenes": {
+    "venice-52": {
+      "path": "/workspace/bal/venice-52.txt",
+      "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b"
+    },
+    "final-3068": {
+      "path": "/workspace/bal/final-3068.txt",
+      "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481"
+    }
+  },
+  "doses": {
+    "eps1e-12": {
+      "epsilon": 1e-12,
+      "seeds": [
+        620000,
+        620001,
+        620002,
+        620003,
+        620004,
+        620005,
+        620006,
+        620007
+      ]
+    },
+    "eps1e-10": {
+      "epsilon": 1e-10,
+      "seeds": [
+        620000,
+        620001,
+        620002,
+        620003
+      ]
+    }
+  },
+  "max_iter": 10,
+  "dump_outers": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "instrument_validation": {
+    "dump_off": 1,
+    "dump_on": 2
+  },
+  "classification": {
+    "positive": "median_A10 > 1e3 and median_gamma10 > 0.5",
+    "stable": "median_A10 < 10 and median_gamma10 < 0.1",
+    "dose_agreement": "same class/sign and median gamma5 within 25% relative"
+  }
+}
