@@ -39,7 +39,8 @@ is fixed in advance:
 2. either normalised weighted degree or k-core number at or below its scene's
    25th percentile.
 
-The gate therefore touches at most `ceil(0.01*n_cam)` cameras.  No threshold is
+The gate therefore touches at most `ceil(0.01*n_cam)` cameras (which can be
+slightly more than 1% as a fraction for finite `n_cam`).  No threshold is
 retuned by scene.
 
 ## Scenes and discriminating predictions
@@ -71,7 +72,7 @@ The graph gate is considered validated for a native prior only if:
 
 - the Venice estimator validation passes;
 - Final3068 camera 550 is selected;
-- selected cameras are at most 1% of every scene; and
+- selected cameras are at most `ceil(0.01*n_cam)` on every scene; and
 - Venice camera 34 is not selected.
 
 If camera 550 is selected but its resistance rank is indistinguishable from its
@@ -83,3 +84,12 @@ is revisited before any intervention.
 
 Any later camera prior is a separate, preregistered native experiment.  This
 diagnostic alone cannot support a speed, quality, or novelty claim.
+
+## Arithmetic clarification after the first scene
+
+Ladybug539 has `ceil(0.01 * 539) = 6` cameras, or 1.113% as a fraction.  The
+original prose said both the exact ceiling rule and "at most 1%".  The latter is
+impossible under the former for most finite camera counts.  Before evaluating
+the positive or negative controls, the decision rule is clarified to use the
+already registered integer ceiling.  No threshold, score, selected camera, or
+prediction changed.
