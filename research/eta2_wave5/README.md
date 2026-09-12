@@ -50,3 +50,12 @@ Current decisions:
   but is rejected: 0.24% panel gain versus 1.44% for dots-only in the same
   three-arm cohort.  Its custom kernels help deep CG and do not pay reliably
   in the smallest cells.
+- B5's Jacobian-consistent square-root Schur path is algebraically exact and
+  reduces fragment storage, but is rejected after losing both tail cohorts.
+  Backward stability does not preserve a basin-sensitive BA trajectory.
+- B2's FP32 correction solves pass the frozen FP64 residual gate with zero
+  fallbacks and make six of nine practical cells faster, but require
+  1.07--4.40x more products and move median endpoints by as much as 0.519%.
+  A loose forcing tolerance defines a set of valid directions rather than one
+  direction, so ordinary iterative-refinement guarantees do not make this a
+  transparent acceleration.  The arm is rejected before Muell and tail runs.
