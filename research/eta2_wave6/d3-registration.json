@@ -1,0 +1,43 @@
+{
+  "arm_order": "fp32 first on even pair, fp64 first on odd pair",
+  "arms": {
+    "fp32": {
+      "binary": "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-deterministic",
+      "sha256": "47e0cc61a6d8e19de832c5b1aed5555fd89dcfd7a6a75d9c9deab67fa7d10a17"
+    },
+    "fp64": {
+      "binary": "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-deterministic-fp64-fragments",
+      "sha256": "c24e891eb392a3714f48538a809bcd7971cbe7103fd444e9fa185f7bc8bc01c1"
+    }
+  },
+  "epsilon": 1e-10,
+  "flags_overlay": {
+    "OCA_W5_CG_DOTS": "1",
+    "OCA_W5_PREP_CAMERA": "1",
+    "OCA_W5_PREP_FUSE": "1",
+    "OCA_W5_PREP_MIN_CAMS": "128",
+    "OCA_W6_DETERMINISTIC": "1"
+  },
+  "inference_tool_sha256": "fe7fd83cb64b83fb52659b3995f8b3b26393b5936ab65db805e2c8a76b5f22e5",
+  "input": "/workspace/bal/final-3068.txt",
+  "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+  "max_iter": 600,
+  "native_cap_seconds": 45.0,
+  "native_runner_sha256": "80cdf927a77f9238c2b0667049cd0a91ab87f47943d3c2c27b4a137d497ea4d8",
+  "perturbation_tool_sha256": "dd1fe13030ca90959303adaf339e0cffdfeacd480436d01c3aab5c85d6461d1d",
+  "production_time_gate": 1.25,
+  "protocol_sha256": "600d346a9d9bfdc99fdf548a603183ced68420db8cac9b66dd5d743ae3168bb8",
+  "seeds": [
+    640000,
+    640059
+  ],
+  "sprt": {
+    "alpha": 0.05,
+    "beta": 0.1,
+    "max_pairs": 60,
+    "q0": 0.5,
+    "q1": 0.7
+  },
+  "target": 1744796.9841897595,
+  "tool_sha256": "267bcbf7001a2e9793952b76e1daaba988be5c395548f30caacb2e2dc9eb40d4"
+}
