@@ -1,0 +1,70 @@
+{
+  "status": "passed",
+  "seed": 20260912,
+  "baseline": {
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "verified_headers": 44,
+    "champion_config": {
+      "label": "sustained-eta2-lambda0.1",
+      "status": "best tested global configuration on six-scene fixed-target panel; defaults unchanged",
+      "binary": "/tmp/prism-rl-sustained/build/prism-tr",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "initial_lambda": 0.1,
+      "flags": {
+        "OCA_ATTR_RADIUS": "1",
+        "OCA_ATTR_RESCUE": "1",
+        "OCA_ATTR_STRICT": "1",
+        "OCA_BACKTRACK_REARM": "1",
+        "OCA_CAMERA_TR": "0",
+        "OCA_CG_STOP": "0",
+        "OCA_CLASSICAL_LM": "1",
+        "OCA_COMPACT_FRAGMENTS": "2",
+        "OCA_DEMAND_MENU": "0",
+        "OCA_DIAG_NORM": "1",
+        "OCA_FORCE_UNSHARED": "1",
+        "OCA_FTOL": "1e-5",
+        "OCA_FTOL_K": "8",
+        "OCA_GRID_DOWN": "2",
+        "OCA_MENU_BACKTRACK": "8",
+        "OCA_MENU_GATE": "1e-2",
+        "OCA_MULTI_RHS": "1",
+        "OCA_NSHIFTS": "1",
+        "OCA_PCG": "1",
+        "OCA_POINT_SAFEGUARD": "1",
+        "OCA_RETRY_CACHE": "1",
+        "OCA_RHO_LAMBDA": "1",
+        "OCA_RHO_SHIFT": "1",
+        "OCA_SCHUR_NUMERIC_GUARD": "1",
+        "OCA_SWITCH_RESTART": "0",
+        "OCA_TR_RECURRENCE": "0",
+        "OCA_RLA_FIXED_ETA": "2"
+      },
+      "cli": [
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        "0.1",
+        "--max_iter",
+        "600"
+      ],
+      "evidence": "/tmp/prism-rl-sustained/verdict.json",
+      "limitations": [
+        "Muell lambda10 + eta2 is a counterexample",
+        "Largest tighter-target gain is only1.035x",
+        "Not a learned RL improvement"
+      ]
+    },
+    "arithmetic_note": "Native Scalar=double with FP32 compact cross blocks/point rows; this CPU reference is Gram-consistent FP64"
+  },
+  "finite_difference_projections": 64,
+  "max_residual_contraction_relative_error": 7.331317981692949e-10,
+  "max_full_objective_hessian_relative_error": 1.0219413916317712e-09,
+  "zero_residual_exact_gn_parity": true,
+  "zero_residual_points": 12,
+  "fallback_exact_gn_parity": true,
+  "damped_spd_can_accept_raw_indefinite": true,
+  "nonfinite_newton_block_falls_back": true,
+  "gpu_used": false
+}

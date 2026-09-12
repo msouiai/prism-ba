@@ -1,0 +1,201 @@
+{
+  "protocol_sha256": "29f5f222bd0240625c0f5ddd101a9ff38ee5b69e1d087995f04a9d54c544bbc9",
+  "registration_commit": "ddf798c",
+  "baseline": {
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "verified_headers": 44,
+    "champion_config": {
+      "label": "sustained-eta2-lambda0.1",
+      "status": "best tested global configuration on six-scene fixed-target panel; defaults unchanged",
+      "binary": "/tmp/prism-rl-sustained/build/prism-tr",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "initial_lambda": 0.1,
+      "flags": {
+        "OCA_ATTR_RADIUS": "1",
+        "OCA_ATTR_RESCUE": "1",
+        "OCA_ATTR_STRICT": "1",
+        "OCA_BACKTRACK_REARM": "1",
+        "OCA_CAMERA_TR": "0",
+        "OCA_CG_STOP": "0",
+        "OCA_CLASSICAL_LM": "1",
+        "OCA_COMPACT_FRAGMENTS": "2",
+        "OCA_DEMAND_MENU": "0",
+        "OCA_DIAG_NORM": "1",
+        "OCA_FORCE_UNSHARED": "1",
+        "OCA_FTOL": "1e-5",
+        "OCA_FTOL_K": "8",
+        "OCA_GRID_DOWN": "2",
+        "OCA_MENU_BACKTRACK": "8",
+        "OCA_MENU_GATE": "1e-2",
+        "OCA_MULTI_RHS": "1",
+        "OCA_NSHIFTS": "1",
+        "OCA_PCG": "1",
+        "OCA_POINT_SAFEGUARD": "1",
+        "OCA_RETRY_CACHE": "1",
+        "OCA_RHO_LAMBDA": "1",
+        "OCA_RHO_SHIFT": "1",
+        "OCA_SCHUR_NUMERIC_GUARD": "1",
+        "OCA_SWITCH_RESTART": "0",
+        "OCA_TR_RECURRENCE": "0",
+        "OCA_RLA_FIXED_ETA": "2"
+      },
+      "cli": [
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        "0.1",
+        "--max_iter",
+        "600"
+      ],
+      "evidence": "/tmp/prism-rl-sustained/verdict.json",
+      "limitations": [
+        "Muell lambda10 + eta2 is a counterexample",
+        "Largest tighter-target gain is only1.035x",
+        "Not a learned RL improvement"
+      ]
+    },
+    "arithmetic_note": "Native Scalar=double with FP32 compact cross blocks/point rows; this CPU reference is Gram-consistent FP64"
+  },
+  "verification_sha256": "26e5490a7cc1aeefadab420a28d0abe2fcb7fde4767dc795b508515be5c3f535",
+  "source_sha256": {
+    "core.py": "a78613bac477c5b7b6aa9c28a1571f404e7e7022aab1adf8d772110b146ab140",
+    "run_witnesses.py": "c3dfc6b1eb25d81a2aa96bded02c3308dce9ba78705f1fbfb20020668ec5883f",
+    "verify.py": "7377c820ad203a588aa1a8594da3795b45676f951b96f1d471c05af1fc8e58eb"
+  },
+  "scoring_reference_sha256": "6d357755d17aee6c7b1270698da15bbe2aee8ed64491e32d78ebcfc8ebdba9e8",
+  "immutable_euclidean_controls_sha256": "fc9941acc660400a438e4d333ddc1d788252e20d61b2ad40c68d0535bd155656",
+  "config": {
+    "repetitions": 3,
+    "camera_directions": [
+      "eta2",
+      "exact_clip"
+    ],
+    "threads": 1,
+    "tau_equals_lambda": true,
+    "spd_threshold": 1e-12,
+    "fallback": "original damped GN block",
+    "objective": "full SIMPLE_RADIAL k2=0 original observations"
+  },
+  "capture_inputs": [
+    {
+      "scene": "venice-52",
+      "capture_rep": 0,
+      "bal_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "state_sha256": {
+        "R_state.f64": "4ad2f2e9c9598537ea0ad7c71d0e57b70d1b618ee3c9d3e0810c58079b6ab613",
+        "t_state.f64": "af2ed72f68477274019f97f97a604bf028c6db5e0f0abf61b3a624c313832f36",
+        "X_state.f64": "ed91dbf7e878a2810ce6698a010871394144f21c74e2ad2edaccfd8b0920a528",
+        "intr_state.f64": "90317018527afbf3ed5adf68e0e6c97daf72cba73509dee22b4a78668888a520",
+        "metadata.txt": "c8f3c16d23f9be260fb965bab5d7d37c67d9b01b0bc9c8cd2a49944aa8e67184"
+      },
+      "lambda_value": 8.923524855210429e-07
+    },
+    {
+      "scene": "venice-52",
+      "capture_rep": 1,
+      "bal_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "state_sha256": {
+        "R_state.f64": "4ae3507e8057ce4ddb4f4f921881da963a466bd2970f4cabba9ace47ff0d4bab",
+        "t_state.f64": "9b38cbb5a39832fa0a43c25386e4c391482168a65dad0dbc6219518794dd9af9",
+        "X_state.f64": "bc920dde4f8ab83a90d81b5f50518cec227e043a0bd1beb7f37adb2183a745dc",
+        "intr_state.f64": "b7845fb16cd2a0cf55b07edf76dd3c3abd507f91020b2a844d677917e80579a2",
+        "metadata.txt": "b4bece80a7bdbb36e85bd3e1c3941391df41d9553dcf0a766cf9fe36080b09b3"
+      },
+      "lambda_value": 4.458387347826933e-08
+    },
+    {
+      "scene": "venice-52",
+      "capture_rep": 2,
+      "bal_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "state_sha256": {
+        "R_state.f64": "f015e5a045df86c4a2380fbb7c74e67d5744793853345f7c0e70dad752ca8875",
+        "t_state.f64": "29e8a9eea1e52f299af0cefd77cf7dd241403b91b00a21f32e0276d91662eb0b",
+        "X_state.f64": "d878c11238a97c8976dcaec85c2dc010928c61c206df12ac148a23263bc994db",
+        "intr_state.f64": "fe51c4aef99eca61b61f47260375ac065f5271ece61ebf35c6172b119faa7e5d",
+        "metadata.txt": "29c70c1d5e2a76b007f875335b7b5dedee6f236d87686a5731482bef51d5ab59"
+      },
+      "lambda_value": 1.1535140970463029e-06
+    },
+    {
+      "scene": "final-3068",
+      "capture_rep": 0,
+      "bal_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+      "state_sha256": {
+        "R_state.f64": "9cb2f9fce42eb4d975262b13a346d9ccb55698c00325e09b9d9c2624e3516c9a",
+        "t_state.f64": "366080eba40cab9393874b3d104cb73b43f779b0beca4b5b255fe493dd4cdf04",
+        "X_state.f64": "9248a4eca3568bbc18ce5989d7c4bf464f454d81a3e4c39f36999e1a5b0f74b0",
+        "intr_state.f64": "5d8b60d6217d5c7b5f91e069a4f99acf9d75176d1ff4dec797adf3921db6e237",
+        "metadata.txt": "608e52525a44eef9148198542de216955f8f041b7cc8dcc2db5734fc0adc664c"
+      },
+      "lambda_value": 7752.199624997855
+    },
+    {
+      "scene": "final-3068",
+      "capture_rep": 5,
+      "bal_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+      "state_sha256": {
+        "R_state.f64": "261a50bfd3e72701ec63baaf9eade1f6ab5ce70402ee2ca9430ed02a439e6c82",
+        "t_state.f64": "180cff359f78b261b4665e4664a933d197c07ba6d62a8e2e7a45e5c5da0a52db",
+        "X_state.f64": "ed9cc726435b90f12135eb19130224db73c6e88db65c41753a9c0ea0cc3c17c8",
+        "intr_state.f64": "8de5ddf90b25e398e515c31fe71b9fdd9a9414cc8a0ccadbe1931942e331243a",
+        "metadata.txt": "598cf512b78d40549cad0b9485bd6dcc23d03ff3931f02d9480bc5854f6cf39d"
+      },
+      "lambda_value": 11.159928306476408
+    },
+    {
+      "scene": "final-3068",
+      "capture_rep": 6,
+      "bal_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+      "state_sha256": {
+        "R_state.f64": "2384a6d67378e94ef93b853a84e58e62df4de434a1de003b354409fe99b78561",
+        "t_state.f64": "a570a5a44e7a05a2ca67e8ed44bd0eec84fd170ab1e190732d391d7aad037e9b",
+        "X_state.f64": "6990729b7df7d691534cae0594556eec4f6b3a66b30602f1dc05920ff8b25a2c",
+        "intr_state.f64": "38c9d02865161e5cc083652e346071096a440f43bb58bd11223783e34646a70b",
+        "metadata.txt": "04cb58688225463bd96049d597098fdbae7754a818381aeb03e1cc944ec857de"
+      },
+      "lambda_value": 9.703747947193543
+    },
+    {
+      "scene": "ladybug-1197",
+      "capture_rep": 0,
+      "bal_sha256": "a90724a99631cc61a050583e08c7fc028601c04c197fba7461566a69d87c920d",
+      "state_sha256": {
+        "R_state.f64": "767ca08b65c0ce9689c5943629609f8eca1a9117930f0ba50f7040c74e7b513a",
+        "t_state.f64": "38850ff82663d72fd7d8c42936d3b49a68fe37b17929b0cf7c0cbb2003f6b089",
+        "X_state.f64": "d214a581694066e941233c872ee228ef737c4ae1165ac88ca07d479c54e22cfd",
+        "intr_state.f64": "c5e5a123c36ec9db7706cd8bd178a2574bd3a959240afe233ded653932464549",
+        "metadata.txt": "1e775ef73f925793f8de32a1e47ba19b34bc69e1502a571a5f70e9cde15a9d22"
+      },
+      "lambda_value": 0.025
+    },
+    {
+      "scene": "ladybug-1197",
+      "capture_rep": 1,
+      "bal_sha256": "a90724a99631cc61a050583e08c7fc028601c04c197fba7461566a69d87c920d",
+      "state_sha256": {
+        "R_state.f64": "c6ad612a0cfa8136ec8086bfe744e4dc07d59915a9e5e1fdfef2068aa279dcfa",
+        "t_state.f64": "26577234472312b1e4e77451fa3c2baf20071210af86a33d65e832bc216c546e",
+        "X_state.f64": "07c276163cae303ba16eb283a8c9181ff8eb12020161dfd792e29fa58ae3a7d5",
+        "intr_state.f64": "28fef332b2997af8f8c715bd73337564fbb9dc4f54f5229debf2a33376fe8c7c",
+        "metadata.txt": "8c60f7574fdbdc10fec239e2110e7949dfb26b87f04940e42631fd1339ea20ac"
+      },
+      "lambda_value": 0.025
+    },
+    {
+      "scene": "ladybug-1197",
+      "capture_rep": 2,
+      "bal_sha256": "a90724a99631cc61a050583e08c7fc028601c04c197fba7461566a69d87c920d",
+      "state_sha256": {
+        "R_state.f64": "01b81f737e38b15a061220bb757a31a3df9f8dbcab2eeeeebb58418dcb77cecd",
+        "t_state.f64": "ba02aeb58bd50a66def6d10552d1fb2360d984c981c852e6b08ab2bb87fbf810",
+        "X_state.f64": "067b283deda50dfc0ac8cd6cda7aaf52843c1430bc830c7239e297f2238959df",
+        "intr_state.f64": "ea66c361d4ba0b52d4b2172ecae406cb9341f5c3a64778cc3d445629d91e040f",
+        "metadata.txt": "1f8c359253882e39baf04e4e84e228b51992164bd2b99907b12714a00f9da285"
+      },
+      "lambda_value": 0.025
+    }
+  ],
+  "campaign_cpu_wall_seconds": 123.07037788815796
+}
