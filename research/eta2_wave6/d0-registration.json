@@ -1,0 +1,79 @@
+{
+  "protocol_sha256": "bd23d9fdc11bd903bd587f34bb675356208a5400cfe1cc83de113a91e64d3b96",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "optimized_candidate_sha256": "53ba1cae00a42d3e84f40250a9a2362e5f8e58000157637c4d8050af2689961a",
+  "derived_binary": "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-deterministic",
+  "derived_binary_sha256": "df98d4503c186e1013942940565cc674d3803768b4b4b671b85296d47a3bd0d5",
+  "b6v7_binary": "/tmp/prism-ba-coarse/research/eta2_wave5/build/prism-b6v7",
+  "b6v7_binary_sha256": "b1b125b55a5d4ff1415fd379a8fee269609f42dffe9409fe0f9b831e41629799",
+  "build_manifest": {
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave6",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/build/deterministic.cu",
+      "-o",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-deterministic",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    "source_sha256": "46064b9bbcefbc0f18f3a981f70bb7df15e7f60bc1bfe3df5cc0dfefb39d7fae",
+    "binary_sha256": "df98d4503c186e1013942940565cc674d3803768b4b4b671b85296d47a3bd0d5",
+    "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+    "wave5_candidate_sha256": "53ba1cae00a42d3e84f40250a9a2362e5f8e58000157637c4d8050af2689961a",
+    "reversible_patch_count": 27,
+    "sources": {
+      "/tmp/prism-ba-coarse/research/eta2_wave6/build_deterministic.py": "ff537bb5dfaf93ebe3ff05af13325eaf90bfbf4f24162a65731a1811193277bc",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/deterministic_cost.cuh": "95884ce34a62561b8b25e4951ed924b1d738eb60190a3d42964d97c6d3348398",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/deterministic_full_model.cuh": "e799fe57cd908ca85ac0de0fce26ae184b5f478fd6551ba49be6042841c8b82e",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/deterministic_mfree.cuh": "26e495e5652c389b6f5a1b91baa23619d76157d63170de1acb4b007de0d6837d"
+    },
+    "protocol_sha256": "3ccf86b96dfba3b2a4cb8763fde1aa3c4cffdce1fba64a157363e49db1f05c19"
+  },
+  "flags": {
+    "OCA_W5_CG_DOTS": "1",
+    "OCA_W5_PREP_FUSE": "1",
+    "OCA_W5_PREP_CAMERA": "1",
+    "OCA_W5_PREP_MIN_CAMS": "128"
+  },
+  "compatibility": {
+    "cell": {
+      "scene": "ladybug-539",
+      "multiplier": 1.01,
+      "target": 165617.73918321263,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cell": "ladybug-539-1.01"
+    },
+    "repetitions": 3,
+    "cost_tolerance": 0.0015
+  },
+  "repeatability": {
+    "cells": {
+      "venice-52": {
+        "scene": "venice-52",
+        "path": "/workspace/bal/venice-52.txt",
+        "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+        "target": 243740.27,
+        "cap": 60
+      },
+      "final-3068": {
+        "scene": "final-3068",
+        "path": "/workspace/bal/final-3068.txt",
+        "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+        "target": 1744796.9841897595,
+        "cap": 60
+      }
+    },
+    "repetitions": 5
+  },
+  "arm_order": "reverse on odd repetition",
+  "decision": "all exact repeatability fields equal; no cap stop; disabled median cost delta below 0.15%"
+}
