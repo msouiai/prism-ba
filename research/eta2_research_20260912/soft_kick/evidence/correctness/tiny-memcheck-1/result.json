@@ -1,0 +1,24 @@
+{
+  "command": [
+    "/usr/local/cuda/bin/compute-sanitizer",
+    "--tool",
+    "memcheck",
+    "--error-exitcode",
+    "91",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/soft_kick/build/prism-soft-kick",
+    "--problem",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/build/toy.txt",
+    "--algo",
+    "mfree_shifted_cg",
+    "--dof9",
+    "--zero_k2",
+    "--lam0",
+    "0.1",
+    "--max_iter",
+    "5",
+    "--csv",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/soft_kick/evidence/correctness/tiny-memcheck-1/curve.csv"
+  ],
+  "returncode": 0,
+  "passed": true
+}

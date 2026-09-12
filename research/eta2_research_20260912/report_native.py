@@ -12,7 +12,9 @@ def summary(rows):
       pcg_per_outer=[r['pcg_per_outer'] for r in rows],retry_fraction=[r['retry_fraction_native'] for r in rows],
       failed_fraction=[r['failed_fraction_native'] for r in rows],cutoffs=[r['attempts']['curvature_cutoffs'] for r in rows],
       cutoff_accepts=[r['attempts']['cutoff_accepts'] for r in rows],repairs=[r['attempts']['numeric_repairs'] for r in rows],
-      cap_hits=sum(r['cap_hit'] for r in rows),ftol=sum(r['stop_ftol'] for r in rows))
+      cap_hits=sum(r['cap_hit'] for r in rows),ftol_marker_runs=sum(r['stop_ftol'] for r in rows),
+      score_init=[r['score_init'] for r in rows],
+      probe_fraction=[r.get('probe_fraction_native',0) for r in rows])
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('candidate');a=ap.parse_args();all_rows=[];result={}
     for stage in ['practical','tail']:
@@ -46,8 +48,15 @@ def main():
                 fmt=lambda xs:', '.join(f'{x:.3g}' for x in xs)
                 lines.append(f"| {cell} / {arm} | {s['cost_median']:.8g} | {s['rejects']} | {fmt(s['pcg_per_outer'])} | {fmt(s['retry_fraction'])} | {fmt(s['failed_fraction'])} | {s['cutoffs']} / {s['cutoff_accepts']} |")
         lines+=['']
+        if any(r.get('probe_fraction_native',0)>0 for r in all_rows if r['stage']==stage):
+            lines+=['| Cell / arm | Terminal probe / native wall |','|---|---|']
+            for cell,c in cells.items():
+                for arm,s in c['arms'].items():
+                    lines.append(f"| {cell} / {arm} | {', '.join(f'{v:.4g}' for v in s['probe_fraction'])} |")
+            lines+=['']
     lines+=['## Limits','',
       'CSV target times have 0.0001-second resolution. Host steady-clock attempt tracing adds no GPU barrier; numeric continuations are included, and attempt acceptance/matvec totals must match native summaries. Retry-entry and nonaccepted-attempt fractions are distinct. Endpoint overshoot at a target stop is not automatically a quality advantage.',
+      'For passenger and soft-kick arms, ordinary LM retry/failure fractions exclude the terminal probe; its fresh fine setup and intervention are reported separately. Legacy raw result stop_ftol means an FTOL message was seen, which can precede an intercepted stop and continuation; summary ftol_marker_runs is not a certified final-stop-reason count. Full score_init values are retained in the companion JSON.',
       'N3 practical/N5 tail are screening cohorts. Report any larger-repetition confirmation separately. A configuration is not promoted solely by a favorable median on a subset. Frozen Eta2 remains the champion unless the complete registered gate passes.']
     (P/(a.candidate.upper()+'_NATIVE_RESULTS.md')).write_text('\n'.join(lines)+'\n')
     compact={stage:{cell:dict(speedup=x['speedup'],signal=x['time_signal'],hits=[x['arms'][a]['hits'] for a in ['off','on']]) for cell,x in cells.items()} for stage,cells in result.items()}

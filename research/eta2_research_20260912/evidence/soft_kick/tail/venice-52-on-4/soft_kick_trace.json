@@ -1,0 +1,70 @@
+{
+  "raw": {
+    "attempts": 153,
+    "accepted": 143,
+    "not_accepted": 10,
+    "curvature_cutoffs": 1,
+    "cutoff_accepts": 0,
+    "numeric_repairs": 1,
+    "pcg_iterations": 263,
+    "matvecs": 415,
+    "attempt_seconds": 1.5936757120000007,
+    "retry_entry_seconds": 0.05437095200000001,
+    "not_accepted_seconds": 0.10844842699999999,
+    "numeric_repair_seconds": 0.007906704,
+    "retry_entry_wall_fraction": 0.03411669738742933,
+    "not_accepted_wall_fraction": 0.06804924375982455
+  },
+  "native": {
+    "accepts": 143,
+    "rejects": 8,
+    "matvecs": 415,
+    "negcurv": 1
+  },
+  "interventions": [
+    {
+      "trace_index": 144,
+      "outer": 135,
+      "admitted": true,
+      "raw_retry_entry": false,
+      "seconds": 0.013912537,
+      "matvecs": 1,
+      "phase_seconds": 0.013893277
+    }
+  ],
+  "corrected": {
+    "ordinary_attempts": 152,
+    "ordinary_accepts": 143,
+    "ordinary_failed_or_numeric_attempts": 9,
+    "numeric_attempts": 1,
+    "intervention_attempts": 1,
+    "admitted_kicks": 1,
+    "skipped_kicks": 0,
+    "intervention_seconds": 0.013912537,
+    "ordinary_attempt_seconds": 1.579763175,
+    "ordinary_failed_or_numeric_seconds": 0.09453589,
+    "numeric_repair_seconds": 0.007906704,
+    "unchanged_state_retry_seconds": 0.054370952,
+    "unchanged_state_retry_wall_fraction": 0.03411669738742935,
+    "ordinary_failed_or_numeric_wall_fraction": 0.059319401863357255,
+    "intervention_wall_fraction": 0.00872984189646733
+  },
+  "scope": "Common not_accepted includes probe rows; corrected values explicitly exclude them. An admitted kick is not an LM rejection.",
+  "native_accept_and_matvec_invariants_pass": true,
+  "probe_events": [
+    {
+      "trace_index": 144,
+      "outer": 135,
+      "admitted": true,
+      "raw_retry_entry": false,
+      "seconds": 0.013912537,
+      "matvecs": 1,
+      "phase_seconds": 0.013893277
+    }
+  ],
+  "probe_trace_rows": [
+    144
+  ],
+  "corrected_unchanged_state_retry_seconds": 0.054370952,
+  "probe_attempt_seconds_including_fresh_fine_setup": 0.013912537
+}

@@ -1,0 +1,13 @@
+========= COMPUTE-SANITIZER
+========= Leaked 8 bytes at 0x714dec200e00
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x11bb45] in soft-state-test
+=========         Host Frame: ComputeCost(DeviceProblem const&, DeviceState const&, int, double) [0x2bc98] in soft-state-test
+=========         Host Frame: main [0x1988a] in soft-state-test
+========= 
+SOFT_KICK_RETURN restored=1 cost_before=25958.246954184455 pre_kick=694.52160708161853 cost=694.52160708161853 checked=694.52160708161853 seconds=0.00010439
+SOFT_KICK_RETURN restored=0 cost_before=0 pre_kick=694.52160708161853 cost=0 checked=0 seconds=0.00018987
+SOFT_KICK_SUMMARY interventions=0 admitted=0 skipped=0 scores=2 model_passes=0 restorations=1 seconds=0 restore_seconds=0.00018987
+SOFT_STATE_TEST pass=1 restored=1 kept=1 pre=694.52160708161853 restored_cost=694.52160708161853
+========= LEAK SUMMARY: 8 bytes leaked in 1 allocations
+========= ERROR SUMMARY: 1 error

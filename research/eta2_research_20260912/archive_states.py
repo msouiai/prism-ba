@@ -4,13 +4,17 @@ from pathlib import Path
 import argparse,gzip,hashlib,json,lzma,os,shutil,tarfile
 from grid_common import P,sha,write
 
-ap=argparse.ArgumentParser();ap.add_argument('cohort',choices=['stcg','pi','coarse','predictor','frontload']);a=ap.parse_args()
+ap=argparse.ArgumentParser();ap.add_argument('cohort',choices=['stcg','pi','coarse','predictor','frontload']);ap.add_argument('--part',type=int);ap.add_argument('--max-members',type=int);a=ap.parse_args()
 root=P/'evidence'/a.cohort;files=sorted(root.rglob('endpoint.state.gz'),key=lambda f:(f.parent.name.split('-off-')[0].split('-on-')[0],str(f)))
+if a.max_members:
+    assert a.part is not None and a.max_members>0
+    files=files[:a.max_members]
 assert files,'No endpoint containers'
 out=P/'evidence_archives';out.mkdir(exist_ok=True)
-archive=out/(a.cohort+'-endpoint-contents.tar.xz');manifest=out/(a.cohort+'-endpoint-contents.json')
+stem=a.cohort+('' if a.part is None else '-part-'+str(a.part))+'-endpoint-contents'
+archive=out/(stem+'.tar.xz');manifest=out/(stem+'.json')
 assert not archive.exists() and not manifest.exists(),'Archive already exists; do not overwrite'
-tmp=Path('/dev/shm')/('eta2-'+a.cohort+'-endpoint-contents.tar.xz');assert not tmp.exists()
+tmp=Path('/dev/shm')/('eta2-'+stem+'.tar.xz');assert not tmp.exists()
 rows=[]
 for f in files:
     result=json.loads((f.parent/'result.json').read_text());assert result['valid']
@@ -30,6 +34,7 @@ def verify(path):
             seen.append(member.name)
     assert len(seen)==len(rows)
 verify(tmp)
+assert shutil.disk_usage(P).free>=tmp.stat().st_size+48*1024**2,'Insufficient safe copy space; original containers preserved. Use smaller archive parts.'
 with tmp.open('rb') as src,archive.open('xb') as dst:
     shutil.copyfileobj(src,dst);dst.flush();os.fsync(dst.fileno())
 assert sha(archive)==sha(tmp);verify(archive)

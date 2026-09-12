@@ -1,0 +1,9 @@
+# One terminal coarse-Ritz kick: no target rescue
+
+The registered74-run native panel is complete: [full results](../SOFT_KICK_NATIVE_RESULTS.md). Both arms hit27/27 practical targets with overlapping timing ranges in all nine cells. Venice remains0/5 off/on; Final3068 remains3/5 off/on. No target-speed or hit-rate improvement passes the gate.
+
+The kick actually fires and is admitted in all seven eligible on-runs: five Venice and the two Final3068 misses. None is rescued to target. Probe attempts cost about0.014–0.018s on Venice and0.065–0.069s on Final, before the resumed LM work. The three successful Final on-runs hit before intervention, so their conditional timing differences are inactive-control variation rather than kick speedups.
+
+The Venice on-cohort's median endpoint is0.61% below its off cohort, but most of that gap is already present before the kicks. Preserve the endpoint observation without claiming it as a causal gain of basin hopping. Per-run pending/event/return costs show what happened after each actual perturbation. Full-state return protection preserves a better pre-kick state when needed; the tests cover both return branches. Runtime controller-history, gauge, generalized Ritz, homogeneous point response and full-cost checks pass.
+
+This tests one deterministic, coarse-restricted mode and one energy amplitude at the first confirmed stop. The mode is orthogonal to camera-space similarity directions in the coarse-PCG metric; this is not a full-joint gauge certificate. It does not refute broader soft-mode portfolios or true lowest modes of the complete operator. Because this arm produces no target rescue, it does not earn the more expensive fresh comparison against the historical Eta2-to-MFREE portfolio. That portfolio remains context, not a newly measured same-host comparator.

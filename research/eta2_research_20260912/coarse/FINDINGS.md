@@ -1,8 +1,8 @@
 # Brief-0 coarse projection pre-test
 
-Seven primary native witnesses; three independently computed reference directions per witness. These are projections, not optimizer rollouts or independent hit-rate repetitions. All captured reference records report certification. Native inputs were not changed.
+Seven primary native witnesses; three separately computed reference directions per witness. These are projections, not optimizer rollouts or independent hit-rate repetitions. All captured reference records pass their reduced-system certificate; this is not a full-normal certificate. Some original full-normal checks failed, with failures and supplementary Venice point completions preserved in the main audit. Native inputs were not changed.
 
-| Witness | K=8 rank | Exact minus raw Eta2 | After global removal | Equally clipped comparison |
+| Witness | K=8 rank | Reduced-certified reference minus raw Eta2 | After global removal | Equally clipped comparison |
 |---|---:|---:|---:|---:|
 | final-3068-capture-0 | 50 | 1.319% | 0.786% | 1.319% |
 | final-3068-capture-5 | 50 | 12.584% | 1.258% | 12.600% |
@@ -23,4 +23,4 @@ A first implementation subtracted absolute transformed translations when forming
 The follow-up [Venice0 spectral pre-test](SPECTRAL_FINDINGS.md) is now complete.
 It supports a camera coarse-space experiment while retaining the original
 point-parity failure and supplementary full-normal completions explicitly.
-No native preconditioner, target-time change or new endpoint has been measured.
+That pretest was followed by the [native additive arm](native/VERDICT.md), which did not improve target reliability. A later [covisibility-partition control](graph_pretest/FINDINGS.md) improves coverage on some Final witnesses without establishing nonlinear usefulness or a native graph-preconditioner result.

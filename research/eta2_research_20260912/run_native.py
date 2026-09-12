@@ -8,7 +8,7 @@ CONFIGS={
  'frontload':dict(binary='frontload/build/prism-frontload',manifest='frontload/build_manifest.json',flag='OCA_FRONTLOAD',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_05_NATIVE.md'),
  'opening_unclip':dict(binary='opening_unclip/build/prism-opening-unclip',manifest='opening_unclip/build_manifest.json',flag='OCA_OPEN_UNCLIP',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_05_UNCLIP.md'),
  'passenger':dict(binary='coarse/nonlinear_native/build/prism-passenger',manifest='coarse/nonlinear_native/build_manifest.json',flag='OCA_PASSENGER',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_09_NATIVE.md',parser='coarse/nonlinear_native/trace_report.py'),
- 'soft_kick':dict(binary='soft_kick/build/prism-soft-kick',manifest='soft_kick/build_manifest.json',flag='OCA_SOFT_KICK',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_11.md'),
+ 'soft_kick':dict(binary='soft_kick/build/prism-soft-kick',manifest='soft_kick/build_manifest.json',flag='OCA_SOFT_KICK',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_11.md',parser='soft_kick/parse_trace.py'),
  'coarse':dict(binary='coarse/native/build/prism-coarse',manifest='coarse/native/build_manifest.json',flag='OCA_COARSE',trace='OCA_ATTEMPT_TRACE')}
 def coarse_trace(folder,row):
     text=(folder/'stdout.log').read_text();rows=[];previous=None
@@ -47,7 +47,15 @@ def main():
     c=CONFIGS[a.candidate];binary=P/c['binary'];bm=json.loads((P/c['manifest']).read_text());assert sha(binary)==bm['binary_sha256']
     probe_report=None
     if 'parser' in c:
-        spec=importlib.util.spec_from_file_location('candidate_trace',P/c['parser']);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);probe_report=module.report
+        spec=importlib.util.spec_from_file_location('candidate_trace',P/c['parser']);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        if a.candidate=='soft_kick':
+            def probe_report(folder):
+                detail=module.analyze(folder/'attempts.json',folder/'stdout.log');events=detail['interventions'];correct=detail['corrected']
+                detail.update(probe_events=events,probe_trace_rows=[e['trace_index'] for e in events],
+                    corrected_unchanged_state_retry_seconds=correct['unchanged_state_retry_seconds'],
+                    probe_attempt_seconds_including_fresh_fine_setup=correct['intervention_seconds'])
+                write(folder/'soft_kick_trace.json',detail);return detail
+        else:probe_report=module.report
     assert proto['protocol_sha256']==sha(P/'PROTOCOL_NATIVE_PANEL.md')
     rows=[]
     registered_cells=list(proto[a.stage])

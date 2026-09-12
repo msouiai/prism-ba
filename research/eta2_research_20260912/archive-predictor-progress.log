@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/tmp/prism-ba-coarse/research/eta2_research_20260912/archive_states.py", line 32, in <module>
+    verify(tmp)
+  File "/tmp/prism-ba-coarse/research/eta2_research_20260912/archive_states.py", line 29, in verify
+    with tar.extractfile(member) as src:assert hashlib.file_digest(src,'sha256').hexdigest()==row['raw_sha256']
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/hashlib.py", line 233, in file_digest
+    size = fileobj.readinto(buf)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/tarfile.py", line 702, in readinto
+    buf = self.read(len(b))
+          ^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/tarfile.py", line 691, in read
+    b = self.fileobj.read(length)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/tarfile.py", line 528, in read
+    buf = self._read(size)
+          ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/tarfile.py", line 550, in _read
+    buf = self.cmp.decompress(buf)
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

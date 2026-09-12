@@ -1,0 +1,169 @@
+{
+  "passed": true,
+  "synthetic_only": true,
+  "baseline": {
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "header_count": 44,
+    "champion_json_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+    "flags": {
+      "OCA_ATTR_RADIUS": "1",
+      "OCA_ATTR_RESCUE": "1",
+      "OCA_ATTR_STRICT": "1",
+      "OCA_BACKTRACK_REARM": "1",
+      "OCA_CAMERA_TR": "0",
+      "OCA_CG_STOP": "0",
+      "OCA_CLASSICAL_LM": "1",
+      "OCA_COMPACT_FRAGMENTS": "2",
+      "OCA_DEMAND_MENU": "0",
+      "OCA_DIAG_NORM": "1",
+      "OCA_FORCE_UNSHARED": "1",
+      "OCA_FTOL": "1e-5",
+      "OCA_FTOL_K": "8",
+      "OCA_GRID_DOWN": "2",
+      "OCA_MENU_BACKTRACK": "8",
+      "OCA_MENU_GATE": "1e-2",
+      "OCA_MULTI_RHS": "1",
+      "OCA_NSHIFTS": "1",
+      "OCA_PCG": "1",
+      "OCA_POINT_SAFEGUARD": "1",
+      "OCA_RETRY_CACHE": "1",
+      "OCA_RHO_LAMBDA": "1",
+      "OCA_RHO_SHIFT": "1",
+      "OCA_SCHUR_NUMERIC_GUARD": "1",
+      "OCA_SWITCH_RESTART": "0",
+      "OCA_TR_RECURRENCE": "0",
+      "OCA_RLA_FIXED_ETA": "2"
+    },
+    "cli": [
+      "--algo",
+      "mfree_shifted_cg",
+      "--dof9",
+      "--zero_k2",
+      "--lam0",
+      "0.1",
+      "--max_iter",
+      "600"
+    ],
+    "binary_not_run": true
+  },
+  "graph": {
+    "ncam": 6,
+    "npoint": 21,
+    "original_observations": 63,
+    "unique_incidences": 62,
+    "collapsed_duplicate_incidences": 1,
+    "undirected_edges": 7,
+    "total_undirected_weight": 61,
+    "connected_components": 1,
+    "component_sizes": [
+      6
+    ],
+    "isolated_cameras": 0,
+    "conservative_memory_estimate_bytes": 6432,
+    "graph_storage_bytes": 196,
+    "graph_build_seconds": 0.0007537500932812691,
+    "graph_sha256": {
+      "indptr": "e42790d348646324682fafedaaecbbeb9f12bf93f514262118c0ff15b44414ba",
+      "indices": "5e03cd6138e0783b75ff89e30dc39552229a295abaca4503c2529c189bdeb4ea",
+      "data": "19e85602135f331e2458696fd7ad354e7590191ad3434ffe8557c13e37269fec"
+    }
+  },
+  "partition": {
+    "requested_k": 2,
+    "actual_k": 2,
+    "labels_sha256": "0020bd656ca1c80cc5854d42f68b0ba484c370f6c4757fcb0809168482318e6e",
+    "cluster_sizes": [
+      3,
+      3
+    ],
+    "size_min": 3,
+    "size_max": 3,
+    "size_median": 3.0,
+    "max_size_over_mean": 1.0,
+    "weighted_edge_cut": 1,
+    "partition_seconds": 0.0002619698643684387,
+    "settings": {
+      "ncuts": 1,
+      "niter": 10,
+      "ufactor": 30,
+      "seed": 20260912,
+      "contig": 0,
+      "numbering": 0,
+      "objtype": 0
+    },
+    "recursive": false,
+    "contiguous": false,
+    "unit_vertex_weights": true
+  },
+  "counts": {
+    "first_observation_anchor_cross_observations": 1,
+    "observations_on_multicluster_tracks": 2,
+    "multicluster_tracks": 1,
+    "observed_tracks": 21
+  },
+  "disconnected_graph": {
+    "ncam": 7,
+    "npoint": 21,
+    "original_observations": 63,
+    "unique_incidences": 62,
+    "collapsed_duplicate_incidences": 1,
+    "undirected_edges": 7,
+    "total_undirected_weight": 61,
+    "connected_components": 2,
+    "component_sizes": [
+      6,
+      1
+    ],
+    "isolated_cameras": 1,
+    "conservative_memory_estimate_bytes": 7056,
+    "graph_storage_bytes": 200,
+    "graph_build_seconds": 0.00042467983439564705,
+    "graph_sha256": {
+      "indptr": "ccecfa775bda93ad23c170c307a8d3f913fb2c9d1b58889f35f671ae130e9a70",
+      "indices": "5e03cd6138e0783b75ff89e30dc39552229a295abaca4503c2529c189bdeb4ea",
+      "data": "19e85602135f331e2458696fd7ad354e7590191ad3434ffe8557c13e37269fec"
+    }
+  },
+  "disconnected_partition": {
+    "requested_k": 2,
+    "actual_k": 2,
+    "labels_sha256": "7146bafa2542465af6f8dcedcdd715eb1aa1e858a609831d2af58c8d2a40f8fa",
+    "cluster_sizes": [
+      4,
+      3
+    ],
+    "size_min": 3,
+    "size_max": 4,
+    "size_median": 3.5,
+    "max_size_over_mean": 1.1428571428571428,
+    "weighted_edge_cut": 1,
+    "partition_seconds": 0.00018342025578022003,
+    "settings": {
+      "ncuts": 1,
+      "niter": 10,
+      "ufactor": 30,
+      "seed": 20260912,
+      "contig": 0,
+      "numbering": 0,
+      "objtype": 0
+    },
+    "recursive": false,
+    "contiguous": false,
+    "unit_vertex_weights": true
+  },
+  "gauge_projector_checks": [
+    {
+      "dense_difference": 1.4199587673237368e-15,
+      "symmetry": 5.480540960365337e-16,
+      "idempotence": 2.1975088639439325e-15,
+      "gauge_orthogonality": 1.1865045720417596e-15
+    },
+    {
+      "dense_difference": 1.6727438682158863e-15,
+      "symmetry": 5.586491386253252e-16,
+      "idempotence": 2.7662938358886616e-15,
+      "gauge_orthogonality": 6.624337229793754e-16
+    }
+  ],
+  "implementation_sha256": "ccadc0b154be5e970586e5db57a3de06b7754cbc73e6901e795f29bd7494ea0b"
+}
