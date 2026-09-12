@@ -43,6 +43,11 @@ Current high-level results:
   0/5 and its median endpoint worsens 5.768% (260.53k versus 246.33k).  The
   result confirms an objective-opening basin effect that does not transfer
   across the two tail mechanisms.
+- a per-track damage filter cleanly separates the archived E4 pair, but not
+  fresh trajectories: all 5/5 Final hits and 5/5 misses contain an early event,
+  with 20 events in each class and nearly identical median concentration.  The
+  preregistered diagnostic gate fails, so no active filter or threshold sweep
+  is run.
 
-See `D9_LIFTED_ROBUST_RESULTS.md` for the current decision.  The scientific
+See `D10_TRACK_DAMAGE_FILTER_RESULTS.md` for the current decision.  The scientific
 champion remains unchanged.
