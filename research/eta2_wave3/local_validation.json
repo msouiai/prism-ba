@@ -1,0 +1,16 @@
+{
+  "command": [
+    "nvcc",
+    "-O2",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave3",
+    "/tmp/prism-ba-coarse/research/eta2_wave3/build/validate_local.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave3/build/validate-local"
+  ],
+  "stdout": "========= COMPUTE-SANITIZER\nE3_GATE o=0 retry=0 touched=1 ncam=3 minratio=9.9999999646324538e-09 ids=0,\nE2_CAP o=0 retry=0 touched=1 ncam=3 raw=100.00999950005 capped=3.3166247903553998 radius=10 median=1 global_scale=1\nLOCAL_VALIDATION_PASS\n========= ERROR SUMMARY: 0 errors\n",
+  "stderr": "",
+  "passed": true
+}

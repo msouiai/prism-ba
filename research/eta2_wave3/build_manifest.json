@@ -1,0 +1,35 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave2",
+    "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "/tmp/prism-ba-coarse/research/eta2_wave3/build/prism_wave3.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave3/build/prism-wave3",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "source_sha256": "b1e016be3ccca877321d411f2b2c5a26e96353a3c5801d07d999cc1ac715b0e3",
+  "binary_sha256": "91beaae36caabb6c37f02abdd00241112c8cb6cf609ad079af11ccdb34a77f58",
+  "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "reversible_patch_count": 34,
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave3/build.py": "11a3907d75bef41f1cc02a8b880dc958cbcbd20abf7073f0d31ee3d55fe54ed5",
+    "/tmp/prism-ba-coarse/research/eta2_wave3/local_actuators.cuh": "a1b7af056b79e2620e0672582039e1813498b4943f89d2b333b9356e05463015",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/build.py": "655b646321fc68f1205f294a118df60947311676d292e236ce1ef73552ba2ca7",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/wave_trace.cuh": "e866f4e5071aba8da6e03b082035e3ebc8d9011d37117f8dedb27f80ba2184e7",
+    "/tmp/prism-ba-coarse/research/eta2_wave2/composition_capture.cuh": "4799691149ce31798063fc4afed1374259a76afd37eeda46e080f500e3528784",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/build.py": "d2c46774fcef0e9f279bc0cc0a197fca844cf3bd067e5f0e5e6dc8a7dc551049",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/frontload.cuh": "7a4a7de108e5616bb76ace88476d29ce1fa6ab605888127f56c4c201830efaee",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/coherent_rows.cuh": "38c042aa5a5f55c8cc740b901de7a92afe54f8fb9cf26920cc9c821bada6d6ce",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/attempt_trace.h": "43400101d54c0ccf94464025497105ef825e16c7e7cbb1d21f7dff019619daf6"
+  }
+}
