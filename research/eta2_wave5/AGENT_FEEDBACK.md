@@ -44,6 +44,7 @@ algorithm; matching the exact linear-system fixed point is insufficient.
 | B6v4, preparation pruning | Preparation bucket on Muell falls 0.242 to 0.160 s.  Prep alone is -6.73% panel and -2.00% Muell; with dots it is -7.78% panel and -2.35% Muell.  Final3068 N=30 is 14/30 versus off 19/30 (`p=0.299`) and dots+prep 17/30 versus dots 18/30 (`p=1.0`). | Prep alone is not promoted.  Dots+prep is the strongest research candidate; no equivalence claim yet. |
 | B6v5, reduction-order-safe preparation fusion | Three bitwise fusions give -1.79% panel but no measurable Muell change. | Useful implementation asset; confirms that B6v4's large-scene gain comes from deleted dead diagonal work. |
 | B6v6, camera-owned reduced RHS | Fixed per-camera reductions cut the Muell preparation bucket 0.241 to 0.074 s, improve the panel 8.23% and Muell 3.93% versus dots-only, and sample Final3068 at 6/10 versus 3/10.  Venice remains 0/10 with a +0.253% endpoint movement. | Always-on arm fails the strict quality gate; retain for a preregistered camera-count dispatch. |
+| B6v7, occupancy-gated camera RHS | A fixed `ncam >= 128` rule is 8.66% faster on the panel and 4.05% on Muell, while Venice executes dots-only exactly.  The preregistered pooled Final3068 screen is 11/20 versus 12/20. | Fastest research candidate; N=100-per-arm non-inferiority extension registered before promotion. |
 | B8, long shots | Literature and existing-repo audit found direct BA prior art for two-grid/deflation, inverse power-series Schur solves, square-root marginalisation, object-space variable projection and matrix-free GPU BA. | No build justified from this menu after the measured base failures. |
 
 Negative percentages above mean faster or lower cost; positive percentages mean
@@ -82,8 +83,8 @@ confirming attribution.
 
 ## Current winner and limits
 
-For the frozen objective, the algorithmic winner remains Eta2.  For the wave-5
-implementation overlays, dots+prep is the current speed winner:
+For the frozen objective, the algorithmic winner remains Eta2.  The initial
+wave-5 implementation winner was dots+prep:
 
 - practical-panel geometric-mean time-to-target ratio: `0.9222`;
 - Muell time-to-target ratio: `0.9765`, 980 products in both arms;
@@ -96,6 +97,12 @@ These data support a separately named optimized build.  They do not yet support
 replacing the frozen champion in the scientific ledger, because Final3068's
 Wilson intervals overlap widely and the RHS atomic schedule changes when the
 dead diagonal work is removed.  “No significant loss” is not equivalence.
+
+The post-handoff B6v6/B6v7 continuation replaces those atomics with a fixed
+camera-owned reduction and gates it at `ncam >= 128`.  B6v7 improves the panel
+by 8.66% and Muell by 4.05%; its pooled Final3068 screen is 11/20 versus 12/20.
+It is now the fastest research candidate, pending the registered N=100-per-arm
+non-inferiority extension.
 
 ## Novelty boundary
 

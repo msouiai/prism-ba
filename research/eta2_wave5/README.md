@@ -75,3 +75,8 @@ Current decisions:
   back by a +0.253% Venice endpoint movement despite improving the sampled
   Final3068 hit count from 3/10 to 6/10.  A camera-count dispatch is the only
   registered follow-up.
+- B6v7 enables that reduction only for `ncam >= 128`.  The fresh panel and
+  Muell gains are 8.66% and 4.05%, while Venice runs the dots-only path.  Its
+  pooled Final3068 screen is 11/20 versus 12/20 for dots, so it remains the
+  fastest research candidate while a preregistered N=100-per-arm
+  non-inferiority cohort settles reliability.
