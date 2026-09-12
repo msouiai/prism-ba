@@ -31,6 +31,12 @@ Current high-level results:
   local scaled condition by 170.8x and retains 12.7x more of the captured
   healthy-camera motion, but a fresh solve exposes another soft direction:
   it remains about 331 radii long and raises true cost in 5/5 terminal states.
+- a rank-one residual tensor model improves Gauss--Newton prediction on all
+  five registered Final3068 plateau transitions, but only by 1.86% at the
+  median and never by the required 20%.  Its correction is concentrated in
+  200 observations but its projection coefficient falls to 0.003--0.031, so
+  preceding-step curvature is mostly irrelevant to the next clipped/retry
+  direction; a native three-solve tensor step is not earned.
 
-See `D7_INTRINSICS_CHART_RESULTS.md` for the current decision.  The scientific champion remains
-unchanged.
+See `D8_TENSOR_SECANT_RESULTS.md` for the current decision.  The scientific
+champion remains unchanged.
