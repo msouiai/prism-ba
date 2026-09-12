@@ -1,5 +1,7 @@
 # Static long-track damping transfer to frozen Eta2
 
+**Fresh confirmation update:** the subsequently requested N=10 experiment is complete, with three N=3 controls: 58 additional scored runs. Final3068 hits are **6/10 off versus 3/10 on**, with seven on-arm FTOL misses; Venice remains **0/10 in both arms** and worsens 6.153% in median endpoint. Dubrovnik88's equal-target median time rises from 0.0830s to 0.1262s. The zero-miss prediction fails. See the [agent handoff](confirmation/AGENT_REPLY.md) and [full fresh results](confirmation/RESULTS.md). This cohort is separate from the original N=5 screen below, which remains unchanged.
+
 **Eta2 does use uniform relative point damping, but the proposed 1/1/0.3 rule does not pass this transfer screen. The original champion remains unchanged.** The registered twenty-run comparison is complete, with independent endpoint audits, the same targets and one binary off/on.
 
 | Scene | Champion target hits | Stratified target hits | Successful-run median crossing | Median endpoint change |
