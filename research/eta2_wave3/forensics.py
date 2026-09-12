@@ -21,9 +21,10 @@ def aggregate(x,ids,n):
     shape=x.shape[1:];flat=x.reshape(len(x),-1)
     return np.column_stack([np.bincount(ids,weights=flat[:,k],minlength=n) for k in range(flat.shape[1])]).reshape((n,)+shape)
 
-def audit(folder,scene,label,cap_screen=True):
+def audit(folder,scene,label,cap_screen=True,problem=None):
     start=time.perf_counter();cam,X,meta=load_capture_state(folder);nc,np_=len(cam.R),len(X)
-    ci,pi,uv,dims=CHART.load_observations('/workspace/bal/'+scene+'.txt')
+    problem=Path(problem or '/workspace/bal/'+scene+'.txt')
+    ci,pi,uv,dims=CHART.load_observations(problem)
     assert dims==(nc,np_,len(ci))
     E=read_array(folder/'E.f64',(nc,9));cd=read_array(folder/'Cdiag.f64',(np_,3))
     raw=-read_array(folder/'eta2_raw_scaled.f64',(nc,9));assert np.all(raw[:,8]==0)
@@ -120,7 +121,7 @@ def audit(folder,scene,label,cap_screen=True):
                     remaining_global_factor=globalfactor,healthy_camera_fraction_retained=globalfactor,
                     **{k:(v if not isinstance(v,float) or np.isfinite(v) else None) for k,v in score.items()}))
     return dict(label=label,scene=scene,metadata=meta,score_init=initial,source_files={p.name:sha(p) for p in folder.iterdir() if p.is_file() and p.suffix in ['.f64','.txt']},
-        observation_input_sha256=sha('/workspace/bal/'+scene+'.txt'),camera_count=nc,median_observations=median_count,
+        observation_input_sha256=sha(problem),camera_count=nc,median_observations=median_count,
         median_smallest_active_eigenvalue=median_eig,median_largest_active_eigenvalue=maxmed,
         active_spectrum_all_cameras=vals.tolist(),active_spectrum_with_prior_all_cameras=pv.tolist(),
         raw_radius_ratio=totalnorm/radius if radius>0 else None,top5=entries,symmetry_absolute_error=symmetry,

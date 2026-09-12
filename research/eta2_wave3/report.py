@@ -23,7 +23,7 @@ def main():
  lines=['# Wave-3 numerical ledger','',
  'Frozen Eta2 is the control. Fresh cohorts remain separate; hit counts are observed samples. Native times include the intervention and trace overhead. N=3 disjoint ranges are descriptive, not confidence intervals.','']
  summary={};allrows=[]
- for stage in ['compatibility','locality','tails','opening','practical','opening-cap','opening-cap-practical','confirmation']:
+ for stage in ['compatibility','locality','tails','opening','practical','opening-cap','combination-tail','opening-cap-practical','confirmation-practical','confirmation-tails']:
   rows=load(stage)
   if not rows:continue
   allrows+=rows;lines += ['## '+stage,'','| Scene/cell | Arm | Hits | Median endpoint | Hit median s | Hit range s | Rejects | PCG/outer | Retry wall % |','|---|---|---:|---:|---:|---|---:|---:|---:|']

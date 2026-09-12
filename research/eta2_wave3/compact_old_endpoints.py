@@ -21,8 +21,8 @@ def restore(archive):
   p=Path(m['original'])
   if p.exists():assert digest(p.read_bytes())==m['compressed_sha256']
   else:p.write_bytes(compressed)
-def pack(limit):
- root=Path('/tmp/prism-rl-actor/runs');dest=root.parent/'lossless-endpoint-archives';dest.mkdir(exist_ok=True)
+def pack(limit,source_root):
+ root=Path(source_root);dest=root.parent/'lossless-endpoint-archives';dest.mkdir(exist_ok=True)
  ledger=P/'old_endpoint_archives.json';records=json.loads(ledger.read_text()) if ledger.exists() else []
  files=sorted(root.glob('*final-13682*/endpoint.state.gz'))[:limit]
  for source in files:
@@ -44,6 +44,6 @@ def pack(limit):
   source.unlink()
   print('ARCHIVED',source.parent.name,'saved',rec['original_bytes']-rec['archive_bytes'],'free',os.statvfs('/tmp').f_bavail*os.statvfs('/tmp').f_frsize,flush=True)
 if __name__=='__main__':
- ap=argparse.ArgumentParser();ap.add_argument('--limit',type=int,default=1);ap.add_argument('--restore');a=ap.parse_args()
+ ap=argparse.ArgumentParser();ap.add_argument('--limit',type=int,default=1);ap.add_argument('--restore');ap.add_argument('--source-root',default='/tmp/prism-rl-actor/runs');a=ap.parse_args()
  if a.restore:restore(a.restore)
- else:pack(a.limit)
+ else:pack(a.limit,a.source_root)
