@@ -6,6 +6,9 @@ CONFIGS={
  'stcg':dict(binary='steihaug/build/prism-stcg',manifest='steihaug/build_manifest.json',flag='OCA_STEIHAUG',trace='OCA_STCG_ATTEMPTS'),
  'pi':dict(binary='pi_radius/build/prism-pi',manifest='pi_radius/build/manifest.json',flag='OCA_PI_RADIUS',trace='OCA_STCG_ATTEMPTS'),
  'frontload':dict(binary='frontload/build/prism-frontload',manifest='frontload/build_manifest.json',flag='OCA_FRONTLOAD',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_05_NATIVE.md'),
+ 'opening_unclip':dict(binary='opening_unclip/build/prism-opening-unclip',manifest='opening_unclip/build_manifest.json',flag='OCA_OPEN_UNCLIP',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_05_UNCLIP.md'),
+ 'passenger':dict(binary='coarse/nonlinear_native/build/prism-passenger',manifest='coarse/nonlinear_native/build_manifest.json',flag='OCA_PASSENGER',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_09_NATIVE.md'),
+ 'soft_kick':dict(binary='soft_kick/build/prism-soft-kick',manifest='soft_kick/build_manifest.json',flag='OCA_SOFT_KICK',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_11.md'),
  'coarse':dict(binary='coarse/native/build/prism-coarse',manifest='coarse/native/build_manifest.json',flag='OCA_COARSE',trace='OCA_ATTEMPT_TRACE')}
 def coarse_trace(folder,row):
     text=(folder/'stdout.log').read_text();rows=[];previous=None
@@ -45,10 +48,10 @@ def main():
     assert proto['protocol_sha256']==sha(P/'PROTOCOL_NATIVE_PANEL.md')
     rows=[]
     registered_cells=list(proto[a.stage])
-    if a.candidate=='frontload' and a.stage=='tail':
+    if a.candidate in ('frontload','opening_unclip') and a.stage=='tail':
         extra_path='/workspace/bal/ladybug-1197.txt'
         extra=dict(scene='ladybug-1197',target=369997.000889023,cap=60,path=extra_path,input_sha256=sha(extra_path),cell='ladybug-1197')
-        registration=P/'frontload-tail-extra.json'
+        registration=P/(a.candidate+'-tail-extra.json')
         if registration.exists():assert json.loads(registration.read_text())==extra
         else:write(registration,extra)
         registered_cells.append(extra)
