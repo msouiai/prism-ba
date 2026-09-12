@@ -1,0 +1,1548 @@
+{
+  "baseline": {
+    "arithmetic_note": "Native Scalar=double with FP32 compact cross blocks/point rows; this CPU reference is Gram-consistent FP64",
+    "champion_config": {
+      "binary": "/tmp/prism-rl-sustained/build/prism-tr",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "cli": [
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        "0.1",
+        "--max_iter",
+        "600"
+      ],
+      "evidence": "/tmp/prism-rl-sustained/verdict.json",
+      "flags": {
+        "OCA_ATTR_RADIUS": "1",
+        "OCA_ATTR_RESCUE": "1",
+        "OCA_ATTR_STRICT": "1",
+        "OCA_BACKTRACK_REARM": "1",
+        "OCA_CAMERA_TR": "0",
+        "OCA_CG_STOP": "0",
+        "OCA_CLASSICAL_LM": "1",
+        "OCA_COMPACT_FRAGMENTS": "2",
+        "OCA_DEMAND_MENU": "0",
+        "OCA_DIAG_NORM": "1",
+        "OCA_FORCE_UNSHARED": "1",
+        "OCA_FTOL": "1e-5",
+        "OCA_FTOL_K": "8",
+        "OCA_GRID_DOWN": "2",
+        "OCA_MENU_BACKTRACK": "8",
+        "OCA_MENU_GATE": "1e-2",
+        "OCA_MULTI_RHS": "1",
+        "OCA_NSHIFTS": "1",
+        "OCA_PCG": "1",
+        "OCA_POINT_SAFEGUARD": "1",
+        "OCA_RETRY_CACHE": "1",
+        "OCA_RHO_LAMBDA": "1",
+        "OCA_RHO_SHIFT": "1",
+        "OCA_RLA_FIXED_ETA": "2",
+        "OCA_SCHUR_NUMERIC_GUARD": "1",
+        "OCA_SWITCH_RESTART": "0",
+        "OCA_TR_RECURRENCE": "0"
+      },
+      "initial_lambda": 0.1,
+      "label": "sustained-eta2-lambda0.1",
+      "limitations": [
+        "Muell lambda10 + eta2 is a counterexample",
+        "Largest tighter-target gain is only1.035x",
+        "Not a learned RL improvement"
+      ],
+      "status": "best tested global configuration on six-scene fixed-target panel; defaults unchanged"
+    },
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "verified_headers": 44
+  },
+  "cases": [
+    {
+      "archive": "/tmp/prism-ba-coarse/research/eta2_wave2/composition/terminal-static-0-0/snapshots.tar.xz",
+      "archive_sha256": "08b97bd77e47091f5176f67ec3c783e23c702e7175e2613385737353df628628",
+      "case": "terminal-0",
+      "charts": {
+        "additive": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 237922886.04527524,
+            "eigenvalues": [
+              1.884313168794613e-08,
+              0.0001519909864510889,
+              0.0003220842127601916,
+              0.07955899890002725,
+              0.3458484838452903,
+              0.4297868707809693,
+              2.6611192791040454,
+              4.4832122733273225
+            ],
+            "max_weak_pair_coordinate_loading": 0.5350072792607287,
+            "normalized_pair_correlation": 0.9991949735648411,
+            "weak_f_or_logf_loading": 0.46144364197381527,
+            "weak_pair_loading": 0.9964509212345439,
+            "weak_q_or_tz_loading": 0.5350072792607287
+          },
+          "captured_direction": {
+            "clip_factor": 0.0026508362743028055,
+            "healthy_clipped_physical_norm": 0.12473753157730492,
+            "raw_radius_ratio": 377.2394431500713,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9999962429117257
+          },
+          "captured_healthy_retention_vs_additive": 1.0,
+          "captured_ratio_reduction_vs_additive": 1.0,
+          "condition_improvement_vs_additive": 1.0,
+          "exact_clip_factor": 0.0010899868485148595,
+          "exact_healthy_physical_norm": 1.9812477379703268,
+          "exact_healthy_raw_physical_norm": 1817.680406575398,
+          "exact_linear_relative_residual": 2.596858568357598e-12,
+          "exact_proposal": {
+            "candidate_cost": 261511.78776094588,
+            "linear_model_cost": 261505.48805862665,
+            "point_step_norm": 10646917.485120293,
+            "prediction": 8.375317906524288,
+            "rho": 0.24782528979325663,
+            "true_decrease": 2.075615587295033
+          },
+          "exact_raw_radius_ratio": 917.4422621360345,
+          "exact_top_camera": 34,
+          "exact_top_camera_energy_fraction": 0.8719866976846945,
+          "kind": "additive",
+          "true_decrease_delta_vs_additive": 0.0
+        },
+        "ratio-linear": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 1393046.656075791,
+            "eigenvalues": [
+              3.0527014149342285e-06,
+              0.00015230111560823873,
+              0.0003228115859780055,
+              0.05967619355170024,
+              0.36508059189948133,
+              0.6421763091590544,
+              2.6800332419147943,
+              4.252555498071962
+            ],
+            "max_weak_pair_coordinate_loading": 0.4065028228270829,
+            "normalized_pair_correlation": -0.8390787189075134,
+            "weak_f_or_logf_loading": 0.4065028228270829,
+            "weak_pair_loading": 0.42491826219791373,
+            "weak_q_or_tz_loading": 0.01841543937083082
+          },
+          "captured_direction": {
+            "clip_factor": 0.03364824691830744,
+            "healthy_clipped_physical_norm": 1.5833491125728727,
+            "raw_radius_ratio": 29.719230319125987,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9997004269837462
+          },
+          "captured_healthy_retention_vs_additive": 12.6934459304384,
+          "captured_ratio_reduction_vs_additive": 12.6934459304384,
+          "condition_improvement_vs_additive": 170.79319275314398,
+          "exact_clip_factor": 0.00302148872629654,
+          "exact_healthy_physical_norm": 5.651748084504743,
+          "exact_healthy_raw_physical_norm": 1870.517680677277,
+          "exact_linear_relative_residual": 1.5414025167603583e-12,
+          "exact_proposal": {
+            "candidate_cost": 261536.95030152245,
+            "linear_model_cost": 261490.43135496607,
+            "point_step_norm": 10629481.696050439,
+            "prediction": 23.43202156710322,
+            "rho": -0.9852724368299277,
+            "true_decrease": -23.08692498927121
+          },
+          "exact_raw_radius_ratio": 330.9626778669822,
+          "exact_top_camera": 15,
+          "exact_top_camera_energy_fraction": 0.06508449393698046,
+          "kind": "ratio-linear",
+          "true_decrease_delta_vs_additive": -25.162540576566244
+        },
+        "ratio-log": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 1393046.6518234357,
+            "eigenvalues": [
+              3.052701424252768e-06,
+              0.000152301115608244,
+              0.00032281158597799757,
+              0.059676193551701825,
+              0.3650805918994818,
+              0.6421763091590568,
+              2.680033241914793,
+              4.252555498071952
+            ],
+            "max_weak_pair_coordinate_loading": 0.40650282282707634,
+            "normalized_pair_correlation": -0.8390787189075049,
+            "weak_f_or_logf_loading": 0.40650282282707634,
+            "weak_pair_loading": 0.4249182621979242,
+            "weak_q_or_tz_loading": 0.018415439370847896
+          },
+          "captured_direction": {
+            "clip_factor": 0.0336482469183073,
+            "healthy_clipped_physical_norm": 1.5833491125728663,
+            "raw_radius_ratio": 29.71923031912611,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9997004269837462
+          },
+          "captured_healthy_retention_vs_additive": 12.69344593043835,
+          "captured_ratio_reduction_vs_additive": 12.69344593043835,
+          "condition_improvement_vs_additive": 170.79319327450006,
+          "exact_clip_factor": 0.0030214887087273803,
+          "exact_healthy_physical_norm": 5.651748036729139,
+          "exact_healthy_raw_physical_norm": 1870.5176757419017,
+          "exact_linear_relative_residual": 1.455485984488551e-12,
+          "exact_proposal": {
+            "candidate_cost": 261569.00773906583,
+            "linear_model_cost": 261490.4313551243,
+            "point_step_norm": 10629481.69772823,
+            "prediction": 23.432021408865694,
+            "rho": -2.353376244005385,
+            "true_decrease": -55.14436253265012
+          },
+          "exact_raw_radius_ratio": 330.9626797914428,
+          "exact_top_camera": 15,
+          "exact_top_camera_energy_fraction": 0.06508449396903784,
+          "kind": "ratio-log",
+          "true_decrease_delta_vs_additive": -57.219978119945154
+        }
+      },
+      "coherent_E_max_coordinate_relative_error": 15.620651673590949,
+      "coherent_E_relative_error": 0.14690175746528658,
+      "kind": "terminal",
+      "member_sha256": {
+        "0/Cdiag.f64": "bc7dbcd7fbec280d9f1969cc650cb694bfe3b98171454a3a6b8e5de5f7364eb9",
+        "0/E.f64": "9637a76762477a5bfaa87136a5d7d1fe61389a9561a47807a53fb3c1e6a4de04",
+        "0/R_state.f64": "ce81f203a34004eb6e4d8f6b69b4a78084b760e898e27054d0ab9b5e87b8ba26",
+        "0/X_state.f64": "5fab02fa2a71db740c8d631b8bbf3a523c2f197d07ff7e9b57eaba575df794d8",
+        "0/eta2_raw_scaled.f64": "6558044200cfa4c24ea3466009bb50a6c93baebe95cab5277eaecd031f8ffce9",
+        "0/intr_state.f64": "62c6149b85094f04bc203d457a5df50ef458ae6844944a32965fd6674e468eb8",
+        "0/metadata.txt": "50e59b331af8432bf67a9e0e5af00df1f8419027ba868a445aebdf888dcee998",
+        "0/t_state.f64": "92f82ee0c2243be1ff846dc41102d77b3647513f15c98b51598a4d8515ae0a73"
+      },
+      "metadata": {
+        "cost": 261513.8633765335,
+        "eta": 0.5,
+        "eta2_cg": 1.0,
+        "lambda": 6.400000000000004e-10,
+        "ncam": 52.0,
+        "nobs": 347173.0,
+        "npt": 64053.0,
+        "outer": 0.0,
+        "radius": 403.78606586487587,
+        "static_replay": 1.0,
+        "tau": 6.400000000000004e-10
+      },
+      "native_captured_raw_radius_ratio": 428.25736864777406,
+      "record_sha256": "af996ad06f5b9f3884b358490f02c3363936a8db9922c339a803b8baa5d9dca7",
+      "score_init": 261513.86337653318
+    },
+    {
+      "archive": "/tmp/prism-ba-coarse/research/eta2_wave2/composition/terminal-static-0-1/snapshots.tar.xz",
+      "archive_sha256": "cbebbf6cd2d22ab6b4358368741aab8ec44524369605c1e6717045d6452e4a0e",
+      "case": "terminal-1",
+      "charts": {
+        "additive": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 237922534.03083548,
+            "eigenvalues": [
+              1.8843156743413268e-08,
+              0.00015199091792653842,
+              0.00032208419033536345,
+              0.07955900811725343,
+              0.34584882747362944,
+              0.4297868049922494,
+              2.661119663932334,
+              4.48321160153311
+            ],
+            "max_weak_pair_coordinate_loading": 0.5350072601854345,
+            "normalized_pair_correlation": 0.9991949744060433,
+            "weak_f_or_logf_loading": 0.4614436650834418,
+            "weak_pair_loading": 0.9964509252688764,
+            "weak_q_or_tz_loading": 0.5350072601854345
+          },
+          "captured_direction": {
+            "clip_factor": 0.0026508360468113744,
+            "healthy_clipped_physical_norm": 0.12473925911954573,
+            "raw_radius_ratio": 377.2394755242881,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9999962428661383
+          },
+          "captured_healthy_retention_vs_additive": 1.0,
+          "captured_ratio_reduction_vs_additive": 1.0,
+          "condition_improvement_vs_additive": 1.0,
+          "exact_clip_factor": 0.0010904041749278232,
+          "exact_healthy_physical_norm": 1.9820093684073499,
+          "exact_healthy_raw_physical_norm": 1817.6832169030758,
+          "exact_linear_relative_residual": 2.4305460942457485e-12,
+          "exact_proposal": {
+            "candidate_cost": 261511.77817658547,
+            "linear_model_cost": 261505.47461995148,
+            "point_step_norm": 10646927.158833267,
+            "prediction": 8.37894838899956,
+            "rho": 0.24769119687233013,
+            "true_decrease": 2.0753917550027836
+          },
+          "exact_raw_radius_ratio": 917.0911328051296,
+          "exact_top_camera": 34,
+          "exact_top_camera_energy_fraction": 0.8726628431166588,
+          "kind": "additive",
+          "true_decrease_delta_vs_additive": 0.0
+        },
+        "ratio-linear": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 1393042.8738281138,
+            "eigenvalues": [
+              3.052709191978341e-06,
+              0.00015230104758264044,
+              0.00032281156170864785,
+              0.059676211288621155,
+              0.3650809366977081,
+              0.6421763117543346,
+              2.6800335891858427,
+              4.252554785755007
+            ],
+            "max_weak_pair_coordinate_loading": 0.4065027392974946,
+            "normalized_pair_correlation": -0.8390786424456586,
+            "weak_f_or_logf_loading": 0.4065027392974946,
+            "weak_pair_loading": 0.4249182123793712,
+            "weak_q_or_tz_loading": 0.018415473081876608
+          },
+          "captured_direction": {
+            "clip_factor": 0.03364826361582687,
+            "healthy_clipped_physical_norm": 1.5833719626478564,
+            "raw_radius_ratio": 29.719215571338953,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9997004281246302
+          },
+          "captured_healthy_retention_vs_additive": 12.693453318737514,
+          "captured_ratio_reduction_vs_additive": 12.693453318737516,
+          "condition_improvement_vs_additive": 170.7934037787501,
+          "exact_clip_factor": 0.0030304467681005966,
+          "exact_healthy_physical_norm": 5.66851351943662,
+          "exact_healthy_raw_physical_norm": 1870.5207361188834,
+          "exact_linear_relative_residual": 1.3044013395587675e-12,
+          "exact_proposal": {
+            "candidate_cost": 261537.14673507694,
+            "linear_model_cost": 261490.35099226388,
+            "point_step_norm": 10629474.56205131,
+            "prediction": 23.502576076600235,
+            "rho": -0.9910899409725669,
+            "true_decrease": -23.29316673646099
+          },
+          "exact_raw_radius_ratio": 329.9843476962882,
+          "exact_top_camera": 15,
+          "exact_top_camera_energy_fraction": 0.06498188655879865,
+          "kind": "ratio-linear",
+          "true_decrease_delta_vs_additive": -25.368558491463773
+        },
+        "ratio-log": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 1393042.8623212927,
+            "eigenvalues": [
+              3.052709217194324e-06,
+              0.00015230104758260502,
+              0.0003228115617080525,
+              0.059676211288625554,
+              0.3650809366977084,
+              0.6421763117543398,
+              2.6800335891858396,
+              4.252554785754974
+            ],
+            "max_weak_pair_coordinate_loading": 0.4065027392969484,
+            "normalized_pair_correlation": -0.8390786424456358,
+            "weak_f_or_logf_loading": 0.4065027392969484,
+            "weak_pair_loading": 0.4249182123788765,
+            "weak_q_or_tz_loading": 0.018415473081928105
+          },
+          "captured_direction": {
+            "clip_factor": 0.03364826361582648,
+            "healthy_clipped_physical_norm": 1.5833719626478377,
+            "raw_radius_ratio": 29.719215571339305,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9997004281246304
+          },
+          "captured_healthy_retention_vs_additive": 12.693453318737365,
+          "captured_ratio_reduction_vs_additive": 12.693453318737365,
+          "condition_improvement_vs_additive": 170.79340518953882,
+          "exact_clip_factor": 0.0030304467587715183,
+          "exact_healthy_physical_norm": 5.668513460518135,
+          "exact_healthy_raw_physical_norm": 1870.5207224350097,
+          "exact_linear_relative_residual": 1.373182558816481e-12,
+          "exact_proposal": {
+            "candidate_cost": 261569.40752699468,
+            "linear_model_cost": 261490.35099239828,
+            "point_step_norm": 10629474.568053627,
+            "prediction": 23.502575942198746,
+            "rho": -2.3637391403745296,
+            "true_decrease": -55.55395865419996
+          },
+          "exact_raw_radius_ratio": 329.9843487121284,
+          "exact_top_camera": 15,
+          "exact_top_camera_energy_fraction": 0.06498188605730934,
+          "kind": "ratio-log",
+          "true_decrease_delta_vs_additive": -57.62935040920274
+        }
+      },
+      "coherent_E_max_coordinate_relative_error": 15.517967772822942,
+      "coherent_E_relative_error": 0.14690175863889615,
+      "kind": "terminal",
+      "member_sha256": {
+        "0/Cdiag.f64": "be892e7ecfa2c9db9b37dc72921e72378fdf0d1fc8646481e5f0e851f4f3e9ac",
+        "0/E.f64": "e133b5c3db80b915f6dbdaefb033865b5639aa41e35d5b7940185144fa460eb0",
+        "0/R_state.f64": "bd951c233df597683176bf00ef5b6ee3e8b830b07b7ed3aa705415b4531c3c2e",
+        "0/X_state.f64": "474f57e1b37166a3329a4ccbd0c7c810c77c896a984e6233463aec8a25976ee0",
+        "0/eta2_raw_scaled.f64": "3f095f404306252042f033af444d23ef6aff9926209ea19fb1a7a9a63487a955",
+        "0/intr_state.f64": "e08d6461e37ee6500b61e60072946a9ae8e040367146e16c35ca69074df8a433",
+        "0/metadata.txt": "bba152e2fd2c8558f07ff7c971d5f057576bae1914ba0aa9265a7a47edbcfe44",
+        "0/t_state.f64": "247a13763bb0d6418cc571783ac4dfa827585d58ddf7a1718c441245a7297758"
+      },
+      "metadata": {
+        "cost": 261513.85356834027,
+        "eta": 0.5,
+        "eta2_cg": 1.0,
+        "lambda": 6.400000000000004e-10,
+        "ncam": 52.0,
+        "nobs": 347173.0,
+        "npt": 64053.0,
+        "outer": 0.0,
+        "radius": 403.7860658648754,
+        "static_replay": 1.0,
+        "tau": 6.400000000000004e-10
+      },
+      "native_captured_raw_radius_ratio": 428.25740243267296,
+      "record_sha256": "ba2e3b08a8d75be29348c59da5b03fabdc83062f82ed9a21a280ef65d3fb1531",
+      "score_init": 261513.85356834048
+    },
+    {
+      "archive": "/tmp/prism-ba-coarse/research/eta2_wave2/composition/terminal-static-0-2/snapshots.tar.xz",
+      "archive_sha256": "e2ed7c25a1b254f313669e0ad769898c02f43f83613cf14aa79c87522ef41b05",
+      "case": "terminal-2",
+      "charts": {
+        "additive": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 237923070.30575117,
+            "eigenvalues": [
+              1.884311749629532e-08,
+              0.00015199104950785748,
+              0.000322084395348619,
+              0.07955899850195362,
+              0.34584845104233153,
+              0.42978690157946725,
+              2.6611191857376717,
+              4.483212368850602
+            ],
+            "max_weak_pair_coordinate_loading": 0.5350072772591806,
+            "normalized_pair_correlation": 0.9991949736469624,
+            "weak_f_or_logf_loading": 0.4614436445031377,
+            "weak_pair_loading": 0.9964509217623183,
+            "weak_q_or_tz_loading": 0.5350072772591806
+          },
+          "captured_direction": {
+            "clip_factor": 0.0026507979254860093,
+            "healthy_clipped_physical_norm": 0.12473717502113323,
+            "raw_radius_ratio": 377.2449006337046,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.999996242946004
+          },
+          "captured_healthy_retention_vs_additive": 1.0,
+          "captured_ratio_reduction_vs_additive": 1.0,
+          "condition_improvement_vs_additive": 1.0,
+          "exact_clip_factor": 0.0010899020947353296,
+          "exact_healthy_physical_norm": 1.9810937622747469,
+          "exact_healthy_raw_physical_norm": 1817.6804795992557,
+          "exact_linear_relative_residual": 3.095862412368669e-12,
+          "exact_proposal": {
+            "candidate_cost": 261511.77435564078,
+            "linear_model_cost": 261505.4753893403,
+            "point_step_norm": 10646989.541829763,
+            "prediction": 8.374578050686978,
+            "rho": 0.24784672584747797,
+            "true_decrease": 2.075611750216922
+          },
+          "exact_raw_radius_ratio": 917.5136049654429,
+          "exact_top_camera": 34,
+          "exact_top_camera_energy_fraction": 0.8718491906016821,
+          "kind": "additive",
+          "true_decrease_delta_vs_additive": 0.0
+        },
+        "ratio-linear": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 1393047.7312270787,
+            "eigenvalues": [
+              3.0526991844825505e-06,
+              0.00015230117743034722,
+              0.00032281176675022787,
+              0.05967618346419364,
+              0.3650805664869583,
+              0.6421762563321902,
+              2.680033155011117,
+              4.2525556730621705
+            ],
+            "max_weak_pair_coordinate_loading": 0.40650294148667176,
+            "normalized_pair_correlation": -0.8390787843863209,
+            "weak_f_or_logf_loading": 0.40650294148667176,
+            "weak_pair_loading": 0.4249183385354665,
+            "weak_q_or_tz_loading": 0.018415397048794746
+          },
+          "captured_direction": {
+            "clip_factor": 0.033647759865272714,
+            "healthy_clipped_physical_norm": 1.583344573733988,
+            "raw_radius_ratio": 29.7196605064958,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9997004304585311
+          },
+          "captured_healthy_retention_vs_additive": 12.693445826921561,
+          "captured_ratio_reduction_vs_additive": 12.693445826921561,
+          "condition_improvement_vs_additive": 170.79319320679306,
+          "exact_clip_factor": 0.0030196749412901847,
+          "exact_healthy_physical_norm": 5.648355497291008,
+          "exact_healthy_raw_physical_norm": 1870.5177236320988,
+          "exact_linear_relative_residual": 1.4361899600628762e-12,
+          "exact_proposal": {
+            "candidate_cost": 261536.8953714018,
+            "linear_model_cost": 261490.4322385428,
+            "point_step_norm": 10629568.774926,
+            "prediction": 23.417728848202387,
+            "rho": -0.9841007281357521,
+            "true_decrease": -23.045404010801576
+          },
+          "exact_raw_radius_ratio": 331.16147249039346,
+          "exact_top_camera": 15,
+          "exact_top_camera_energy_fraction": 0.06510496646421897,
+          "kind": "ratio-linear",
+          "true_decrease_delta_vs_additive": -25.121015761018498
+        },
+        "ratio-log": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 1393047.7301182612,
+            "eigenvalues": [
+              3.0526991869123915e-06,
+              0.0001523011774304138,
+              0.00032281176675050586,
+              0.05967618346419442,
+              0.36508056648695797,
+              0.6421762563321902,
+              2.680033155011117,
+              4.252555673062169
+            ],
+            "max_weak_pair_coordinate_loading": 0.40650294148633753,
+            "normalized_pair_correlation": -0.839078784386318,
+            "weak_f_or_logf_loading": 0.40650294148633753,
+            "weak_pair_loading": 0.42491833853514066,
+            "weak_q_or_tz_loading": 0.018415397048803146
+          },
+          "captured_direction": {
+            "clip_factor": 0.03364775986527268,
+            "healthy_clipped_physical_norm": 1.5833445737339862,
+            "raw_radius_ratio": 29.71966050649583,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9997004304585311
+          },
+          "captured_healthy_retention_vs_additive": 12.693445826921547,
+          "captured_ratio_reduction_vs_additive": 12.693445826921547,
+          "condition_improvement_vs_additive": 170.7931933427385,
+          "exact_clip_factor": 0.0030196750133206903,
+          "exact_healthy_physical_norm": 5.648355628256354,
+          "exact_healthy_raw_physical_norm": 1870.517722383954,
+          "exact_linear_relative_residual": 1.2094833414036807e-12,
+          "exact_proposal": {
+            "candidate_cost": 261568.91182503704,
+            "linear_model_cost": 261490.43223799273,
+            "point_step_norm": 10629568.766696224,
+            "prediction": 23.417729398264783,
+            "rho": -2.35128934618743,
+            "true_decrease": -55.06185764604015
+          },
+          "exact_raw_radius_ratio": 331.16146459095785,
+          "exact_top_camera": 15,
+          "exact_top_camera_energy_fraction": 0.06510496678158567,
+          "kind": "ratio-log",
+          "true_decrease_delta_vs_additive": -57.137469396257075
+        }
+      },
+      "coherent_E_max_coordinate_relative_error": 15.640688547442984,
+      "coherent_E_relative_error": 0.1469017120164809,
+      "kind": "terminal",
+      "member_sha256": {
+        "0/Cdiag.f64": "9ba743cda28948cb2ad16f1fb44071eef7124f46803be05abda3054c0e455856",
+        "0/E.f64": "e53a8027c8b0a6f272c0e5ae6a1df942ed431a1ea862813d31b0e616486a6e4f",
+        "0/R_state.f64": "9ea2763940348aad43bd32d02c27dbd245cf04a1c062072e8551814074ac6c8c",
+        "0/X_state.f64": "48ee336a803cbeb4ab9f4b3c9556f7fb736626d7707eefaded5bfad7bd29a361",
+        "0/eta2_raw_scaled.f64": "7aaac74d646709c8915f4a7e7fe623fcaba817b82ad52e83c60a3958a9102269",
+        "0/intr_state.f64": "a79f93775b62cb3d20466ab45b4e8289e2b22e297b6e737d09608152c058d900",
+        "0/metadata.txt": "d8636dd55c101755c06ef3ea4829d918f1283ad62454d0a0ee44fba18feae994",
+        "0/t_state.f64": "c27b7573f0104d89d1a342c5613d37b85e237aab6b797f30e4ea14f867158c3d"
+      },
+      "metadata": {
+        "cost": 261513.849967391,
+        "eta": 0.5,
+        "eta2_cg": 1.0,
+        "lambda": 6.400000000000004e-10,
+        "ncam": 52.0,
+        "nobs": 347173.0,
+        "npt": 64053.0,
+        "outer": 0.0,
+        "radius": 403.7860658648758,
+        "static_replay": 1.0,
+        "tau": 6.400000000000004e-10
+      },
+      "native_captured_raw_radius_ratio": 428.26356174542815,
+      "record_sha256": "f2c7c5e7ab00e252df59374e22a62681984fd8d1c7b6927006a18cb7811f4717",
+      "score_init": 261513.849967391
+    },
+    {
+      "archive": "/tmp/prism-ba-coarse/research/eta2_wave2/composition/terminal-static-0-3/snapshots.tar.xz",
+      "archive_sha256": "1cb87f15ef7014188f8600aab756ac97cf5883e25aa37f5c03268d2f2c76b268",
+      "case": "terminal-3",
+      "charts": {
+        "additive": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 237923072.66623583,
+            "eigenvalues": [
+              1.8843119517457785e-08,
+              0.00015199107569398822,
+              0.0003220843313305234,
+              0.07955899117076697,
+              0.3458480496093426,
+              0.4297868244523806,
+              2.661119146306686,
+              4.483212894210675
+            ],
+            "max_weak_pair_coordinate_loading": 0.5350072991590584,
+            "normalized_pair_correlation": 0.9991949726973206,
+            "weak_f_or_logf_loading": 0.4614436178784342,
+            "weak_pair_loading": 0.9964509170374927,
+            "weak_q_or_tz_loading": 0.5350072991590584
+          },
+          "captured_direction": {
+            "clip_factor": 0.002650781163460205,
+            "healthy_clipped_physical_norm": 0.1247350276119713,
+            "raw_radius_ratio": 377.247286114953,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9999962429900493
+          },
+          "captured_healthy_retention_vs_additive": 1.0,
+          "captured_ratio_reduction_vs_additive": 1.0,
+          "condition_improvement_vs_additive": 1.0,
+          "exact_clip_factor": 0.0010902094652979098,
+          "exact_healthy_physical_norm": 1.9816441934409796,
+          "exact_healthy_raw_physical_norm": 1817.6728936209308,
+          "exact_linear_relative_residual": 2.4505994800084697e-12,
+          "exact_proposal": {
+            "candidate_cost": 261511.74603637223,
+            "linear_model_cost": 261505.44434942724,
+            "point_step_norm": 10647045.263154352,
+            "prediction": 8.377210956910858,
+            "rho": 0.24775835568586882,
+            "true_decrease": 2.075524011917878
+          },
+          "exact_raw_radius_ratio": 917.2549237836059,
+          "exact_top_camera": 34,
+          "exact_top_camera_energy_fraction": 0.8723475273211563,
+          "kind": "additive",
+          "true_decrease_delta_vs_additive": 0.0
+        },
+        "ratio-linear": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 1393049.5111794155,
+            "eigenvalues": [
+              3.0526956367893503e-06,
+              0.0001523012045331749,
+              0.0003228117065698295,
+              0.05967617785849161,
+              0.3650800807554054,
+              0.6421762689774105,
+              2.6800331421930115,
+              4.252556164608939
+            ],
+            "max_weak_pair_coordinate_loading": 0.4065028960060006,
+            "normalized_pair_correlation": -0.8390787916195901,
+            "weak_f_or_logf_loading": 0.4065028960060006,
+            "weak_pair_loading": 0.42491830551823656,
+            "weak_q_or_tz_loading": 0.018415409512235945
+          },
+          "captured_direction": {
+            "clip_factor": 0.03364752705080948,
+            "healthy_clipped_physical_norm": 1.583316372400456,
+            "raw_radius_ratio": 29.719866143207167,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.999700425791709
+          },
+          "captured_healthy_retention_vs_additive": 12.693438264397345,
+          "captured_ratio_reduction_vs_additive": 12.693438264397345,
+          "condition_improvement_vs_additive": 170.7929766723079,
+          "exact_clip_factor": 0.0030262611825194246,
+          "exact_healthy_physical_norm": 5.660653252372237,
+          "exact_healthy_raw_physical_norm": 1870.5104784312196,
+          "exact_linear_relative_residual": 1.4000303085055436e-12,
+          "exact_proposal": {
+            "candidate_cost": 261537.01757972335,
+            "linear_model_cost": 261490.35207113595,
+            "point_step_norm": 10629621.582410743,
+            "prediction": 23.469489248207537,
+            "rho": -0.9883478542666688,
+            "true_decrease": -23.196019339200575
+          },
+          "exact_raw_radius_ratio": 330.44074509374616,
+          "exact_top_camera": 15,
+          "exact_top_camera_energy_fraction": 0.06502965834032604,
+          "kind": "ratio-linear",
+          "true_decrease_delta_vs_additive": -25.271543351118453
+        },
+        "ratio-log": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 1393049.5178593614,
+            "eigenvalues": [
+              3.052695622151088e-06,
+              0.00015230120453319093,
+              0.0003228117065686981,
+              0.05967617785848889,
+              0.36508008075540527,
+              0.6421762689774068,
+              2.6800331421930133,
+              4.252556164608956
+            ],
+            "max_weak_pair_coordinate_loading": 0.4065028960064004,
+            "normalized_pair_correlation": -0.839078791619604,
+            "weak_f_or_logf_loading": 0.4065028960064004,
+            "weak_pair_loading": 0.42491830551860676,
+            "weak_q_or_tz_loading": 0.018415409512206396
+          },
+          "captured_direction": {
+            "clip_factor": 0.03364752705080973,
+            "healthy_clipped_physical_norm": 1.5833163724004677,
+            "raw_radius_ratio": 29.719866143206954,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.999700425791709
+          },
+          "captured_healthy_retention_vs_additive": 12.69343826439744,
+          "captured_ratio_reduction_vs_additive": 12.693438264397436,
+          "condition_improvement_vs_additive": 170.79297585332205,
+          "exact_clip_factor": 0.0030262612388539307,
+          "exact_healthy_physical_norm": 5.660653380868618,
+          "exact_healthy_raw_physical_norm": 1870.5104860717017,
+          "exact_linear_relative_residual": 1.2310034201333692e-12,
+          "exact_proposal": {
+            "candidate_cost": 261569.1827445512,
+            "linear_model_cost": 261490.3520706663,
+            "point_step_norm": 10629621.593524663,
+            "prediction": 23.46948971785605,
+            "rho": -2.358857599060431,
+            "true_decrease": -55.36118416703539
+          },
+          "exact_raw_radius_ratio": 330.44073894252034,
+          "exact_top_camera": 15,
+          "exact_top_camera_energy_fraction": 0.06502965802306188,
+          "kind": "ratio-log",
+          "true_decrease_delta_vs_additive": -57.43670817895327
+        }
+      },
+      "coherent_E_max_coordinate_relative_error": 15.565083526348708,
+      "coherent_E_relative_error": 0.14690177219750652,
+      "kind": "terminal",
+      "member_sha256": {
+        "0/Cdiag.f64": "4dc3d3fb2676f971eff31948c48fdfb99fb2f6fff3feb0b0e087ffd5dfc1e4f8",
+        "0/E.f64": "3298869ae77293c7d1d40a3ee939823500b6ceb8198532346b6679e8c788393a",
+        "0/R_state.f64": "444149e6169cc6ffcd9edcdf62b3fd975401a7d99be87bcf12bcff9d85115b24",
+        "0/X_state.f64": "f640c66fdf8cc3e05da5978276c83f8e04a20507d13825bb14418c4897ddd0c4",
+        "0/eta2_raw_scaled.f64": "8b781b00465006c7880b3757236e6eef4df46d39f088b352906e96f45ab3e296",
+        "0/intr_state.f64": "335ffcc366e7d5f4e300b6f7ffbe2663c165e27c2f40b64e0cdc18f0c7a92eea",
+        "0/metadata.txt": "c2cadf7fc016a57ff3498a0d89d91cac748dc38367f067fba9986d544510dd9f",
+        "0/t_state.f64": "5b11221fbfae9811b142702a9ce41e4180ee7b253de728594c175184a9ac674f"
+      },
+      "metadata": {
+        "cost": 261513.82156038427,
+        "eta": 0.5,
+        "eta2_cg": 1.0,
+        "lambda": 6.400000000000004e-10,
+        "ncam": 52.0,
+        "nobs": 347173.0,
+        "npt": 64053.0,
+        "outer": 0.0,
+        "radius": 403.7860658648756,
+        "static_replay": 1.0,
+        "tau": 6.400000000000004e-10
+      },
+      "native_captured_raw_radius_ratio": 428.26627989707873,
+      "record_sha256": "1a35f802d1333153b703fc2f370f2f966df21a314bb97dcb9af1327f702b24ee",
+      "score_init": 261513.82156038415
+    },
+    {
+      "archive": "/tmp/prism-ba-coarse/research/eta2_wave2/composition/terminal-static-0-4/snapshots.tar.xz",
+      "archive_sha256": "af76b980cec6e680900380da579ef30c096c9a9deb5293866c7d535522d45b16",
+      "case": "terminal-4",
+      "charts": {
+        "additive": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 237923102.22905532,
+            "eigenvalues": [
+              1.8843117490410377e-08,
+              0.00015199112274256554,
+              0.0003220845123152763,
+              0.07955898855153444,
+              0.34584799346702655,
+              0.4297868087565933,
+              2.6611191457616594,
+              4.483212968985009
+            ],
+            "max_weak_pair_coordinate_loading": 0.5350073041774588,
+            "normalized_pair_correlation": 0.9991949724809795,
+            "weak_f_or_logf_loading": 0.46144361192774025,
+            "weak_pair_loading": 0.9964509161051991,
+            "weak_q_or_tz_loading": 0.5350073041774588
+          },
+          "captured_direction": {
+            "clip_factor": 0.0026507775632058288,
+            "healthy_clipped_physical_norm": 0.1247353920638095,
+            "raw_radius_ratio": 377.24779848770413,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9999962430346642
+          },
+          "captured_healthy_retention_vs_additive": 1.0,
+          "captured_ratio_reduction_vs_additive": 1.0,
+          "condition_improvement_vs_additive": 1.0,
+          "exact_clip_factor": 0.0010900606669989091,
+          "exact_healthy_physical_norm": 1.9813747544081168,
+          "exact_healthy_raw_physical_norm": 1817.6738363224513,
+          "exact_linear_relative_residual": 3.3801767736467164e-12,
+          "exact_proposal": {
+            "candidate_cost": 261511.72844911646,
+            "linear_model_cost": 261505.42815368154,
+            "point_step_norm": 10647250.714086479,
+            "prediction": 8.375846187904244,
+            "rho": 0.247801918328003,
+            "true_decrease": 2.075550752982963
+          },
+          "exact_raw_radius_ratio": 917.3801333031686,
+          "exact_top_camera": 34,
+          "exact_top_camera_energy_fraction": 0.8721063774362605,
+          "kind": "additive",
+          "true_decrease_delta_vs_additive": 0.0
+        },
+        "ratio-linear": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 1393050.2342357093,
+            "eigenvalues": [
+              3.05269416275844e-06,
+              0.00015230125042753684,
+              0.00032281188564902997,
+              0.05967616687444985,
+              0.36508001082747027,
+              0.6421761931488823,
+              2.680033144838328,
+              4.252556318480627
+            ],
+            "max_weak_pair_coordinate_loading": 0.4065029951950708,
+            "normalized_pair_correlation": -0.8390788553186244,
+            "weak_f_or_logf_loading": 0.4065029951950708,
+            "weak_pair_loading": 0.4249183694988192,
+            "weak_q_or_tz_loading": 0.018415374303748375
+          },
+          "captured_direction": {
+            "clip_factor": 0.03364747501961418,
+            "healthy_clipped_physical_norm": 1.5833207006071668,
+            "raw_radius_ratio": 29.71991210089519,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9997004339612099
+          },
+          "captured_healthy_retention_vs_additive": 12.693435875819471,
+          "captured_ratio_reduction_vs_additive": 12.693435875819468,
+          "condition_improvement_vs_additive": 170.79290924464811,
+          "exact_clip_factor": 0.0030230695834923545,
+          "exact_healthy_physical_norm": 5.654685815833473,
+          "exact_healthy_raw_physical_norm": 1870.5112997435488,
+          "exact_linear_relative_residual": 1.3552315618748588e-12,
+          "exact_proposal": {
+            "candidate_cost": 261536.9269134921,
+            "linear_model_cost": 261490.35984277757,
+            "point_step_norm": 10629825.333800504,
+            "prediction": 23.444157091871602,
+            "rho": -0.9862975039807941,
+            "true_decrease": -23.122913622646593
+          },
+          "exact_raw_radius_ratio": 330.7896071795891,
+          "exact_top_camera": 15,
+          "exact_top_camera_energy_fraction": 0.06506637165452364,
+          "kind": "ratio-linear",
+          "true_decrease_delta_vs_additive": -25.198464375629555
+        },
+        "ratio-log": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 1393050.2322643488,
+            "eigenvalues": [
+              3.0526941670784235e-06,
+              0.00015230125042753174,
+              0.00032281188564889536,
+              0.059676166874450924,
+              0.36508001082746994,
+              0.6421761931488843,
+              2.6800331448383283,
+              4.252556318480621
+            ],
+            "max_weak_pair_coordinate_loading": 0.40650299519465194,
+            "normalized_pair_correlation": -0.8390788553186197,
+            "weak_f_or_logf_loading": 0.40650299519465194,
+            "weak_pair_loading": 0.4249183694984199,
+            "weak_q_or_tz_loading": 0.01841537430376796
+          },
+          "captured_direction": {
+            "clip_factor": 0.033647475019614105,
+            "healthy_clipped_physical_norm": 1.5833207006071632,
+            "raw_radius_ratio": 29.719912100895257,
+            "top_camera": 34,
+            "top_camera_energy_fraction": 0.9997004339612099
+          },
+          "captured_healthy_retention_vs_additive": 12.693435875819443,
+          "captured_ratio_reduction_vs_additive": 12.69343587581944,
+          "condition_improvement_vs_additive": 170.79290948634394,
+          "exact_clip_factor": 0.0030230695822426336,
+          "exact_healthy_physical_norm": 5.6546858070712505,
+          "exact_healthy_raw_physical_norm": 1870.5112976183557,
+          "exact_linear_relative_residual": 1.3089594096759353e-12,
+          "exact_proposal": {
+            "candidate_cost": 261569.0197523548,
+            "linear_model_cost": 261490.3598427969,
+            "point_step_norm": 10629825.331931517,
+            "prediction": 23.44415707254666,
+            "rho": -2.355203145691765,
+            "true_decrease": -55.21575248535373
+          },
+          "exact_raw_radius_ratio": 330.7896073163358,
+          "exact_top_camera": 15,
+          "exact_top_camera_energy_fraction": 0.06506637187197506,
+          "kind": "ratio-log",
+          "true_decrease_delta_vs_additive": -57.291303238336695
+        }
+      },
+      "coherent_E_max_coordinate_relative_error": 15.602247634446073,
+      "coherent_E_relative_error": 0.14690174480146667,
+      "kind": "terminal",
+      "member_sha256": {
+        "0/Cdiag.f64": "5f56bd9337ff3cd8204e2b7ccc30fc4697ee70a068c9ecaa589f47dd64c80cad",
+        "0/E.f64": "a3acc4fae3d3d4611c4b3c0b68c80ecf883ba3e17db89af3d52a32e2d6a21503",
+        "0/R_state.f64": "3da0e1ac64a543e88b38096ab6ca0f5947c51c260bf6129f5f15b44f47bed6c4",
+        "0/X_state.f64": "cafbb1fc6ef517ec4ac753c96e5f33cf4b7e42ceecf11872c3aa377f9ec52526",
+        "0/eta2_raw_scaled.f64": "a910fefb9e9ff2248897a4b09e19d69e24dab39e473ee2eef812cf18a3708a60",
+        "0/intr_state.f64": "cc39591b3ee597202e122b556cf2c8b403d0df4de11fcbd48b0ee1f286d87a00",
+        "0/metadata.txt": "f0988cb7aed91ceb595e498886071369b57537ea62b5c2f47adcb28d21c006ee",
+        "0/t_state.f64": "0d57ce051fe5f0090ada8843e83731db029c13d51789518ab0677802a57f4fce"
+      },
+      "metadata": {
+        "cost": 261513.80399986924,
+        "eta": 0.5,
+        "eta2_cg": 1.0,
+        "lambda": 6.400000000000004e-10,
+        "ncam": 52.0,
+        "nobs": 347173.0,
+        "npt": 64053.0,
+        "outer": 0.0,
+        "radius": 403.7860658648758,
+        "static_replay": 1.0,
+        "tau": 6.400000000000004e-10
+      },
+      "native_captured_raw_radius_ratio": 428.26686105715913,
+      "record_sha256": "bca92671118e38778d4fa45641a3a4c401c82c70a4e4cf6b2c26705d8989c11d",
+      "score_init": 261513.80399986944
+    },
+    {
+      "archive": "/workspace/eta2-wave3-evidence/opening-capture-0.xor.tar.xz",
+      "archive_sha256": "a4a4a03991139d18d67a860dd1b6c2ec65348dbcb3011d322bd97337d52906b5",
+      "case": "opening-0",
+      "charts": {
+        "additive": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 207669.17089526798,
+            "eigenvalues": [
+              2.1444932075714492e-05,
+              0.00013642800663266175,
+              0.00037543495798447306,
+              0.07900426204934767,
+              0.3606093839810624,
+              0.998181259340112,
+              2.1082205226638124,
+              4.453451264068967
+            ],
+            "max_weak_pair_coordinate_loading": 0.453022503324577,
+            "normalized_pair_correlation": 0.9992692507954851,
+            "weak_f_or_logf_loading": 0.38545085873516266,
+            "weak_pair_loading": 0.8384733620597397,
+            "weak_q_or_tz_loading": 0.453022503324577
+          },
+          "captured_direction": {
+            "clip_factor": 0.7508648849195176,
+            "healthy_clipped_physical_norm": 168.54432306331174,
+            "raw_radius_ratio": 1.33179753119922,
+            "top_camera": 6,
+            "top_camera_energy_fraction": 0.0705089560283588
+          },
+          "captured_healthy_retention_vs_additive": 1.0,
+          "captured_ratio_reduction_vs_additive": 1.0,
+          "condition_improvement_vs_additive": 1.0,
+          "exact_clip_factor": 0.6128837031651065,
+          "exact_healthy_physical_norm": 167.26215483049464,
+          "exact_healthy_raw_physical_norm": 272.91010344491957,
+          "exact_linear_relative_residual": 2.6578300395858728e-14,
+          "exact_proposal": {
+            "candidate_cost": 1108728.0392850812,
+            "linear_model_cost": 1108074.6436771587,
+            "point_step_norm": 16.762868188246557,
+            "prediction": 398295.6810971254,
+            "rho": 0.998359521232762,
+            "true_decrease": 397642.28548920294
+          },
+          "exact_raw_radius_ratio": 1.6316309192685565,
+          "exact_top_camera": 6,
+          "exact_top_camera_energy_fraction": 0.06191403070929029,
+          "kind": "additive",
+          "true_decrease_delta_vs_additive": 0.0
+        },
+        "ratio-linear": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 245088.2310595364,
+            "eigenvalues": [
+              1.817193154866576e-05,
+              0.000133896781224107,
+              0.0003716532193014544,
+              0.07832243408713858,
+              0.36105840122065924,
+              0.998179073224761,
+              2.10818981133789,
+              4.453726558197473
+            ],
+            "max_weak_pair_coordinate_loading": 0.4660193696303293,
+            "normalized_pair_correlation": 0.9994028530825937,
+            "weak_f_or_logf_loading": 0.4028311817131773,
+            "weak_pair_loading": 0.8688505513435065,
+            "weak_q_or_tz_loading": 0.4660193696303293
+          },
+          "captured_direction": {
+            "clip_factor": 0.7608370689833226,
+            "healthy_clipped_physical_norm": 170.7827484395056,
+            "raw_radius_ratio": 1.314341848953629,
+            "top_camera": 6,
+            "top_camera_energy_fraction": 0.07186752663875753
+          },
+          "captured_healthy_retention_vs_additive": 1.0132809301168395,
+          "captured_ratio_reduction_vs_additive": 1.0132809301168397,
+          "condition_improvement_vs_additive": 0.847324124856984,
+          "exact_clip_factor": 0.6157245150918103,
+          "exact_healthy_physical_norm": 211.67006707710195,
+          "exact_healthy_raw_physical_norm": 343.7739799032364,
+          "exact_linear_relative_residual": 2.300938402366654e-14,
+          "exact_proposal": {
+            "candidate_cost": 1104333.2049354713,
+            "linear_model_cost": 1102689.2549431517,
+            "point_step_norm": 16.90892404537081,
+            "prediction": 403681.0698311324,
+            "rho": 0.995927601972995,
+            "true_decrease": 402037.11983881285
+          },
+          "exact_raw_radius_ratio": 1.624102947810825,
+          "exact_top_camera": 6,
+          "exact_top_camera_energy_fraction": 0.0630903558791582,
+          "kind": "ratio-linear",
+          "true_decrease_delta_vs_additive": 4394.834349609911
+        },
+        "ratio-log": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 245088.23105880021,
+            "eigenvalues": [
+              1.8171931548720343e-05,
+              0.00013389678122415993,
+              0.00037165321930141237,
+              0.07832243408713863,
+              0.3610584012206591,
+              0.9981790732247615,
+              2.1081898113378914,
+              4.453726558197473
+            ],
+            "max_weak_pair_coordinate_loading": 0.4660193696301976,
+            "normalized_pair_correlation": 0.9994028530825937,
+            "weak_f_or_logf_loading": 0.40283118171303484,
+            "weak_pair_loading": 0.8688505513432324,
+            "weak_q_or_tz_loading": 0.4660193696301976
+          },
+          "captured_direction": {
+            "clip_factor": 0.7608370689833226,
+            "healthy_clipped_physical_norm": 170.7827484395056,
+            "raw_radius_ratio": 1.314341848953629,
+            "top_camera": 6,
+            "top_camera_energy_fraction": 0.07186752663875753
+          },
+          "captured_healthy_retention_vs_additive": 1.0132809301168395,
+          "captured_ratio_reduction_vs_additive": 1.0132809301168397,
+          "condition_improvement_vs_additive": 0.8473241248595292,
+          "exact_clip_factor": 0.6157245150918093,
+          "exact_healthy_physical_norm": 211.6700670771026,
+          "exact_healthy_raw_physical_norm": 343.773979903238,
+          "exact_linear_relative_residual": 2.3334257019255177e-14,
+          "exact_proposal": {
+            "candidate_cost": 1103215.0361134682,
+            "linear_model_cost": 1102689.254943152,
+            "point_step_norm": 16.908924045370792,
+            "prediction": 403681.0698311322,
+            "rho": 0.9986975332518411,
+            "true_decrease": 403155.2886608159
+          },
+          "exact_raw_radius_ratio": 1.6241029478108278,
+          "exact_top_camera": 6,
+          "exact_top_camera_energy_fraction": 0.06309035587915804,
+          "kind": "ratio-log",
+          "true_decrease_delta_vs_additive": 5513.003171612974
+        }
+      },
+      "coherent_E_max_coordinate_relative_error": 1.4224425775271379,
+      "coherent_E_relative_error": 0.536660737897264,
+      "kind": "opening",
+      "member_sha256": {
+        "2/Cdiag.f64": "eab2968d6ba3dbb6661a4123f434e1600d271f75f9d49746c01eb6b404ef165d",
+        "2/E.f64": "5632449efec6ce8b797fa464070bf08521fcc83581e1d3d01caa7eafa6a0888c",
+        "2/R_state.f64": "5de9f4246a8c746f57763911ca370c1038a9d476f2e574da28d9a0049c604769",
+        "2/X_state.f64": "d8a2b6d5044dd49ac33aa0a8c8221e5a523334d3f1d90ee1318844a4c2367837",
+        "2/eta2_raw_scaled.f64": "c40370806095372f44f279213bf09630aa92e478ee7a1baa0004e5996d9ee14e",
+        "2/intr_state.f64": "a7de7fe3cc0600cdf51f7dadf52655150d1f28b1e49b6e41bd219454bb16d00f",
+        "2/metadata.txt": "3c98e98a59b4d68afce2f48a55b17598b13a6b124274997ab52b96d2818b9351",
+        "2/t_state.f64": "9e851b6c8fd7d726033e068f12adfed88e0c19e5785287d7c0b0178b28e4d53a"
+      },
+      "metadata": {
+        "cost": 1506370.3247742828,
+        "eta": 0.05,
+        "eta2_cg": 10.0,
+        "lambda": 0.0025000000000000005,
+        "ncam": 52.0,
+        "nobs": 347173.0,
+        "npt": 64053.0,
+        "outer": 2.0,
+        "radius": 6208.490810724024,
+        "static_replay": 0.0,
+        "tau": 0.0025000000000000005
+      },
+      "native_captured_raw_radius_ratio": 1.5468554820266964,
+      "record_sha256": "bb0c435e190f1ecc5b95845daaa95c8a75c2f92239f6b85556f6142cf95411c0",
+      "score_init": 1506370.3247742841
+    },
+    {
+      "archive": "/workspace/eta2-wave3-evidence/opening-capture-1.xor.tar.xz",
+      "archive_sha256": "f04077cd4ee050e20a97115258bdd3e81178e7efa003a7e840012e1fcc475a7f",
+      "case": "opening-1",
+      "charts": {
+        "additive": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 207669.17089497473,
+            "eigenvalues": [
+              2.1444932075744776e-05,
+              0.00013642800663194796,
+              0.0003754349579844763,
+              0.07900426204934748,
+              0.3606093839810618,
+              0.9981812593401131,
+              2.108220522663813,
+              4.453451264068967
+            ],
+            "max_weak_pair_coordinate_loading": 0.4530225033248858,
+            "normalized_pair_correlation": 0.9992692507954852,
+            "weak_f_or_logf_loading": 0.38545085873542406,
+            "weak_pair_loading": 0.8384733620603099,
+            "weak_q_or_tz_loading": 0.4530225033248858
+          },
+          "captured_direction": {
+            "clip_factor": 0.7508648849194963,
+            "healthy_clipped_physical_norm": 168.54432306331,
+            "raw_radius_ratio": 1.3317975311992578,
+            "top_camera": 6,
+            "top_camera_energy_fraction": 0.07050895602833614
+          },
+          "captured_healthy_retention_vs_additive": 1.0,
+          "captured_ratio_reduction_vs_additive": 1.0,
+          "condition_improvement_vs_additive": 1.0,
+          "exact_clip_factor": 0.6128837031651087,
+          "exact_healthy_physical_norm": 167.26215483050163,
+          "exact_healthy_raw_physical_norm": 272.91010344493014,
+          "exact_linear_relative_residual": 2.2658402950923807e-14,
+          "exact_proposal": {
+            "candidate_cost": 1108728.0392850817,
+            "linear_model_cost": 1108074.6436771587,
+            "point_step_norm": 16.762868188246546,
+            "prediction": 398295.68109712587,
+            "rho": 0.9983595212327607,
+            "true_decrease": 397642.28548920294
+          },
+          "exact_raw_radius_ratio": 1.631630919268551,
+          "exact_top_camera": 6,
+          "exact_top_camera_energy_fraction": 0.06191403070929162,
+          "kind": "additive",
+          "true_decrease_delta_vs_additive": 0.0
+        },
+        "ratio-linear": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 245088.23105862772,
+            "eigenvalues": [
+              1.817193154873313e-05,
+              0.0001338967812237594,
+              0.0003716532193021323,
+              0.07832243408713856,
+              0.3610584012206591,
+              0.9981790732247615,
+              2.108189811337891,
+              4.453726558197472
+            ],
+            "max_weak_pair_coordinate_loading": 0.46601936963061746,
+            "normalized_pair_correlation": 0.999402853082594,
+            "weak_f_or_logf_loading": 0.4028311817134159,
+            "weak_pair_loading": 0.8688505513440334,
+            "weak_q_or_tz_loading": 0.46601936963061746
+          },
+          "captured_direction": {
+            "clip_factor": 0.7608370689833016,
+            "healthy_clipped_physical_norm": 170.782748439504,
+            "raw_radius_ratio": 1.3143418489536653,
+            "top_camera": 6,
+            "top_camera_energy_fraction": 0.07186752663873468
+          },
+          "captured_healthy_retention_vs_additive": 1.0132809301168404,
+          "captured_ratio_reduction_vs_additive": 1.0132809301168404,
+          "condition_improvement_vs_additive": 0.847324124858929,
+          "exact_clip_factor": 0.6157245150918091,
+          "exact_healthy_physical_norm": 211.67006707716695,
+          "exact_healthy_raw_physical_norm": 343.77397990334254,
+          "exact_linear_relative_residual": 2.502414662781139e-14,
+          "exact_proposal": {
+            "candidate_cost": 1104333.2049354718,
+            "linear_model_cost": 1102689.2549431513,
+            "point_step_norm": 16.90892404537079,
+            "prediction": 403681.06983113335,
+            "rho": 0.9959276019729927,
+            "true_decrease": 402037.11983881285
+          },
+          "exact_raw_radius_ratio": 1.6241029478108282,
+          "exact_top_camera": 6,
+          "exact_top_camera_energy_fraction": 0.06309035587916036,
+          "kind": "ratio-linear",
+          "true_decrease_delta_vs_additive": 4394.834349609911
+        },
+        "ratio-log": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 245088.2310559042,
+            "eigenvalues": [
+              1.8171931548935063e-05,
+              0.00013389678122357638,
+              0.0003716532193019467,
+              0.0783224340871383,
+              0.36105840122065885,
+              0.9981790732247614,
+              2.108189811337889,
+              4.453726558197472
+            ],
+            "max_weak_pair_coordinate_loading": 0.46601936963046303,
+            "normalized_pair_correlation": 0.9994028530825938,
+            "weak_f_or_logf_loading": 0.40283118171326876,
+            "weak_pair_loading": 0.8688505513437318,
+            "weak_q_or_tz_loading": 0.46601936963046303
+          },
+          "captured_direction": {
+            "clip_factor": 0.7608370689833015,
+            "healthy_clipped_physical_norm": 170.782748439504,
+            "raw_radius_ratio": 1.3143418489536653,
+            "top_camera": 6,
+            "top_camera_energy_fraction": 0.07186752663873468
+          },
+          "captured_healthy_retention_vs_additive": 1.0132809301168404,
+          "captured_ratio_reduction_vs_additive": 1.0132809301168404,
+          "condition_improvement_vs_additive": 0.8473241248683449,
+          "exact_clip_factor": 0.6157245150918081,
+          "exact_healthy_physical_norm": 211.67006707716482,
+          "exact_healthy_raw_physical_norm": 343.7739799033397,
+          "exact_linear_relative_residual": 2.4538822422845253e-14,
+          "exact_proposal": {
+            "candidate_cost": 1103215.0361134687,
+            "linear_model_cost": 1102689.2549431515,
+            "point_step_norm": 16.908924045370775,
+            "prediction": 403681.0698311331,
+            "rho": 0.9986975332518387,
+            "true_decrease": 403155.2886608159
+          },
+          "exact_raw_radius_ratio": 1.6241029478108309,
+          "exact_top_camera": 6,
+          "exact_top_camera_energy_fraction": 0.06309035587916062,
+          "kind": "ratio-log",
+          "true_decrease_delta_vs_additive": 5513.003171612974
+        }
+      },
+      "coherent_E_max_coordinate_relative_error": 1.4224425775271428,
+      "coherent_E_relative_error": 0.5366607378972639,
+      "kind": "opening",
+      "member_sha256": {
+        "2/Cdiag.f64": "608eef3d89f8131a26042ad92609f46afd2121f7fa8c43d1202ba88dd0ec3a17",
+        "2/E.f64": "9dc9d6150fa31c32e287334af3450f1bc00602cf4b33f2e2f6f3331e87699b4f",
+        "2/R_state.f64": "ef71a6cafa9207fc4a2726b9337d013d873ee7f30fc9dfbbfe7b18b0d89d8756",
+        "2/X_state.f64": "7d70af5959442904d0b7e45a13b873122909680dde5fb5bfa96ef8135322a651",
+        "2/eta2_raw_scaled.f64": "283bab47ca5f5d487e4c519edaa70992cde9f5e0fca14161f7722e33f7d61117",
+        "2/intr_state.f64": "4328f20ac5131b9c786825d879e2cec8cdf86ab12fa2c921b401ca5fa2d943d3",
+        "2/metadata.txt": "a4b606d8b5ed54be5c84ed11a0200ee3fc32b10e8dd7fd8bdd5c72a068ec3c71",
+        "2/t_state.f64": "62f22166091280feeb5e5040fbbb0837257e9d95784865bb586e88bf0f6ec330"
+      },
+      "metadata": {
+        "cost": 1506370.3247742816,
+        "eta": 0.05,
+        "eta2_cg": 10.0,
+        "lambda": 0.0025000000000000005,
+        "ncam": 52.0,
+        "nobs": 347173.0,
+        "npt": 64053.0,
+        "outer": 2.0,
+        "radius": 6208.490810724033,
+        "static_replay": 0.0,
+        "tau": 0.0025000000000000005
+      },
+      "native_captured_raw_radius_ratio": 1.5468554820267562,
+      "record_sha256": "0f525a6be6e053b94bcebdcba3ebe95d7733ad4af97ddd3b53e6de8d2fe2aa80",
+      "score_init": 1506370.3247742846
+    },
+    {
+      "archive": "/workspace/eta2-wave3-evidence/opening-capture-2.xor.tar.xz",
+      "archive_sha256": "425b493c61a5ed6d06559188416285dcd11d1b1ccedd7776a10ceb7bdc5e959b",
+      "case": "opening-2",
+      "charts": {
+        "additive": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 207669.1708990792,
+            "eigenvalues": [
+              2.144493207532093e-05,
+              0.00013642800663306746,
+              0.00037543495798428235,
+              0.07900426204934619,
+              0.36060938398106174,
+              0.998181259340113,
+              2.1082205226638107,
+              4.453451264068968
+            ],
+            "max_weak_pair_coordinate_loading": 0.4530225033210712,
+            "normalized_pair_correlation": 0.9992692507954843,
+            "weak_f_or_logf_loading": 0.38545085873170015,
+            "weak_pair_loading": 0.8384733620527713,
+            "weak_q_or_tz_loading": 0.4530225033210712
+          },
+          "captured_direction": {
+            "clip_factor": 0.7508648849195163,
+            "healthy_clipped_physical_norm": 168.5443230633248,
+            "raw_radius_ratio": 1.3317975311992223,
+            "top_camera": 6,
+            "top_camera_energy_fraction": 0.07050895602833886
+          },
+          "captured_healthy_retention_vs_additive": 1.0,
+          "captured_ratio_reduction_vs_additive": 1.0,
+          "condition_improvement_vs_additive": 1.0,
+          "exact_clip_factor": 0.6128837031651083,
+          "exact_healthy_physical_norm": 167.26215483050808,
+          "exact_healthy_raw_physical_norm": 272.9101034449408,
+          "exact_linear_relative_residual": 2.434399376595173e-14,
+          "exact_proposal": {
+            "candidate_cost": 1108728.0392850821,
+            "linear_model_cost": 1108074.6436771594,
+            "point_step_norm": 16.762868188246536,
+            "prediction": 398295.6810971261,
+            "rho": 0.9983595212327614,
+            "true_decrease": 397642.2854892034
+          },
+          "exact_raw_radius_ratio": 1.6316309192685519,
+          "exact_top_camera": 6,
+          "exact_top_camera_energy_fraction": 0.06191403070928727,
+          "kind": "additive",
+          "true_decrease_delta_vs_additive": 0.0
+        },
+        "ratio-linear": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 245088.23106286788,
+            "eigenvalues": [
+              1.8171931548418745e-05,
+              0.00013389678122461613,
+              0.0003716532193023785,
+              0.07832243408713706,
+              0.3610584012206589,
+              0.9981790732247606,
+              2.1081898113378905,
+              4.453726558197472
+            ],
+            "max_weak_pair_coordinate_loading": 0.46601936962770546,
+            "normalized_pair_correlation": 0.9994028530825931,
+            "weak_f_or_logf_loading": 0.40283118171044396,
+            "weak_pair_loading": 0.8688505513381495,
+            "weak_q_or_tz_loading": 0.46601936962770546
+          },
+          "captured_direction": {
+            "clip_factor": 0.7608370689833203,
+            "healthy_clipped_physical_norm": 170.78274843951866,
+            "raw_radius_ratio": 1.3143418489536332,
+            "top_camera": 6,
+            "top_camera_energy_fraction": 0.07186752663873705
+          },
+          "captured_healthy_retention_vs_additive": 1.0132809301168384,
+          "captured_ratio_reduction_vs_additive": 1.0132809301168382,
+          "condition_improvement_vs_additive": 0.8473241248610168,
+          "exact_clip_factor": 0.6157245150918035,
+          "exact_healthy_physical_norm": 211.67006707717323,
+          "exact_healthy_raw_physical_norm": 343.77397990335595,
+          "exact_linear_relative_residual": 2.2128942611741214e-14,
+          "exact_proposal": {
+            "candidate_cost": 1104333.2049354722,
+            "linear_model_cost": 1102689.2549431527,
+            "point_step_norm": 16.90892404537074,
+            "prediction": 403681.0698311329,
+            "rho": 0.995927601972995,
+            "true_decrease": 402037.1198388133
+          },
+          "exact_raw_radius_ratio": 1.624102947810843,
+          "exact_top_camera": 6,
+          "exact_top_camera_energy_fraction": 0.06309035587915265,
+          "kind": "ratio-linear",
+          "true_decrease_delta_vs_additive": 4394.834349609911
+        },
+        "ratio-log": {
+          "camera34_local": {
+            "camera": 34,
+            "condition": 245088.23106107375,
+            "eigenvalues": [
+              1.8171931548551773e-05,
+              0.0001338967812246183,
+              0.0003716532193023537,
+              0.07832243408713714,
+              0.36105840122065896,
+              0.9981790732247607,
+              2.1081898113378905,
+              4.453726558197473
+            ],
+            "max_weak_pair_coordinate_loading": 0.46601936962804485,
+            "normalized_pair_correlation": 0.9994028530825931,
+            "weak_f_or_logf_loading": 0.4028311817107656,
+            "weak_pair_loading": 0.8688505513388105,
+            "weak_q_or_tz_loading": 0.46601936962804485
+          },
+          "captured_direction": {
+            "clip_factor": 0.7608370689833203,
+            "healthy_clipped_physical_norm": 170.78274843951866,
+            "raw_radius_ratio": 1.3143418489536332,
+            "top_camera": 6,
+            "top_camera_energy_fraction": 0.07186752663873705
+          },
+          "captured_healthy_retention_vs_additive": 1.0132809301168384,
+          "captured_ratio_reduction_vs_additive": 1.0132809301168382,
+          "condition_improvement_vs_additive": 0.8473241248672195,
+          "exact_clip_factor": 0.6157245150918065,
+          "exact_healthy_physical_norm": 211.67006707717715,
+          "exact_healthy_raw_physical_norm": 343.7739799033606,
+          "exact_linear_relative_residual": 2.281542351484792e-14,
+          "exact_proposal": {
+            "candidate_cost": 1103215.0361134678,
+            "linear_model_cost": 1102689.2549431522,
+            "point_step_norm": 16.908924045370746,
+            "prediction": 403681.06983113335,
+            "rho": 0.9986975332518429,
+            "true_decrease": 403155.2886608178
+          },
+          "exact_raw_radius_ratio": 1.624102947810835,
+          "exact_top_camera": 6,
+          "exact_top_camera_energy_fraction": 0.06309035587915279,
+          "kind": "ratio-log",
+          "true_decrease_delta_vs_additive": 5513.003171614371
+        }
+      },
+      "coherent_E_max_coordinate_relative_error": 1.4224425775271379,
+      "coherent_E_relative_error": 0.5366607378972648,
+      "kind": "opening",
+      "member_sha256": {
+        "2/Cdiag.f64": "4614267d2527bb3bd862bf00481ce2f5803a052ec519e06216e95278b274a0fd",
+        "2/E.f64": "330b795a8fca7d7c42e2146fbf4d03ceb0d132a8f3930a692c243f65d398b09f",
+        "2/R_state.f64": "5352aaa484985f1e20aa61e07b4bb30958fe472b10063dec3afe402ae806e39c",
+        "2/X_state.f64": "381eed2298a005bde7e7755898ba911bc73efed4b84f5372de2a5ecbff3c7664",
+        "2/eta2_raw_scaled.f64": "13513db7a20b76791768a3a0b6866ca4b881f597a298b05025b7715d45fad40e",
+        "2/intr_state.f64": "55559de02856bddcba9243e073223abb081d7362ed315f3d2f04ba8f1fb8f8c9",
+        "2/metadata.txt": "522a33d12229d148f3057a769697a72bd4a8e1cc476331b62dbcbd8f0d0a2d6a",
+        "2/t_state.f64": "aa154485c0bdf5623892e71d3ea49d81454024c234bbeb9c4cd45990b0724554"
+      },
+      "metadata": {
+        "cost": 1506370.3247742823,
+        "eta": 0.05,
+        "eta2_cg": 10.0,
+        "lambda": 0.0025000000000000005,
+        "ncam": 52.0,
+        "nobs": 347173.0,
+        "npt": 64053.0,
+        "outer": 2.0,
+        "radius": 6208.490810724024,
+        "static_replay": 0.0,
+        "tau": 0.0025000000000000005
+      },
+      "native_captured_raw_radius_ratio": 1.5468554820267197,
+      "record_sha256": "0a02f7bf9d8c61f7a0427fe5a8b90a9c3954a53e4c1fc0a659920422b034e214",
+      "score_init": 1506370.3247742855
+    }
+  ],
+  "elapsed_seconds": 51.39517641067505,
+  "gates": {
+    "alignment_and_condition_at_least_4_of_5": false,
+    "alignment_and_condition_cases": [],
+    "all_three_opening_controls_pass": true,
+    "metric_improvement_at_least_4_of_5": true,
+    "metric_improvement_cases": [
+      "terminal-0",
+      "terminal-1",
+      "terminal-2",
+      "terminal-3",
+      "terminal-4"
+    ],
+    "native_ratio_log_justified": false,
+    "opening_control_pass_cases": [
+      "opening-0",
+      "opening-1",
+      "opening-2"
+    ],
+    "true_proposal_improvement_at_least_4_of_5": false,
+    "true_proposal_improvement_cases": []
+  },
+  "registration": {
+    "analysis_sha256": "4f82bc4e27dd037b2789ed70d316ee3d65db0e6556b2095e8997b78086040ddb",
+    "arithmetic": "coherent FP64 dense diagnostic",
+    "bal": "/workspace/bal/venice-52.txt",
+    "bal_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+    "dimensions": [
+      52,
+      64053,
+      347173
+    ],
+    "opening_archive_member": "2 (selected attempt2)",
+    "opening_indices": [
+      0,
+      1,
+      2
+    ],
+    "protocol_sha256": "1d4c9e260bf792758bfb9ed5442133f3cbdb69def3d13a869692e1da87097aa1",
+    "terminal_indices": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  }
+}
