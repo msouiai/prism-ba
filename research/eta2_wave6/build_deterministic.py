@@ -85,6 +85,26 @@ def derive():
         '                   MFVinvApply<<<GridSize(npt),256>>>(Rf,tacc,npt,uu);',
     )
     patch(
+        '      } else {\n'
+        '        CUDA_CHECK(cudaMemset(dk,0,(size_t)n_cf*sizeof(Scalar)));\n'
+        '        MFRhsDiagFused<<<GridSize(nobs),256>>>(mf_fp32?Gp32:Gp,fragment_cams,fragment_points,Rf,uu,nobs,corr,dk);\n'
+        '      }',
+        '      } else if(w6_deterministic) {\n'
+        '        MFRhsDiagCamera<CD,Fragment><<<ncam,256>>>(Gc?Gc:Gp,p.mf_cspt,p.mf_coff,Rf,uu,nobs,corr,dk,fragment_slots);\n'
+        '      } else {\n'
+        '        CUDA_CHECK(cudaMemset(dk,0,(size_t)n_cf*sizeof(Scalar)));\n'
+        '        MFRhsDiagFused<<<GridSize(nobs),256>>>(mf_fp32?Gp32:Gp,fragment_cams,fragment_points,Rf,uu,nobs,corr,dk);\n'
+        '      }',
+    )
+    patch(
+        '        else        MFPass1<CD,Fragment><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,xc_un,nobs,tacc);\n'
+        '      } });',
+        '        else if(w6_deterministic)\n'
+        '          W6DeterministicPass1<CD,Fragment><<<npt,32>>>(Gp,p.point_obs_offsets,p.point_obs_list,p.cam_idx,p.obs2cslot,xc_un,npt,nobs,tacc);\n'
+        '        else MFPass1<CD,Fragment><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,xc_un,nobs,tacc);\n'
+        '      } });',
+    )
+    patch(
         '        else        MFPass1Multi<CD,Fragment><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,XCU,n_cf,na,nobs,TACC,n_p); });',
         '        else if(w6_deterministic)\n'
         '          W6DeterministicPass1Multi<CD,Fragment><<<npt,32>>>(Gp,p.point_obs_offsets,p.point_obs_list,p.cam_idx,p.obs2cslot,XCU,n_cf,na,npt,nobs,TACC,n_p);\n'
