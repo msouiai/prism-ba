@@ -14,7 +14,7 @@ def sha(p):
 def write(p,x):
     p=Path(p);p.parent.mkdir(parents=True,exist_ok=True)
     p.write_text(json.dumps(x,indent=2,allow_nan=False)+'\n')
-def run(folder,scene,arm,rep,binary,flags,protocol,target=0,cap=60,problem=None,cli=None):
+def run(folder,scene,arm,rep,binary,flags,protocol,target=0,cap=60,problem=None,cli=None,build_manifest=None):
     folder=Path(folder);folder.mkdir(parents=True,exist_ok=True)
     binary=Path(binary);problem=Path(problem or '/workspace/bal/'+scene+'.txt')
     if (folder/'result.json').exists():return json.loads((folder/'result.json').read_text())
@@ -26,7 +26,7 @@ def run(folder,scene,arm,rep,binary,flags,protocol,target=0,cap=60,problem=None,
     cmd=[str(binary),'--problem',str(problem),*(cli or CHAMP['cli']),'--csv',str(folder/'curve.csv'),'--state_out',str(folder/'endpoint.state')]
     manifest=dict(command=cmd,flags=config,binary_sha256=sha(binary),input_sha256=sha(problem),
       champion_sha256=sha(F/'champion.json'),protocol_sha256=sha(protocol),host=socket.gethostname(),
-      scene=scene,arm=arm,rep=rep,target=target,cap=cap)
+      scene=scene,arm=arm,rep=rep,target=target,cap=cap,build_manifest=build_manifest)
     write(folder/'manifest.json',manifest)
     print('RUN',folder.parent.name,scene,arm,rep,flush=True)
     start=time.monotonic()
