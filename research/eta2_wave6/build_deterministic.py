@@ -34,6 +34,10 @@ def derive():
         source = source.replace(before, after)
         changes.append((before, after))
 
+    patch(
+        '#include "bal_hessian_generated.cuh"',
+        '#include "deterministic_blas.cuh"\n#include "bal_hessian_generated.cuh"',
+    )
     patch('#include "full_step_model.cuh"', '#include "deterministic_full_model.cuh"')
     patch(
         'Scalar ComputeCost(const DeviceProblem& p, const DeviceState& s,\n'
@@ -91,12 +95,25 @@ def derive():
         '  cudaFree(Hcc);cudaFree(Cdiag);cudaFree(Gp);cudaFree(Gc);cudaFree(Bo);cudaFree(fragment_slots);cudaFree(fragment_camera_ids);cudaFree(w6_cslot_to_obs);',
     )
 
-    restored = source
+    # cuBLAS reductions use block-level accumulation internally and showed
+    # last-bit run-to-run variation at the first accepted outer.  Route every
+    # source-level dot/norm through a fixed two-level tree while D0 is active;
+    # the wrappers delegate verbatim when the flag is off.  Header-internal
+    # calls belong to inactive research features and remain untouched.
+    dot_count = source.count("cublasDdot(")
+    norm_count = source.count("cublasDnrm2(")
+    assert dot_count > 20 and norm_count > 10, (dot_count, norm_count)
+    source = source.replace("cublasDdot(", "PrismW6Ddot(")
+    source = source.replace("cublasDnrm2(", "PrismW6Dnrm2(")
+
+    transformed = source
+    restored = source.replace("PrismW6Ddot(", "cublasDdot(")
+    restored = restored.replace("PrismW6Dnrm2(", "cublasDnrm2(")
     for before, after in reversed(changes):
         assert restored.count(after) == 1
         restored = restored.replace(after, before)
     assert restored == intermediate
-    return source, inherited + len(changes)
+    return transformed, inherited + len(changes) + 2
 
 
 def main():
@@ -122,7 +139,7 @@ def main():
         "wave5_candidate_sha256": sha(W5 / "optimized_candidate.json"),
         "reversible_patch_count": count,
         "sources": {str(path): sha(path) for path in [
-            P / "build_deterministic.py", P / "deterministic_cost.cuh",
+            P / "build_deterministic.py", P / "deterministic_blas.cuh", P / "deterministic_cost.cuh",
             P / "deterministic_full_model.cuh", P / "deterministic_mfree.cuh"]},
         "protocol_sha256": sha(P / "PROTOCOL.md"),
     }

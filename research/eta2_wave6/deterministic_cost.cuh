@@ -5,14 +5,6 @@
 // private subtotal, and a single block reduces those subtotals in index order.
 // This is intentionally a measurement path rather than a latency path.
 
-inline bool PrismW6DeterministicEnabled() {
-  static const bool enabled = []() {
-    const char* value = std::getenv("OCA_W6_DETERMINISTIC");
-    return value && std::atoi(value) != 0;
-  }();
-  return enabled;
-}
-
 __global__ void W6CostPartials(
     const int* __restrict__ cam_idx, const int* __restrict__ pt_idx,
     const Scalar* __restrict__ uv, const Scalar* __restrict__ R,

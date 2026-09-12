@@ -15,7 +15,7 @@ sys.path.insert(0, str(W5))
 import native_light as N
 N.HERE = P
 
-PROTOCOL = P / "D0_PROTOCOL.md"
+PROTOCOL = P / "D0V2_PROTOCOL.md"
 DERIVED = P / "build" / "prism-deterministic"
 B6V7 = W5 / "build" / "prism-b6v7"
 OPTIMIZED = json.loads((W5 / "optimized_candidate.json").read_text())
@@ -46,7 +46,7 @@ def registration():
         "arm_order": "reverse on odd repetition",
         "decision": "all exact repeatability fields equal; no cap stop; disabled median cost delta below 0.15%",
     }
-    path = P / "d0-registration.json"
+    path = P / "d0v2-registration.json"
     if path.exists():
         assert json.loads(path.read_text()) == reg
     else:
@@ -88,12 +88,12 @@ def execute(reg):
         if rep % 2:
             arms.reverse()
         for arm in arms:
-            rows.append(run_one(reg, "d0-compatibility", cell, arm, rep))
-            N.write(P / "d0-results.json", rows)
+            rows.append(run_one(reg, "d0v2-compatibility", cell, arm, rep))
+            N.write(P / "d0v2-results.json", rows)
     for name, cell in reg["repeatability"]["cells"].items():
         for rep in range(reg["repeatability"]["repetitions"]):
-            rows.append(run_one(reg, "d0-repeatability", cell, "deterministic", rep))
-            N.write(P / "d0-results.json", rows)
+            rows.append(run_one(reg, "d0v2-repeatability", cell, "deterministic", rep))
+            N.write(P / "d0v2-results.json", rows)
     return rows
 
 
@@ -123,7 +123,7 @@ def summarize(reg, rows):
         }
     summary = {"compatibility": compatibility, "repeatability": repeatability}
     summary["passed"] = compatibility["passed"] and all(x["passed"] for x in repeatability.values())
-    N.write(P / "d0-summary.json", summary)
+    N.write(P / "d0v2-summary.json", summary)
     return summary
 
 
@@ -135,7 +135,7 @@ def main():
     if args.stage == "register":
         print(json.dumps(reg, indent=2))
         return
-    rows = execute(reg) if args.stage == "run" else json.loads((P / "d0-results.json").read_text())
+    rows = execute(reg) if args.stage == "run" else json.loads((P / "d0v2-results.json").read_text())
     result = summarize(reg, rows)
     print(json.dumps(result, indent=2))
     if not result["passed"]:
