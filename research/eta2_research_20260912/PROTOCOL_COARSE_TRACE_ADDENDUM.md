@@ -1,0 +1,5 @@
+# Coarse attempt-trace format, before its timed panel
+
+The built coarse prototype writes per-attempt rows into the existing stdout stream, using ordinary stdio buffering, rather than the STCG/PI trace's exit-only JSON writer. No extra flush or GPU barrier is introduced. Both coarse on/off arms use this same instrumentation and pay its overhead. This is an accounting-format variation, not an algorithm/configuration change; the original common protocol and earlier rows remain immutable.
+
+The raw ledger reports literal retry-index>0 time. The common report additionally derives retry-entry time from repeated entries at the same outer, so a numeric-repair continuation with unchanged retry index is included. Keep both definitions and raw rows. Failed/nonaccepted time is computed from actual row acceptance. Native curvature counts are retained, but cutoff-specific acceptance is unavailable in this overlay and must be null, never invented as zero. Whole-attempt acceptance and product totals must match the native summary before fractions are reported.

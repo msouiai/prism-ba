@@ -1,10 +1,24 @@
 #!/usr/bin/env python3
 """One separately registered native arm, identical-target comparisons."""
-import argparse,json,subprocess
+import argparse,json,re,subprocess
 from grid_common import P,F,run,write,sha
 CONFIGS={
  'stcg':dict(binary='steihaug/build/prism-stcg',manifest='steihaug/build_manifest.json',flag='OCA_STEIHAUG',trace='OCA_STCG_ATTEMPTS'),
- 'pi':dict(binary='pi_radius/build/prism-pi',manifest='pi_radius/build/manifest.json',flag='OCA_PI_RADIUS',trace='OCA_STCG_ATTEMPTS')}
+ 'pi':dict(binary='pi_radius/build/prism-pi',manifest='pi_radius/build/manifest.json',flag='OCA_PI_RADIUS',trace='OCA_STCG_ATTEMPTS'),
+ 'coarse':dict(binary='coarse/native/build/prism-coarse',manifest='coarse/native/build_manifest.json',flag='OCA_COARSE',trace='OCA_ATTEMPT_TRACE')}
+def coarse_trace(folder,row):
+    text=(folder/'stdout.log').read_text();rows=[];previous=None
+    for line in re.findall(r'^ATTEMPT (.*)$',text,re.M):
+        r={k:float(v) for k,v in re.findall(r'(\w+)=([^ ]+)',line)}
+        r['retry_entry']=r['o']==previous;previous=r['o'];rows.append(r)
+    total=sum(r['seconds'] for r in rows);retry=sum(r['seconds'] for r in rows if r['retry_entry']);failed=sum(r['seconds'] for r in rows if not r['accepted'])
+    obj=dict(clock='host_steady_stdout_no_added_gpu_sync',rows=rows,totals=dict(attempts=len(rows),accepted=sum(int(r['accepted']) for r in rows),
+      not_accepted=sum(not r['accepted'] for r in rows),curvature_cutoffs=row['negcurv'],cutoff_accepts=None,
+      numeric_repairs=sum(int(r['numeric_retry']) for r in rows),pcg_iterations=sum(int(r['pcg_products']) for r in rows),
+      matvecs=sum(int(r['products']) for r in rows),attempt_seconds=total,retry_entry_seconds=retry,not_accepted_seconds=failed,
+      retry_entry_wall_fraction=retry/total if total else 0,not_accepted_wall_fraction=failed/total if total else 0,
+      raw_retry_index_seconds=sum(r['seconds'] for r in rows if r['retry']>0)))
+    write(folder/'attempts.json',obj);return obj
 def panel():
     path=P/'native-panel.json'
     if path.exists():return json.loads(path.read_text())
@@ -35,10 +49,10 @@ def main():
             assert sha(cell['path'])==cell['input_sha256']
             for arm in (['off','on'] if rep%2==0 else ['on','off']):
                 folder=P/'evidence'/a.candidate/a.stage/f"{cell['cell']}-{arm}-{rep}"
-                flags={c['flag']:str(int(arm=='on')),c['trace']:str(folder/'attempts.json')}
+                flags={c['flag']:str(int(arm=='on')),c['trace']:'1' if a.candidate=='coarse' else str(folder/'attempts.json')}
                 r=run(folder,cell['scene'],arm,rep,binary,flags,P/'PROTOCOL_NATIVE_PANEL.md',cell['target'],cell['cap'],cell['path'],build_manifest=bm)
                 r['cell']=cell['cell'];r['candidate']=a.candidate;r['stage']=a.stage
-                trace=json.loads((folder/'attempts.json').read_text())
+                trace=coarse_trace(folder,r) if a.candidate=='coarse' else json.loads((folder/'attempts.json').read_text())
                 totals=trace['totals'];assert totals['accepted']==r['accepts'],(totals,r)
                 assert totals['matvecs']==r['matvecs'],(totals,r)
                 r['attempts']=totals;r['pcg_per_outer']=totals['pcg_iterations']/max(1,r['outers'])

@@ -1,0 +1,24 @@
+{
+  "command": [
+    "nvcc",
+    "-O2",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/coarse/native",
+    "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/coarse/native/build",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/coarse/native/toy.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/coarse/native/build/coarse-toy",
+    "-lcublas"
+  ],
+  "source_sha256": "0c61ce522ca90d30f46486e02be314fa11974fb3b462fb389a7c2a0cefaf3f43",
+  "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "extracted_native_kernels_sha256": "669a5855af541ec5b015f8a0f802289ff575070301ce9db505d13cb218ba1af9",
+  "local_headers": {
+    "coarse.cuh": "52f06ed6beb00fe716701254e6d264867ad08344433b1837a672b55171ca0428",
+    "geometry.h": "41036fb9e2cbe1d197400a9a3f0e3a88fad54f6b963a29431fbd239d9ee3ad8a",
+    "attempt_trace.h": "b671abd37f885b43e13f7023e8df386067e8114f4edcb3825d527925b82d557a"
+  },
+  "binary_sha256": "ea812b6a3da4462f7ffaff6d981942091700e46c7b1ffc818371832068996ceb"
+}

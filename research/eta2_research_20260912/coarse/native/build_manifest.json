@@ -1,0 +1,28 @@
+{
+  "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "derived_source_sha256": "ba433bd8b7e21ddc926f97217cd37c9b50628b4d0e2c8047eff04319c8e42338",
+  "inverse_patch_source_parity": true,
+  "substitutions": 7,
+  "local_headers": {
+    "coarse.cuh": "52f06ed6beb00fe716701254e6d264867ad08344433b1837a672b55171ca0428",
+    "geometry.h": "41036fb9e2cbe1d197400a9a3f0e3a88fad54f6b963a29431fbd239d9ee3ad8a",
+    "attempt_trace.h": "b671abd37f885b43e13f7023e8df386067e8114f4edcb3825d527925b82d557a"
+  },
+  "protocol_sha256": "67587f8adea64a30cef216a182064b13c456740b535397b64ebd33eae7612057",
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/coarse/native",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/coarse/native/build/prism_coarse.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/coarse/native/build/prism-coarse",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "binary_sha256": "17ee0fad5a7c50636cb840976dc5ff43a046c4e5510a497769c5a69e0720c534"
+}
