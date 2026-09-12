@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """One separately registered native arm, identical-target comparisons."""
-import argparse,json,re,subprocess
+import argparse,importlib.util,json,re,subprocess
 from grid_common import P,F,run,write,sha
 CONFIGS={
  'stcg':dict(binary='steihaug/build/prism-stcg',manifest='steihaug/build_manifest.json',flag='OCA_STEIHAUG',trace='OCA_STCG_ATTEMPTS'),
  'pi':dict(binary='pi_radius/build/prism-pi',manifest='pi_radius/build/manifest.json',flag='OCA_PI_RADIUS',trace='OCA_STCG_ATTEMPTS'),
  'frontload':dict(binary='frontload/build/prism-frontload',manifest='frontload/build_manifest.json',flag='OCA_FRONTLOAD',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_05_NATIVE.md'),
  'opening_unclip':dict(binary='opening_unclip/build/prism-opening-unclip',manifest='opening_unclip/build_manifest.json',flag='OCA_OPEN_UNCLIP',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_05_UNCLIP.md'),
- 'passenger':dict(binary='coarse/nonlinear_native/build/prism-passenger',manifest='coarse/nonlinear_native/build_manifest.json',flag='OCA_PASSENGER',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_09_NATIVE.md'),
+ 'passenger':dict(binary='coarse/nonlinear_native/build/prism-passenger',manifest='coarse/nonlinear_native/build_manifest.json',flag='OCA_PASSENGER',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_09_NATIVE.md',parser='coarse/nonlinear_native/trace_report.py'),
  'soft_kick':dict(binary='soft_kick/build/prism-soft-kick',manifest='soft_kick/build_manifest.json',flag='OCA_SOFT_KICK',trace='OCA_STCG_ATTEMPTS',protocol='PROTOCOL_11.md'),
  'coarse':dict(binary='coarse/native/build/prism-coarse',manifest='coarse/native/build_manifest.json',flag='OCA_COARSE',trace='OCA_ATTEMPT_TRACE')}
 def coarse_trace(folder,row):
@@ -45,6 +45,9 @@ def main():
     if a.stage=='register':print(json.dumps(proto,indent=2));return
     subprocess.run(['python3',str(F/'build.py'),'--check-only'],check=True)
     c=CONFIGS[a.candidate];binary=P/c['binary'];bm=json.loads((P/c['manifest']).read_text());assert sha(binary)==bm['binary_sha256']
+    probe_report=None
+    if 'parser' in c:
+        spec=importlib.util.spec_from_file_location('candidate_trace',P/c['parser']);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);probe_report=module.report
     assert proto['protocol_sha256']==sha(P/'PROTOCOL_NATIVE_PANEL.md')
     rows=[]
     registered_cells=list(proto[a.stage])
@@ -71,6 +74,13 @@ def main():
                 r['attempts']=totals;r['pcg_per_outer']=totals['pcg_iterations']/max(1,r['outers'])
                 r['retry_fraction_native']=totals['retry_entry_seconds']/r['native_seconds']
                 r['failed_fraction_native']=totals['not_accepted_seconds']/r['native_seconds']
+                if probe_report:
+                    detail=probe_report(folder);r['intervention']=detail
+                    r['raw_retry_fraction_native']=r['retry_fraction_native'];r['raw_not_accepted_fraction_native']=r['failed_fraction_native']
+                    r['retry_fraction_native']=detail['corrected_unchanged_state_retry_seconds']/r['native_seconds']
+                    ids=set(detail['probe_trace_rows'])
+                    r['failed_fraction_native']=sum(x['seconds'] for i,x in enumerate(trace['rows']) if i not in ids and not x['accepted'])/r['native_seconds']
+                    r['probe_fraction_native']=detail['probe_attempt_seconds_including_fresh_fine_setup']/r['native_seconds']
                 write(folder/'result.json',r);rows.append(r)
                 write(P/(a.candidate+'-'+a.stage+'-results.json'),rows)
     for cell in registered_cells:

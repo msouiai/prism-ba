@@ -1,0 +1,7 @@
+# Exact endpoint contents, archived for local space
+
+The completed cohort archives retain every numerical byte of the original endpoint exports. Per-archive JSON lists the tar member, raw-state SHA256 and byte length, original gzip-container hash, archive hash, and storage size. `archive_states.py` verifies all member hashes in a temporary archive, copies it to this directory, verifies the durable copy again, and only then replaces the redundant individual gzip containers. The original raw result/manifest/curve/trace files stay in their normal locations and in Git.
+
+The archives are local, ignored large research artifacts; the manifests and restoration instructions are versioned. The old gzip container hash remains provenance, but the archived object is its exact decompressed numerical state rather than its timestamped gzip wrapper. To audit again, extract the manifest's named `.state` member into a temporary directory, check its raw SHA256, then use `eta2_champion/bench/audit_prism_state.py` with the original problem. Do not treat absence of an individual `.state.gz` as loss of its numerical content.
+
+The separate `numeric-dedup-manifest.json` records hard-link deduplication of immutable witness arrays. Those witness paths and bytes remain directly available; only duplicate disk allocation was removed. None of the campaign's scored observations, captured states, directions or outcomes was dropped to reclaim space.
