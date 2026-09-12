@@ -1,0 +1,141 @@
+{
+  "status": "passed",
+  "baseline": {
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "verified_headers": 44,
+    "champion_config": {
+      "label": "sustained-eta2-lambda0.1",
+      "status": "best tested global configuration on six-scene fixed-target panel; defaults unchanged",
+      "binary": "/tmp/prism-rl-sustained/build/prism-tr",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "initial_lambda": 0.1,
+      "flags": {
+        "OCA_ATTR_RADIUS": "1",
+        "OCA_ATTR_RESCUE": "1",
+        "OCA_ATTR_STRICT": "1",
+        "OCA_BACKTRACK_REARM": "1",
+        "OCA_CAMERA_TR": "0",
+        "OCA_CG_STOP": "0",
+        "OCA_CLASSICAL_LM": "1",
+        "OCA_COMPACT_FRAGMENTS": "2",
+        "OCA_DEMAND_MENU": "0",
+        "OCA_DIAG_NORM": "1",
+        "OCA_FORCE_UNSHARED": "1",
+        "OCA_FTOL": "1e-5",
+        "OCA_FTOL_K": "8",
+        "OCA_GRID_DOWN": "2",
+        "OCA_MENU_BACKTRACK": "8",
+        "OCA_MENU_GATE": "1e-2",
+        "OCA_MULTI_RHS": "1",
+        "OCA_NSHIFTS": "1",
+        "OCA_PCG": "1",
+        "OCA_POINT_SAFEGUARD": "1",
+        "OCA_RETRY_CACHE": "1",
+        "OCA_RHO_LAMBDA": "1",
+        "OCA_RHO_SHIFT": "1",
+        "OCA_SCHUR_NUMERIC_GUARD": "1",
+        "OCA_SWITCH_RESTART": "0",
+        "OCA_TR_RECURRENCE": "0",
+        "OCA_RLA_FIXED_ETA": "2"
+      },
+      "cli": [
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        "0.1",
+        "--max_iter",
+        "600"
+      ],
+      "evidence": "/tmp/prism-rl-sustained/verdict.json",
+      "limitations": [
+        "Muell lambda10 + eta2 is a counterexample",
+        "Largest tighter-target gain is only1.035x",
+        "Not a learned RL improvement"
+      ]
+    },
+    "arithmetic_note": "Native Scalar=double with FP32 compact cross blocks/point rows; this CPU reference is Gram-consistent FP64"
+  },
+  "seed": 20260912,
+  "coefficient_source": "https://kpp.readthedocs.io/en/stable/num_methods/rosenbrock-methods.html",
+  "gamma": 1.7071067811865475,
+  "quadratic_local_orders": [
+    2.86475993545959,
+    2.9300658121680216,
+    2.9644221140454
+  ],
+  "nonlinear_local_orders": [
+    2.9490322255890846,
+    2.9742143119025317,
+    2.9870302415225547
+  ],
+  "arbitrary_approximate_jacobian_cases": [
+    {
+      "approximate_H": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "local_orders": [
+        2.9973887086365996,
+        2.9986929425091517,
+        2.9993459925318895
+      ]
+    },
+    {
+      "approximate_H": [
+        [
+          -2.0,
+          -0.0
+        ],
+        [
+          -0.0,
+          -2.0
+        ]
+      ],
+      "local_orders": [
+        3.065033684229673,
+        3.031762581085384,
+        3.015697978702727
+      ]
+    },
+    {
+      "approximate_H": [
+        [
+          5.0,
+          1.0
+        ],
+        [
+          1.0,
+          3.0
+        ]
+      ],
+      "local_orders": [
+        2.9269688701397403,
+        2.9621803190342706,
+        2.980738585426712
+      ]
+    }
+  ],
+  "so3_left_jacobian_relative_error": 9.749398131692692e-11,
+  "fixed_chart_gradient_relative_error": 3.7990011478657747e-10,
+  "dense_vs_schur_direction_relative_error": 2.7986907157326243e-12,
+  "full_normal_certificate": {
+    "relative_full_normal_residual": 1.1882594360107695e-11,
+    "refinement_history": [
+      1.1882594360107695e-11
+    ],
+    "corrections": 0,
+    "seconds": 0.00022516027092933655,
+    "certified": true
+  },
+  "unclipped_combined_rhs_completion_error": 0.0,
+  "clipped_combined_rhs_point_equation_error": 2.003097958855531e-12,
+  "gpu_used": false
+}

@@ -1,0 +1,38 @@
+{
+  "command": [
+    "/usr/local/cuda/bin/compute-sanitizer",
+    "--tool",
+    "memcheck",
+    "--leak-check",
+    "full",
+    "--error-exitcode",
+    "91",
+    "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/build/frontload-toy"
+  ],
+  "build_manifest": {
+    "command": [
+      "nvcc",
+      "-O2",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload",
+      "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/build",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/toy.cu",
+      "-o",
+      "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/build/frontload-toy",
+      "-lcublas"
+    ],
+    "tmpdir": "/dev/shm",
+    "source_sha256": "8f33163d2134fdb0dcf46accf5933605163ad45640e381e9ce275fcca9454518",
+    "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "extracted_native_kernels_sha256": "5f3a8cba4e9569046741163662e210a504ab7661f03d8d02bd6be5b4eab8bf15",
+    "local_headers": {
+      "frontload.cuh": "7a4a7de108e5616bb76ace88476d29ce1fa6ab605888127f56c4c201830efaee",
+      "coherent_rows.cuh": "38c042aa5a5f55c8cc740b901de7a92afe54f8fb9cf26920cc9c821bada6d6ce"
+    },
+    "binary_sha256": "55648031a6efa9328b800d15787d33be19160f79ae3d41e477e79198951c1e63"
+  },
+  "host": "2237c6528e79"
+}

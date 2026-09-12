@@ -1,0 +1,53 @@
+========= COMPUTE-SANITIZER
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+FRONTLOAD_CONFIG accepted_outers=3 eta=0.05 operator=coherent_fp64 clipping=off_strict_ball_retained native_assembly_retained=1
+  [compact-fragments] active=2 saved_bytes=9984 storage=fp32 camera_reads=contiguous
+  MFCG score_init=364516.19390409789 precision=fp64
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+FRONTLOAD_LINEAR outer=0 retry=0 accepts_before=0 depth=4 cap=128 eta=0.050000000000000003 recursive=0.026485548722929776 fresh=0.026485548722929766 rhs_norm=236.7099304130771 lambda=0.10000000000000001 truncated=0 products=5
+ATTR_RADIUS o=0 raw_norm=409.06072486792362 norm=409.06072486792362 radius=409.06072486792362 next_radius=409.06072486792362 lambda=0.10000000000000001 next_lambda=0.10000000000000001 rho=0.38496871586029113 accept=1
+CLASSICAL_LM o=0 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=358173.71710971842 rho=0.38496871586029113 accept=1
+  MFCG it   1 cost=2.266305e+05 lam=1.000e-01 tau=0.00e+00 cg_it=3 shift=0 ckpt=4 alpha=0 acc mv=5
+PCG_PREP o=1 rebuild=1 drift=0 previous_depth=4
+FRONTLOAD_LINEAR outer=1 retry=0 accepts_before=1 depth=3 cap=128 eta=0.050000000000000003 recursive=0.032948159080418774 fresh=0.032948159080418725 rhs_norm=576.54182318676374 lambda=0.10000000000000001 truncated=0 products=4
+ATTR_RADIUS o=1 raw_norm=367.00526753744623 norm=367.00526753744623 radius=409.06072486792362 next_radius=818.12144973584725 lambda=0.10000000000000001 next_lambda=0.025000000000000001 rho=0.84726614789157961 accept=1
+CLASSICAL_LM o=1 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=222287.48648515751 rho=0.84726614789157961 accept=1
+  MFCG it   2 cost=3.829386e+04 lam=2.500e-02 tau=0.00e+00 cg_it=2 shift=0 ckpt=3 alpha=0 acc mv=9
+PCG_PREP o=2 rebuild=1 drift=0 previous_depth=3
+FRONTLOAD_LINEAR outer=2 retry=0 accepts_before=2 depth=4 cap=128 eta=0.050000000000000003 recursive=0.046152907497900644 fresh=0.046152907497900623 rhs_norm=121.94041065203037 lambda=0.025000000000000001 truncated=0 products=5
+ATTR_RADIUS o=2 raw_norm=320.22603480557643 norm=320.22603480557643 radius=818.12144973584725 next_radius=818.12144973584725 lambda=0.025000000000000001 next_lambda=0.0025000000000000005 rho=0.8817876037181791 accept=1
+CLASSICAL_LM o=2 lambda=0.025000000000000001 tau=0.025000000000000001 prediction=36479.982187857589 rho=0.8817876037181791 accept=1
+  MFCG it   3 cost=6.126259e+03 lam=2.500e-03 tau=0.00e+00 cg_it=3 shift=0 ckpt=4 alpha=0 acc mv=14
+FRONTLOAD_HANDOFF outer=3 accepts=3 previous_rhs_norm=121.94041065203037
+PCG_PREP o=3 rebuild=1 drift=0 previous_depth=4
+ATTR_RADIUS o=3 raw_norm=193.25968044825373 norm=193.25968044825373 radius=818.12144973584725 next_radius=818.12144973584725 lambda=0.0025000000000000005 next_lambda=0.00025000000000000006 rho=0.93210059832229775 accept=1
+CLASSICAL_LM o=3 lambda=0.0025000000000000005 tau=0.0025000000000000005 prediction=4966.4921042497554 rho=0.93210059832229775 accept=1
+  MFCG it   4 cost=1.496989e+03 lam=2.500e-04 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=17
+PCG_PREP o=4 rebuild=1 drift=0 previous_depth=2
+ATTR_RADIUS o=4 raw_norm=613.85087896495986 norm=613.85087896495986 radius=818.12144973584725 next_radius=818.12144973584725 lambda=0.00025000000000000006 next_lambda=2.5000000000000008e-05 rho=0.79308698697570779 accept=1
+CLASSICAL_LM o=4 lambda=0.00025000000000000006 tau=0.00025000000000000006 prediction=466.87153216147817 rho=0.79308698697570779 accept=1
+  MFCG it   5 cost=1.126719e+03 lam=2.500e-05 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=20
+PCG_PREP o=5 rebuild=1 drift=0 previous_depth=2
+ATTR_RADIUS o=5 raw_norm=140.7138334527676 norm=140.7138334527676 radius=818.12144973584725 next_radius=818.12144973584725 lambda=2.5000000000000008e-05 next_lambda=2.5000000000000011e-06 rho=0.90032538147272301 accept=1
+CLASSICAL_LM o=5 lambda=2.5000000000000008e-05 tau=2.5000000000000008e-05 prediction=123.75957252824671 rho=0.90032538147272301 accept=1
+  MFCG it   6 cost=1.015296e+03 lam=2.500e-06 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=22
+PCG_PREP o=6 rebuild=1 drift=0 previous_depth=1
+POINT_SAFE o=6 frozen=0 slope=-116.28954362194217 candidate=inf original=988.24965892687078 current=1015.2956145404115 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=6 raw_norm=283.26715564723833 norm=141.63357782361913 radius=818.12144973584725 next_radius=818.12144973584725 lambda=2.5000000000000011e-06 next_lambda=2.5000000000000009e-07 rho=0.61964730843995464 accept=1
+CLASSICAL_LM o=6 lambda=2.5000000000000011e-06 tau=2.5000000000000011e-06 prediction=43.647338163434561 rho=0.61964730843995464 accept=1
+  MFCG it   7 cost=9.882497e+02 lam=2.500e-07 tau=0.00e+00 cg_it=3 shift=0 ckpt=4 alpha=0 acc mv=27
+PCG_PREP o=7 rebuild=1 drift=0 previous_depth=4
+ATTR_RADIUS o=7 raw_norm=22.336939379461942 norm=22.336939379461946 radius=818.12144973584725 next_radius=818.12144973584725 lambda=2.5000000000000009e-07 next_lambda=2.5000000000000012e-08 rho=0.99850805512445528 accept=1
+CLASSICAL_LM o=7 lambda=2.5000000000000009e-07 tau=2.5000000000000009e-07 prediction=14.735796039369204 rho=0.99850805512445528 accept=1
+  MFCG it   8 cost=9.735358e+02 lam=2.500e-08 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=29
+  MFCG: accepts=8 rejects=0 total_matvecs=29 negcurv=0 cand_evals=8 mean_cg_per_outer=3.6
+NUMERIC_REPAIR summary rebuilds=0 floor=9.9999999999999998e-17
+FRONTLOAD_SUMMARY attempts=3 products=14 point_completions=3 fresh_checks=3 extra_fresh_products=0 allocated_bytes=80652 peak_attempt_bytes=26884 construction_seconds=0.006558833 destruction_seconds=0.000455611
+  [retry-cache] builds=8 reuses=0
+  [menu-backtrack] trials=1 rescues=1 evals=1 total_scored=9
+POINT_SAFE summary calls=1 evals=0 wins=0 frozen=0 seconds=0.001085371
+  [scoring] menu_evals=8 alpha_evals=0 backtrack_evals=1 total_scored=9
+RESULT algo=mfree_shifted_cg iters=8 final_cost=973.5358478829 solve_seconds=0.112685
+DIAGNOSTICS median_reproj_err_px 33.770689 -> 2.132249 | cheirality_violations(obs) 0 -> 0 | cheirality_violations(pts, of 24) 0 -> 0
+========= ERROR SUMMARY: 0 errors

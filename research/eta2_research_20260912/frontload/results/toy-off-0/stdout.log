@@ -1,0 +1,194 @@
+========= COMPUTE-SANITIZER
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+  [compact-fragments] active=2 saved_bytes=9984 storage=fp32 camera_reads=contiguous
+  MFCG score_init=364516.19390409789 precision=fp64
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+ATTR_RADIUS o=0 raw_norm=245.38404495694635 norm=245.38404495694635 radius=245.38404495694635 next_radius=61.346011239236589 lambda=0.10000000000000001 next_lambda=1.6000000000000001 rho=-1 accept=0
+CLASSICAL_LM o=0 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=355912.55825184693 rho=-1 accept=0
+  MFCG it   1  retry 1/8  lam=1.600e+00 tau_eff=1.000e-01  (assembly reused)
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=0 raw_norm=232.40563932231086 norm=61.346011239236596 radius=61.346011239236589 next_radius=122.69202247847318 lambda=1.6000000000000001 next_lambda=0.40000000000000002 rho=0.83686672300673171 accept=1
+CLASSICAL_LM o=0 lambda=1.6000000000000001 tau=1.6000000000000001 prediction=235509.64532031983 rho=0.83686672300673171 accept=1
+  MFCG it   1 cost=1.674260e+05 lam=4.000e-01 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=4
+PCG_PREP o=1 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=1 raw_norm=229.97133071184007 norm=122.69202247847321 radius=122.69202247847318 next_radius=245.38404495694635 lambda=0.40000000000000002 next_lambda=0.10000000000000001 rho=0.84040922252425565 accept=1
+CLASSICAL_LM o=1 lambda=0.40000000000000002 tau=0.40000000000000002 prediction=142073.16603816691 rho=0.84040922252425565 accept=1
+  MFCG it   2 cost=4.802641e+04 lam=1.000e-01 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=7
+PCG_PREP o=2 rebuild=1 drift=0 previous_depth=2
+ATTR_RADIUS o=2 raw_norm=180.17934472221478 norm=180.17934472221478 radius=245.38404495694635 next_radius=245.38404495694635 lambda=0.10000000000000001 next_lambda=0.010000000000000002 rho=0.89628192302667831 accept=1
+CLASSICAL_LM o=2 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=44522.009652350287 rho=0.89628192302667831 accept=1
+  MFCG it   3 cost=8.122137e+03 lam=1.000e-02 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=10
+PCG_PREP o=3 rebuild=1 drift=0 previous_depth=2
+ATTR_RADIUS o=3 raw_norm=102.97207860448194 norm=102.97207860448194 radius=245.38404495694635 next_radius=245.38404495694635 lambda=0.010000000000000002 next_lambda=0.0010000000000000002 rho=0.93699625757430383 accept=1
+CLASSICAL_LM o=3 lambda=0.010000000000000002 tau=0.010000000000000002 prediction=7875.2909458241293 rho=0.93699625757430383 accept=1
+  MFCG it   4 cost=7.430192e+02 lam=1.000e-03 tau=0.00e+00 cg_it=2 shift=0 ckpt=3 alpha=0 acc mv=14
+PCG_PREP o=4 rebuild=1 drift=0 previous_depth=3
+ATTR_RADIUS o=4 raw_norm=150.31145973238682 norm=150.31145973238682 radius=245.38404495694635 next_radius=245.38404495694635 lambda=0.0010000000000000002 next_lambda=0.00010000000000000003 rho=0.89694099032996832 accept=1
+CLASSICAL_LM o=4 lambda=0.0010000000000000002 tau=0.0010000000000000002 prediction=728.05179435009904 rho=0.89694099032996832 accept=1
+  MFCG it   5 cost=8.999971e+01 lam=1.000e-04 tau=0.00e+00 cg_it=2 shift=0 ckpt=3 alpha=0 acc mv=18
+PCG_PREP o=5 rebuild=1 drift=0 previous_depth=3
+ATTR_RADIUS o=5 raw_norm=23.735041368516754 norm=23.735041368516754 radius=245.38404495694635 next_radius=245.38404495694635 lambda=0.00010000000000000003 next_lambda=1.0000000000000004e-05 rho=0.99565925682211642 accept=1
+CLASSICAL_LM o=5 lambda=0.00010000000000000003 tau=0.00010000000000000003 prediction=83.706779027495756 rho=0.99565925682211642 accept=1
+  MFCG it   6 cost=6.656278e+00 lam=1.000e-05 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=20
+PCG_PREP o=6 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=6 raw_norm=31.978218980872157 norm=31.978218980872157 radius=245.38404495694635 next_radius=245.38404495694635 lambda=1.0000000000000004e-05 next_lambda=1.0000000000000004e-06 rho=0.97820726667514335 accept=1
+CLASSICAL_LM o=6 lambda=1.0000000000000004e-05 tau=1.0000000000000004e-05 prediction=3.4636910874453921 rho=0.97820726667514335 accept=1
+  MFCG it   7 cost=3.268070e+00 lam=1.000e-06 tau=0.00e+00 cg_it=3 shift=0 ckpt=4 alpha=0 acc mv=25
+PCG_PREP o=7 rebuild=1 drift=0 previous_depth=4
+POINT_SAFE o=7 frozen=0 slope=-0.97713210849436516 candidate=inf original=3.1722010190701284 current=3.2680703173452907 won=0 mode=1 camera_scale=1 keep_scale=0
+ATTR_RADIUS o=7 raw_norm=271.88649696076158 norm=30.673005619618298 radius=245.38404495694635 next_radius=245.38404495694635 lambda=1.0000000000000004e-06 next_lambda=1.0000000000000005e-07 rho=0.81942904192941213 accept=1
+CLASSICAL_LM o=7 lambda=1.0000000000000004e-06 tau=1.0000000000000004e-06 prediction=0.11699524103933429 rho=0.81942904192941213 accept=1
+  MFCG it   8 cost=3.172201e+00 lam=1.000e-07 tau=0.00e+00 cg_it=8 shift=0 ckpt=9 alpha=0 acc mv=35
+  MFCG: accepts=8 rejects=1 total_matvecs=35 negcurv=0 cand_evals=9 mean_cg_per_outer=4.4
+NUMERIC_REPAIR summary rebuilds=0 floor=9.9999999999999998e-17
+  [retry-cache] builds=9 reuses=0
+  [menu-backtrack] trials=1 rescues=1 evals=3 total_scored=12
+POINT_SAFE summary calls=1 evals=0 wins=0 frozen=0 seconds=0.00108173
+  [scoring] menu_evals=9 alpha_evals=0 backtrack_evals=3 total_scored=12
+RESULT algo=mfree_shifted_cg iters=8 final_cost=3.1722010191 solve_seconds=0.121545
+DIAGNOSTICS median_reproj_err_px 33.770689 -> 0.212177 | cheirality_violations(obs) 0 -> 0 | cheirality_violations(pts, of 24) 0 -> 0
+========= Leaked 384 bytes at 0x73c1ba200000
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x11557f] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 384 bytes at 0x73c1ba200200
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x1155a6] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 1536 bytes at 0x73c1ba200400
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x1155d8] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 32 bytes at 0x73c1ba200a00
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x115613] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 32 bytes at 0x73c1ba200c00
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x11563f] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 32 bytes at 0x73c1ba200e00
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x11566b] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 100 bytes at 0x73c1ba201000
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: BuildPointObsCSR(DeviceProblem&, int const*, int, int, std::vector<int, std::allocator<int> >*) [0xc9189] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x11589b] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 384 bytes at 0x73c1ba201200
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: BuildPointObsCSR(DeviceProblem&, int const*, int, int, std::vector<int, std::allocator<int> >*) [0xc91a6] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x11589b] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 384 bytes at 0x73c1ba201400
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int)::{lambda(int**, std::vector<int, std::allocator<int> > const&)#1}::operator()(int**, std::vector<int, std::allocator<int> > const&) const [clone .isra.0] [0xd2495] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int) [0xd2a45] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x1169a2] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 384 bytes at 0x73c1ba201600
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int)::{lambda(int**, std::vector<int, std::allocator<int> > const&)#1}::operator()(int**, std::vector<int, std::allocator<int> > const&) const [clone .isra.0] [0xd2495] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int) [0xd2a77] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x1169a2] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 384 bytes at 0x73c1ba201800
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int)::{lambda(int**, std::vector<int, std::allocator<int> > const&)#1}::operator()(int**, std::vector<int, std::allocator<int> > const&) const [clone .isra.0] [0xd2495] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int) [0xd2a9c] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x1169a2] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 384 bytes at 0x73c1ba201a00
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int)::{lambda(int**, std::vector<int, std::allocator<int> > const&)#1}::operator()(int**, std::vector<int, std::allocator<int> > const&) const [clone .isra.0] [0xd2495] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int) [0xd2ab7] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x1169a2] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 20 bytes at 0x73c1ba201c00
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int)::{lambda(int**, std::vector<int, std::allocator<int> > const&)#1}::operator()(int**, std::vector<int, std::allocator<int> > const&) const [clone .isra.0] [0xd2495] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int) [0xd2ac8] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x1169a2] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 384 bytes at 0x73c1ba201e00
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int)::{lambda(int**, std::vector<int, std::allocator<int> > const&)#1}::operator()(int**, std::vector<int, std::allocator<int> > const&) const [clone .isra.0] [0xd2495] in prism-frontload
+=========         Host Frame: BuildMFreeIndex(DeviceProblem&, int const*, int const*, std::vector<int, std::allocator<int> > const&, int, int) [0xd2ad9] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x1169a2] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 288 bytes at 0x73c1ba202000
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: AllocState(DeviceState&, int, int, bool) [0xc4321] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x115aec] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 96 bytes at 0x73c1ba202200
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: AllocState(DeviceState&, int, int, bool) [0xc4340] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x115aec] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 576 bytes at 0x73c1ba202400
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: AllocState(DeviceState&, int, int, bool) [0xc435f] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x115aec] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 96 bytes at 0x73c1ba202800
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: AllocState(DeviceState&, int, int, bool) [0xc43a3] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x115aec] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 8 bytes at 0x73c1ba22e200
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: ComputeCost(DeviceProblem const&, DeviceState const&, int, double) [0xc4748] in prism-frontload
+=========         Host Frame: RunLog SolveMFreeShiftedCG<9>(DeviceProblem const&, DeviceState&, double, int, bool, double, std::vector<int, std::allocator<int> >, int, bool, double, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, double, double, double, int, bool, double, int, int, double, double, bool, int, double*) [0x18a5b4] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x116168] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= Leaked 4 bytes at 0x73c1ba22e400
+=========     Saved host backtrace up to driver entry point at allocation time
+=========         Host Frame: cudaMalloc [0x226fa5] in prism-frontload
+=========         Host Frame: CountCheiralityViolations(DeviceProblem const&, DeviceState const&) [0xc4a78] in prism-frontload
+=========         Host Frame: RunLog SolveMFreeShiftedCG<9>(DeviceProblem const&, DeviceState&, double, int, bool, double, std::vector<int, std::allocator<int> >, int, bool, double, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool, double, double, double, int, bool, double, int, int, double, double, bool, int, double*) [0x18a5e5] in prism-frontload
+=========         Host Frame: OcaCliMain(int, char**) [0x116168] in prism-frontload
+=========         Host Frame: main [0xaa0c9] in prism-frontload
+========= 
+========= LEAK SUMMARY: 5892 bytes leaked in 20 allocations
+========= ERROR SUMMARY: 20 errors

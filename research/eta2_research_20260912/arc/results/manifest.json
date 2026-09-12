@@ -1,0 +1,138 @@
+{
+  "protocol_sha256": "581edf813735e6833713979b8b0285f1eec45e64f0e25482d2bb44f24a1dcf93",
+  "interpretation_sha256": "9bbfab2128f1eeb477ad00ef478e7c718afcbe018e01994bde1a17a1f69f6230",
+  "source_sha256": {
+    "arc_core.py": "1a379dfa4adc4354b87c1be0185b1c97e5ed251675cddd85e79d960941e58c3b",
+    "verify.py": "db5c50d5c35471b28ff47789e55d1b74ac69586ffb4b774b4d1b88536190f25c",
+    "run_witnesses.py": "1daf61f60d9c813f4c28b8df10493459680bf0f36aa58de67d1d71bf426ff2f2"
+  },
+  "reused_sources": {
+    "rosenbrock/core.py": "8de9490d498dabe9e39af1fbb0008f214dbfcda293f1d7a35fe9792eb14f400f",
+    "analysis/audit_capture.py": "35c8e11e812563c5512bf9ad901a22ea6f3e9693ebcdb7d92a9696aa33b8f213",
+    "charts/reference.py": "6d357755d17aee6c7b1270698da15bbe2aee8ed64491e32d78ebcfc8ebdba9e8",
+    "coarse/spectrum.py": "9ad52942c56ad8274425787ab56cc88b7bcb0c6c96071dda533aa70c3d757c14"
+  },
+  "verification_sha256": "5915f73b9a7c9f84fc9d7e365bacd775f1ed84b97031c55acde0f43c1c4f6a33",
+  "baseline": {
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "verified_headers": 44,
+    "champion_config": {
+      "label": "sustained-eta2-lambda0.1",
+      "status": "best tested global configuration on six-scene fixed-target panel; defaults unchanged",
+      "binary": "/tmp/prism-rl-sustained/build/prism-tr",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "initial_lambda": 0.1,
+      "flags": {
+        "OCA_ATTR_RADIUS": "1",
+        "OCA_ATTR_RESCUE": "1",
+        "OCA_ATTR_STRICT": "1",
+        "OCA_BACKTRACK_REARM": "1",
+        "OCA_CAMERA_TR": "0",
+        "OCA_CG_STOP": "0",
+        "OCA_CLASSICAL_LM": "1",
+        "OCA_COMPACT_FRAGMENTS": "2",
+        "OCA_DEMAND_MENU": "0",
+        "OCA_DIAG_NORM": "1",
+        "OCA_FORCE_UNSHARED": "1",
+        "OCA_FTOL": "1e-5",
+        "OCA_FTOL_K": "8",
+        "OCA_GRID_DOWN": "2",
+        "OCA_MENU_BACKTRACK": "8",
+        "OCA_MENU_GATE": "1e-2",
+        "OCA_MULTI_RHS": "1",
+        "OCA_NSHIFTS": "1",
+        "OCA_PCG": "1",
+        "OCA_POINT_SAFEGUARD": "1",
+        "OCA_RETRY_CACHE": "1",
+        "OCA_RHO_LAMBDA": "1",
+        "OCA_RHO_SHIFT": "1",
+        "OCA_SCHUR_NUMERIC_GUARD": "1",
+        "OCA_SWITCH_RESTART": "0",
+        "OCA_TR_RECURRENCE": "0",
+        "OCA_RLA_FIXED_ETA": "2"
+      },
+      "cli": [
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        "0.1",
+        "--max_iter",
+        "600"
+      ],
+      "evidence": "/tmp/prism-rl-sustained/verdict.json",
+      "limitations": [
+        "Muell lambda10 + eta2 is a counterexample",
+        "Largest tighter-target gain is only1.035x",
+        "Not a learned RL improvement"
+      ]
+    },
+    "arithmetic_note": "Native Scalar=double with FP32 compact cross blocks/point rows; this CPU reference is Gram-consistent FP64"
+  },
+  "config": {
+    "krylov_dimension": 64,
+    "reorthogonalization_passes": 2,
+    "secular_relative_tolerance": 1e-08,
+    "sigma_rule": "lambda_saved/max(captured_eta2_full_D_norm,1e-30)",
+    "threads": 1,
+    "repetitions": 3,
+    "no_radius_clipping": true,
+    "no_point_replacement": true,
+    "arm_order": "rep0 LM,ARC; rep1 ARC,LM; rep2 LM,ARC"
+  },
+  "inputs": [
+    {
+      "capture_rep": 0,
+      "bal_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "witness_files": {
+        "R_state.f64": "4ad2f2e9c9598537ea0ad7c71d0e57b70d1b618ee3c9d3e0810c58079b6ab613",
+        "t_state.f64": "af2ed72f68477274019f97f97a604bf028c6db5e0f0abf61b3a624c313832f36",
+        "X_state.f64": "ed91dbf7e878a2810ce6698a010871394144f21c74e2ad2edaccfd8b0920a528",
+        "intr_state.f64": "90317018527afbf3ed5adf68e0e6c97daf72cba73509dee22b4a78668888a520",
+        "E.f64": "dcb07b9c3f40bc869955f6673d505e5e48195496e857661cf30aac3429e0a61a",
+        "Cdiag.f64": "367d7cb8c81b2bad2e93a9e382d1812c7f899609f981c3f525608431034fabbd",
+        "eta2-0.step": "b9a8dbcf8628a6a6b4fdbf8dc9ff634533a7c4b52546f5ef8c4a3d6ce4b6b81c",
+        "metadata.txt": "c8f3c16d23f9be260fb965bab5d7d37c67d9b01b0bc9c8cd2a49944aa8e67184"
+      },
+      "lambda_value": 8.923524855210429e-07,
+      "radius": 6450.705179259341,
+      "score_init": 246359.02458229894
+    },
+    {
+      "capture_rep": 1,
+      "bal_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "witness_files": {
+        "R_state.f64": "4ae3507e8057ce4ddb4f4f921881da963a466bd2970f4cabba9ace47ff0d4bab",
+        "t_state.f64": "9b38cbb5a39832fa0a43c25386e4c391482168a65dad0dbc6219518794dd9af9",
+        "X_state.f64": "bc920dde4f8ab83a90d81b5f50518cec227e043a0bd1beb7f37adb2183a745dc",
+        "intr_state.f64": "b7845fb16cd2a0cf55b07edf76dd3c3abd507f91020b2a844d677917e80579a2",
+        "E.f64": "c3d1ce09f2c853165c9a225e364d31513bc26b4b3338574305ef8633222eca0d",
+        "Cdiag.f64": "dc4a541e712651894e0a6e70edd33e611b2595cd5201ae757323f925eb235764",
+        "eta2-0.step": "2c52141a709e4902a1ad57940fa59d5a094a70886c571b7898cead5a9ff1a6dd",
+        "metadata.txt": "b4bece80a7bdbb36e85bd3e1c3941391df41d9553dcf0a766cf9fe36080b09b3"
+      },
+      "lambda_value": 4.458387347826933e-08,
+      "radius": 403.1690737037086,
+      "score_init": 244946.83905292646
+    },
+    {
+      "capture_rep": 2,
+      "bal_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "witness_files": {
+        "R_state.f64": "f015e5a045df86c4a2380fbb7c74e67d5744793853345f7c0e70dad752ca8875",
+        "t_state.f64": "29e8a9eea1e52f299af0cefd77cf7dd241403b91b00a21f32e0276d91662eb0b",
+        "X_state.f64": "d878c11238a97c8976dcaec85c2dc010928c61c206df12ac148a23263bc994db",
+        "intr_state.f64": "fe51c4aef99eca61b61f47260375ac065f5271ece61ebf35c6172b119faa7e5d",
+        "E.f64": "df764d0e3ebfe964b16141efd829a45cbacd022f8be28098ef6d330370f5068f",
+        "Cdiag.f64": "61f448115307a641db1caffce76aaae9a656aced9f41ac3ac6c5b473a644fa87",
+        "eta2-0.step": "506e9509489f43a2c471fe0013d6f36439b5f6bc8f56b0a23214dad0bce8fd2e",
+        "metadata.txt": "29c70c1d5e2a76b007f875335b7b5dedee6f236d87686a5731482bef51d5ab59"
+      },
+      "lambda_value": 1.1535140970463029e-06,
+      "radius": 1612.6762948148341,
+      "score_init": 246403.69473567858
+    }
+  ],
+  "campaign_elapsed_seconds": 37.276806321926415
+}
