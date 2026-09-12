@@ -2,6 +2,8 @@
 
 This directory contains the exact frozen source of the measured Prism champion and the latest speed/curvature findings. It is an opt-in research solver. The original `gpu/oca_cuda.cu`, original build targets and default algorithm configuration are unchanged by this package.
 
+For the mathematical algorithm, read [Theory and novelty](docs/theory_and_novelty.md): the Schur/PCG equations, forcing and radius policies, nonlinear point safeguard, numerical recovery guarantees, evidence, and contribution boundaries. It also distinguishes the frozen solver from the separately reported Eta2/MFREE scheduler cascade.
+
 ## Build and run
 
 Requires Python 3.11+, CUDA/NVCC and Eigen headers. From the repository root:
