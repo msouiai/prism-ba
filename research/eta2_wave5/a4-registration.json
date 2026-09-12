@@ -1,0 +1,65 @@
+{
+  "arms": {
+    "off": {},
+    "rho001": {
+      "OCA_W4_RHO_MIN": "0.001"
+    }
+  },
+  "cells": {
+    "venice-52": {
+      "scene": "venice-52",
+      "path": "/workspace/bal/venice-52.txt",
+      "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "target": 243740.27,
+      "cap": 60
+    },
+    "final-3068": {
+      "scene": "final-3068",
+      "path": "/workspace/bal/final-3068.txt",
+      "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+      "target": 1744796.9841897595,
+      "cap": 60
+    }
+  },
+  "repetitions": 10,
+  "binary": "/tmp/prism-ba-coarse/research/eta2_wave4/build/prism-aside",
+  "binary_sha256": "9c3675d8be45b8298fbcb1e63584bb094f0e76c9efa1430bce394e9b3dda6462",
+  "build_manifest": {
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave3",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave2",
+      "-I/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "/tmp/prism-ba-coarse/research/eta2_wave4/build/aside.cu",
+      "-o",
+      "/tmp/prism-ba-coarse/research/eta2_wave4/build/prism-aside",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    "source_sha256": "3ff1526078a24b959de02457bc91e29584189e7de577e774b005f4deec24f5f5",
+    "binary_sha256": "9c3675d8be45b8298fbcb1e63584bb094f0e76c9efa1430bce394e9b3dda6462",
+    "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+    "reversible_patch_count": 40,
+    "sources": {
+      "/tmp/prism-ba-coarse/research/eta2_wave3/build.py": "11a3907d75bef41f1cc02a8b880dc958cbcbd20abf7073f0d31ee3d55fe54ed5",
+      "/tmp/prism-ba-coarse/research/eta2_wave3/local_actuators.cuh": "a1b7af056b79e2620e0672582039e1813498b4943f89d2b333b9356e05463015",
+      "/tmp/prism-ba-coarse/research/eta2_wave2/build.py": "655b646321fc68f1205f294a118df60947311676d292e236ce1ef73552ba2ca7",
+      "/tmp/prism-ba-coarse/research/eta2_wave2/wave_trace.cuh": "e866f4e5071aba8da6e03b082035e3ebc8d9011d37117f8dedb27f80ba2184e7",
+      "/tmp/prism-ba-coarse/research/eta2_wave2/composition_capture.cuh": "4799691149ce31798063fc4afed1374259a76afd37eeda46e080f500e3528784",
+      "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/build.py": "d2c46774fcef0e9f279bc0cc0a197fca844cf3bd067e5f0e5e6dc8a7dc551049",
+      "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/frontload.cuh": "7a4a7de108e5616bb76ace88476d29ce1fa6ab605888127f56c4c201830efaee",
+      "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/coherent_rows.cuh": "38c042aa5a5f55c8cc740b901de7a92afe54f8fb9cf26920cc9c821bada6d6ce",
+      "/tmp/prism-ba-coarse/research/eta2_research_20260912/frontload/attempt_trace.h": "43400101d54c0ccf94464025497105ef825e16c7e7cbb1d21f7dff019619daf6",
+      "/tmp/prism-ba-coarse/research/eta2_wave4/build_aside.py": "4bf2339f4fd055f92019d35f5fa287cb545935d647038d85192705801eef4940"
+    }
+  },
+  "protocol_sha256": "5a32a5630779c6e52c1e53fa111e3a3bdf00563dc98858f159b0405eb96fe7ca",
+  "cohort_rule": "Fresh rows only; alternate arm order and reverse scene order on odd repetitions"
+}

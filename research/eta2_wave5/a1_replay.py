@@ -128,6 +128,47 @@ def hs_correct(fundamental, point1, point2):
                     "direct_correction_cost": direct, "epipolar_residual": epi}
 
 
+def lindstrom_niter2(fundamental, point1, point2):
+    """Listing 3 niter2 from Lindstrom 2010, in ordinary pixel coordinates."""
+    # The paper writes x^T E x'=0.  Our F obeys point2^T F point1=0,
+    # hence x=point1, x'=point2 and E=F^T.
+    x = np.r_[np.asarray(point1, dtype=float), 1.]
+    xp = np.r_[np.asarray(point2, dtype=float), 1.]
+    e = np.asarray(fundamental, dtype=float).T
+    et = e[:2, :2]
+    n = (e @ xp)[:2]
+    np_ = (e.T @ x)[:2]
+    a = float(n @ et @ np_)
+    b = 0.5 * float(n @ n + np_ @ np_)
+    c = float(x @ e @ xp)
+    discriminant = b*b - a*c
+    if discriminant < -1e-12 * max(1.0, b*b, abs(a*c)):
+        raise RuntimeError("Negative Lindstrom discriminant")
+    d = np.sqrt(max(0.0, discriminant))
+    denominator = b + np.copysign(d, b)
+    if not np.isfinite(denominator) or abs(denominator) < 1e-300:
+        raise RuntimeError("Degenerate Lindstrom root")
+    lam = c / denominator
+    delta = lam * n
+    deltap = lam * np_
+    n2 = n - et @ deltap
+    np2 = np_ - et.T @ delta
+    denominator2 = float(n2 @ n2 + np2 @ np2)
+    if not np.isfinite(denominator2) or denominator2 < 1e-300:
+        raise RuntimeError("Degenerate Lindstrom second step")
+    lam2 = lam * 2.0 * d / denominator2
+    corrected1 = x.copy(); corrected1[:2] -= lam2 * n2
+    corrected2 = xp.copy(); corrected2[:2] -= lam2 * np2
+    epi = float(corrected2 @ fundamental @ corrected1)
+    direct = float(np.sum((corrected1[:2]-point1)**2) +
+                   np.sum((corrected2[:2]-point2)**2))
+    return corrected1[:2], corrected2[:2], {
+        "a": a, "b": b, "c": c, "discriminant_sqrt": float(d),
+        "lambda1": float(lam), "lambda2": float(lam2),
+        "direct_correction_cost": direct, "epipolar_residual": epi,
+    }
+
+
 def triangulate_dlt(camera, cameras, standard_pixels):
     rows = []
     for c, pixel in zip(cameras, standard_pixels):
@@ -139,6 +180,29 @@ def triangulate_dlt(camera, cameras, standard_pixels):
     if abs(vh[-1,3]) < 1e-14:
         raise RuntimeError("DLT returned point at infinity")
     return vh[-1,:3]/vh[-1,3]
+
+
+def triangulate_inhomogeneous(camera, cameras, standard_pixels):
+    rows = []
+    for c, pixel in zip(cameras, standard_pixels):
+        focal = camera.intrinsics[c,0]
+        projection = np.diag([focal,focal,1.]) @ camera_matrix(camera,c)
+        rows.extend([pixel[0]*projection[2]-projection[0],
+                     pixel[1]*projection[2]-projection[1]])
+    rows=np.asarray(rows)
+    return np.linalg.lstsq(rows[:,:3],-rows[:,3],rcond=None)[0]
+
+
+def triangulate_normal_equations(camera, cameras, standard_pixels):
+    rows = []
+    for c, pixel in zip(cameras, standard_pixels):
+        focal = camera.intrinsics[c,0]
+        projection = np.diag([focal,focal,1.]) @ camera_matrix(camera,c)
+        rows.extend([pixel[0]*projection[2]-projection[0],
+                     pixel[1]*projection[2]-projection[1]])
+    rows=np.asarray(rows)
+    a,b=rows[:,:3],-rows[:,3]
+    return np.linalg.solve(a.T@a,a.T@b)
 
 
 def midpoint(camera, cameras, bal_normalized):
@@ -251,10 +315,21 @@ def calculate(root, label, ci, pi, uv):
     fundamental=fundamental_pixel(proposed,int(cameras[0]),int(cameras[1]))
     q1,q2,hs=hs_correct(fundamental,standard[0],standard[1])
     hs_x=triangulate_dlt(proposed,cameras,[q1,q2])
+    l1,l2,lindstrom=lindstrom_niter2(fundamental,standard[0],standard[1])
+    lindstrom_x=triangulate_dlt(proposed,cameras,[l1,l2])
+    lindstrom_inhomogeneous_x=triangulate_inhomogeneous(proposed,cameras,[l1,l2])
+    lindstrom_normal_x=triangulate_normal_equations(proposed,cameras,[l1,l2])
+    lindstrom_bal=np.asarray([-l1/camera.intrinsics[cameras[0],0],
+                              -l2/camera.intrinsics[cameras[1],0]])
+    lindstrom_midpoint_x=midpoint(proposed,cameras,lindstrom_bal)
     ray_x,ray=old_anchor_search(camera,proposed,old,cameras,pixels)
     recorded_cost,recorded_y=track_cost(old+dp[point])
     starts=[('old',old),('recorded',old+dp[point]),('midpoint',midpoint_x),
-            ('hartley_sturm',hs_x),('old_anchor_global_1d',ray_x)]
+            ('hartley_sturm',hs_x),('lindstrom_niter2',lindstrom_x),
+            ('lindstrom_niter2_inhomogeneous',lindstrom_inhomogeneous_x),
+            ('lindstrom_niter2_normal',lindstrom_normal_x),
+            ('lindstrom_niter2_midpoint',lindstrom_midpoint_x),
+            ('old_anchor_global_1d',ray_x)]
     raw_candidates=[]
     old_sign=np.sign(old_y[:,2]);old_sign[old_sign==0]=1
     for start_label,start in starts:
@@ -285,6 +360,12 @@ def calculate(root, label, ci, pi, uv):
     attribution=json.loads((W4/'attribution'/('final-e4-'+label.replace('/','-')+'.json')).read_text())
     full_prediction=attribution['prediction']-point_pred(dp[point])+point_pred(repaired-old)
     full_decrease=attribution['true_decrease']+recorded_cost-repaired_cost
+    native=next(candidate for candidate in raw_candidates if candidate['label']=='lindstrom_niter2_normal')
+    if not (native['valid'] and native['projection_margin_passed'] and native['cost']<recorded_cost):
+        native=next(candidate for candidate in raw_candidates if candidate['label']=='recorded')
+    native_point=np.asarray(native['point'])
+    native_prediction=attribution['prediction']-point_pred(dp[point])+point_pred(native_point-old)
+    native_decrease=attribution['true_decrease']+recorded_cost-native['cost']
     return dict(label=label,point=point,observations=obs.tolist(),cameras=cameras.tolist(),
         recorded_point_cost=recorded_cost,repaired_point_cost=repaired_cost,
         repaired_point=repaired.tolist(),recorded_point=(old+dp[point]).tolist(),
@@ -292,9 +373,13 @@ def calculate(root, label, ci, pi, uv):
         full_rho=full_decrease/full_prediction if full_prediction>0 else None,
         depth_signs_preserved=bool(np.all(new_y[:,2]*old_y[:,2]>0)),
         repaired_depth_ratios=(new_y[:,2]/old_y[:,2]).tolist(),
-        radial_inverse=inverse,hartley_sturm=hs,old_anchor_search=ray,
+        radial_inverse=inverse,hartley_sturm=hs,lindstrom_niter2=lindstrom,
+        old_anchor_search=ray,
         raw_candidates=raw_candidates,selected_kind=selected_kind,
         selected_candidate=best,all_polishes=polishes,
+        native_candidate=native,native_full_prediction=native_prediction,
+        native_full_true_decrease=native_decrease,
+        native_full_rho=native_decrease/native_prediction if native_prediction>0 else None,
         source_hashes={q.name:F.sha(q) for q in folder.iterdir() if q.is_file()},
         scope='Fixed recorded camera proposal; only point 250233 substituted and full quadratic prediction recomputed')
 
@@ -314,13 +399,19 @@ def main():
         rows=[calculate(root,label,ci,pi,uv) for label in sorted(wanted)]
     old_gap=abs(rows[1]['recorded_point_cost']-rows[0]['recorded_point_cost'])
     new_gap=abs(rows[1]['repaired_point_cost']-rows[0]['repaired_point_cost'])
+    native_gap=abs(rows[1]['native_candidate']['cost']-rows[0]['native_candidate']['cost'])
     passed=(new_gap<=.1*old_gap and all(r['depth_signs_preserved'] and
             r['full_prediction']>0 and r['full_rho'] is not None and r['full_rho']>.1
             for r in rows))
+    native_passed=(native_gap<=.1*old_gap and all(r['native_full_prediction']>0 and
+                   r['native_full_rho'] is not None and r['native_full_rho']>.1 for r in rows))
     result=dict(rows=rows,recorded_point_gap=old_gap,repaired_point_gap=new_gap,
         fraction_remaining=new_gap/old_gap,replay_gate_passed=passed,
+        native_lindstrom_point_gap=native_gap,
+        native_lindstrom_fraction_remaining=native_gap/old_gap,
+        native_lindstrom_replay_gate_passed=native_passed,
         protocol_sha256=sha(protocol),code_sha256=sha(__file__),
-        decision=('Proceed to detector-locality and native targeted repair' if passed else
+        decision=('Proceed to detector-locality and native targeted repair' if passed and native_passed else
                   'Kill the registered targeted repair before native rollout'))
     write(P/'a1-replay.json',result)
     print(json.dumps(result,indent=2))
