@@ -1,0 +1,26 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave6",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/build/deterministic_fp64_fragments.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-deterministic-fp64-fragments",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "source_sha256": "c2436f24b3efc6c6546e4ca7d58f0713b4a5a823d3cc20c6ad8b74271874ff84",
+  "binary_sha256": "c24e891eb392a3714f48538a809bcd7971cbe7103fd444e9fa185f7bc8bc01c1",
+  "reversible_patch_count": 39,
+  "base_builder_sha256": "2a80ca57e9fd8a7595e5f74edfa7dbd7e1b481df9f35fa237863545f02d1e4ac",
+  "builder_sha256": "ea6efed6ac2d444091f52a1c1b73275899b608febf60df3f441103c1dcd79540",
+  "protocol_sha256": "8f70345ed8ffd6e6d0542205301533dfaf05e8c1537c47065790f28e86a15744",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "only_semantic_delta": "stored Fragment typedef float -> double; diagnostic labels updated"
+}
