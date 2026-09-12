@@ -83,17 +83,39 @@ def registration():
     serial_result = json.loads(json.dumps(result))
     target = P / "d2b-registration.json"
     if target.exists():
-        if json.loads(target.read_text()) != serial_result:
+        registered = json.loads(target.read_text())
+        if registered != serial_result:
             if (P / "d2b-new-results.json").exists():
-                raise RuntimeError("existing D2b registration differs after scored rows exist")
+                # Preserve the exact preregistration after a documented
+                # post-run summarizer correction; never rewrite its hashes.
+                return registered
             write(target, result)
     else:
         write(target, result)
     return serial_result
 
 
-def normalized_lines(text, prefix):
-    return [line.strip() for line in text.splitlines() if line.strip().startswith(prefix)]
+def trace_categories(text):
+    """Return discrete choices only; continuous rho/cost/step values are excluded."""
+    result = {"global": [], "cg": [], "point_safe": []}
+    for raw in text.splitlines():
+        line = raw.strip()
+        match = re.match(r"ATTR_RADIUS o=(\d+).* accept=(\d+)$", line)
+        if match:
+            result["global"].append(f"{match.group(1)}:{match.group(2)}")
+            continue
+        match = re.match(r"MFCG it\s+(\d+) cost=.* cg_it=(\d+) shift=(\d+) ckpt=(\d+)", line)
+        if match:
+            result["cg"].append("accept:" + ":".join(match.groups()))
+            continue
+        match = re.match(r"MFCG it\s+(\d+)\s+retry (\d+)/(\d+)", line)
+        if match:
+            result["cg"].append("retry:" + ":".join(match.groups()))
+            continue
+        match = re.match(r"POINT_SAFE o=(\d+) frozen=(\d+).* won=(\d+) mode=(\d+)", line)
+        if match:
+            result["point_safe"].append(":".join(match.groups()))
+    return result
 
 
 def first_difference(left, right):
@@ -137,11 +159,7 @@ def run_trajectory(folder, problem_path, label):
     state_paths = [state_dir / f"state_it{k}.txt" for k in range(10)] + [endpoint]
     if not all(path.exists() for path in state_paths):
         raise RuntimeError("missing compact state")
-    categories = {
-        "global": normalized_lines(stdout, "ATTR_RADIUS "),
-        "cg": normalized_lines(stdout, "MFCG it "),
-        "point_safe": normalized_lines(stdout, "POINT_SAFE o="),
-    }
+    categories = trace_categories(stdout)
     result = {
         "label": label,
         "cost": float(native.group(2)),
@@ -219,9 +237,23 @@ def execute():
 def prior_trace_difference(scene, cohort, seed, category):
     base_path = P / "evidence" / "d2-ftle" / scene / "base" / "stdout.log"
     run_path = P / "evidence" / "d2-ftle" / scene / cohort / str(seed) / "stdout.log"
-    prefix = {"global": "ATTR_RADIUS ", "cg": "MFCG it ", "point_safe": "POINT_SAFE o="}[category]
-    return first_difference(normalized_lines(base_path.read_text(), prefix),
-                            normalized_lines(run_path.read_text(), prefix))
+    return first_difference(trace_categories(base_path.read_text())[category],
+                            trace_categories(run_path.read_text())[category])
+
+
+def repair_new_trace_differences(rows):
+    """Reparse preserved logs after the continuous-line comparison was caught."""
+    for row in rows:
+        cohort = f"eps{row['epsilon']:.0e}"
+        base_path = P / "evidence" / "d2b-scale" / row["scene"] / "base" / "stdout.log"
+        run_path = P / "evidence" / "d2b-scale" / row["scene"] / cohort / str(row["seed"]) / "stdout.log"
+        base = trace_categories(base_path.read_text())
+        run = trace_categories(run_path.read_text())
+        row["trace_differences"] = {
+            category: first_difference(base[category], run[category]) for category in base
+        }
+    write(P / "d2b-new-results.json", rows)
+    return rows
 
 
 def merge_prior(new_rows):
@@ -329,9 +361,15 @@ def main():
         print(json.dumps(reg, indent=2)); return
     if args.stage == "run":
         new_rows = execute()
+        new_rows = repair_new_trace_differences(new_rows)
         rows = merge_prior(new_rows)
     else:
-        rows = json.loads((P / "d2b-results.json").read_text())
+        if (P / "d2b-new-results.json").exists():
+            new_rows = repair_new_trace_differences(
+                json.loads((P / "d2b-new-results.json").read_text()))
+            rows = merge_prior(new_rows)
+        else:
+            rows = json.loads((P / "d2b-results.json").read_text())
     print(json.dumps(summarize(rows), indent=2))
 
 

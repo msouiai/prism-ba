@@ -30,3 +30,14 @@ portfolio work.  A stable smooth regime supports controller work.
 
 This is a diagnostic only.  It changes no Eta2 algorithm and makes no endpoint,
 speed, or novelty claim.
+
+## Trace-parser correction after execution
+
+The initial summarizer compared complete diagnostic lines, so a changed
+floating-point `rho`, cost, or lambda was incorrectly counted as a changed
+discrete decision.  Before sealing the report, the preserved stdout logs were
+reparsed into accept/reject bits, discrete CG depth/checkpoint/retry tuples, and
+point-safeguard `(outer,frozen,won,mode)` tuples.  No run, residual distance,
+dose, slope, threshold, or primary classification changed.  This correction is
+reported because the first provisional trace counts were all four by
+construction and were not meaningful.
