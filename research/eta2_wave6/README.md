@@ -37,6 +37,12 @@ Current high-level results:
   200 observations but its projection coefficient falls to 0.003--0.031, so
   preceding-step curvature is mostly irrelevant to the next clipped/retry
   direction; a native three-solve tensor step is not earned.
+- a faithful three-accept lifted robust opening jointly optimises persistent
+  observation weights and improves the Final3068 screen from 3/5 to 4/5 while
+  cutting median rejects 15 to 4.  It is nevertheless rejected: Venice stays
+  0/5 and its median endpoint worsens 5.768% (260.53k versus 246.33k).  The
+  result confirms an objective-opening basin effect that does not transfer
+  across the two tail mechanisms.
 
-See `D8_TENSOR_SECANT_RESULTS.md` for the current decision.  The scientific
+See `D9_LIFTED_ROBUST_RESULTS.md` for the current decision.  The scientific
 champion remains unchanged.
