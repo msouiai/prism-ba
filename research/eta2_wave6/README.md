@@ -20,6 +20,10 @@ Current high-level results:
 - monotone soft acceptance makes 206/213 low-rho proposals locally better,
   yet its 60-pair Final3068 cohort is unresolved: 41/60 versus 38/60 hits,
   12 versus 9 discordant wins, and 1.077x median target time on double hits.
+- a banded camera preconditioner has a strong fixed-system signal on Venice52
+  (RCM band 32 improves conditioning 106.6x), but the registered structural
+  gate fails: no sequence scene retains 80% normalized coupling at band 16,
+  and required widths grow to 138--215 cameras on the larger sequences.
 
-See `D4_RESULTS.md` for the current decision.  The scientific champion remains
+See `D5_BAND_RESULTS.md` for the current decision.  The scientific champion remains
 unchanged.
