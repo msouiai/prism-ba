@@ -13,6 +13,7 @@ P = Path(__file__).resolve().parent
 W5 = P.parent / "eta2_wave5"
 sys.path.insert(0, str(W5))
 import native_light as N
+N.HERE = P
 
 PROTOCOL = P / "D0_PROTOCOL.md"
 DERIVED = P / "build" / "prism-deterministic"
