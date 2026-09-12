@@ -1,0 +1,11 @@
+# Brief 2(c) registration: freeze thin-track inverse depth
+
+The plain S3 and inverse-depth charts are killed by the user's original Ladybug fling criterion, despite inverse depth passing a subsidiary cost-fidelity screen. This is the explicitly proposed depth-freezing extension, not a silent deployment of the killed plain chart.
+
+One fixed rule at every captured state: use frozen-first-observation-anchor inverse depth, and constrain delta_rho=0 if (a) maximum initial track parallax is below one degree, (b) track length is two and the undamped FP64 Euclidean point-normal condition number is at least 1e8, or (c) the track has fewer than two observations. Nonpositive minimum eigenvalues count as infinite condition number and are reported separately. Keep both bearing coordinates active. Use the same lambda and chart-coordinate diagonal damping as the plain ID test. No release in this fixed-state screen, no threshold tuning and no observation removal.
+
+Evaluate all nine saved states, both prescribed camera directions, N=3 CPU repetitions per cell (54 new cells), alongside the retained Euclidean/plain-ID controls. Include full original-objective cost, rho from the selected chart model, initial-score checks, solve residual, inward/outward large displacements, maximum displacement, cheirality flips and CPU overhead. The fixed-state comparison is not a hit-rate or GPU-speed claim. All original states and controls remain unchanged.
+
+The primary requested cure must now show fewer outward >scene-radius moves than the Euclidean Ladybug control in each of its three saved repeat states, with no >0.15% candidate-cost regression on any primary state and at least two >0.15% improvements in two families. Failure kills this threshold/rule and stops the tau-floor-removal sweep: there is no justification for reducing damping if the intended boundedness device fails. Count the predictable loss of Venice's useful inward recoveries explicitly. Fixed depth does not mathematically bound large bearing increments; the measured fling gate is still necessary.
+
+Only if this passes will a native rollout and an explicit global depth-release rule be registered. No release threshold is tested or selected here. The original frozen Eta2 remains the baseline and current winner.

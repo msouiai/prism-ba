@@ -1,0 +1,2321 @@
+{
+  "kind": "independent full-normal and point backward-error audit",
+  "capture": "research/eta2_research_20260912/evidence/collect/ladybug-1197-capture-0",
+  "bal": "/workspace/bal/ladybug-1197.txt",
+  "source_sha256": "a3b2b481afd8c09e20a71634a72cfd7ce9560ef3fc0dea33951a65ee0f9e1b1d",
+  "longdouble_mantissa_bits": 63,
+  "point_backward_error_definition": "||rp_j||2 / (||Vlambda_j||F ||dp_j||2 + ||rhs_j||2); global uses L2 norm of the per-point denominators",
+  "scaled_residual_definition": "||[E rc; Dp^-1/2 rp]||2 / ||[E gc; Dp^-1/2 gp]||2; Dp is saved diagonal damping/tau",
+  "saved_vs_recomputed_point_diagonal_relative_norm": 1.0485385792534696e-07,
+  "rows": [
+    {
+      "arm": "eta2",
+      "rep": 0,
+      "native_reduced_certified": false,
+      "label": "native inexact direction",
+      "camera_equation_applicability": "unclipped direction normal-equation diagnostic",
+      "point_residual_norm": 642886.4078402593,
+      "point_rhs_norm": 104205094598.24208,
+      "gp_norm": 164963827553.50906,
+      "WTdc_norm": 69136409653.85562,
+      "point_residual_relative_rhs": 6.169433560987378e-06,
+      "point_normwise_backward_error_global": 2.2278725766201458e-06,
+      "point_normwise_backward_error_max": 2.304521607190337e-06,
+      "point_normwise_backward_error_p95": 2.74695387729539e-08,
+      "point_stable_minus_assembled_norm": 1.033719416216265e-05,
+      "scaled_full_gradient_norm": 8253.45332812805,
+      "Dp_whitened_point_residual_norm": 0.00012248635871028423,
+      "scaled_camera_residual_norm": 81.28640957797612,
+      "Dp_whitened_point_residual_relative_full_gradient": 1.4840619294816458e-08,
+      "scaled_full_normal_residual_relative_full_gradient": 0.009848775578707347,
+      "worst_tracks": [
+        {
+          "point": 24795,
+          "observations": 11,
+          "max_projected_depth_cancellation_condition": 3.0200809981027508,
+          "min_abs_projected_depth": 1.0254147102408175,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 5.082172951251309e-05,
+            "rhs_norm": 48.596047804378564,
+            "normwise_backward_error": 3.268507518817998e-07,
+            "stable_minus_assembled_norm": 6.820384122644316e-17,
+            "residual": [
+              -1.934556336025329e-06,
+              -2.1649501337311884e-05,
+              4.593914207156593e-05
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 5.082175801448924e-05,
+            "rhs_norm": 48.596047804408066,
+            "normwise_backward_error": 3.26850935187037e-07,
+            "stable_minus_assembled_norm": 2.570000854591051e-17,
+            "residual": [
+              -1.934561528399637e-06,
+              -2.1649498937613388e-05,
+              4.593917451507388e-05
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 2.2586458660155226e-16
+        },
+        {
+          "point": 46428,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 1.2557061079009437,
+          "min_abs_projected_depth": 19.6151851644732,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 2.763900332497171e-06,
+            "rhs_norm": 2.850681807592003,
+            "normwise_backward_error": 4.291547162721051e-07,
+            "stable_minus_assembled_norm": 2.5045773113351476e-18,
+            "residual": [
+              2.4760667565280395e-06,
+              -7.909297516985069e-07,
+              -9.395044401559922e-07
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 2.763898400572388e-06,
+            "rhs_norm": 2.8506818075910805,
+            "normwise_backward_error": 4.2915441629947134e-07,
+            "stable_minus_assembled_norm": 2.192739926635349e-18,
+            "residual": [
+              2.476065239963388e-06,
+              -7.909296503819823e-07,
+              -9.39502838887829e-07
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 1.663814273503721e-16
+        },
+        {
+          "point": 67408,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 180681063.66140804,
+          "min_abs_projected_depth": 7.752714634200533e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 6742.059634810514,
+            "rhs_norm": 1729094937.5467224,
+            "normwise_backward_error": 9.517603018468698e-07,
+            "stable_minus_assembled_norm": 1.5850277462700948e-10,
+            "residual": [
+              -6588.882906095347,
+              -232.67572597461185,
+              1409.9121162852662
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 9815.345267094557,
+            "rhs_norm": 1729085862.1576397,
+            "normwise_backward_error": 1.3856103953182549e-06,
+            "stable_minus_assembled_norm": 9.550993558386891e-11,
+            "residual": [
+              6611.09939092501,
+              -555.6675475300908,
+              -7233.64369679682
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.507363413965252e-09
+        },
+        {
+          "point": 67491,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 226678412.8925482,
+          "min_abs_projected_depth": 6.179610663546026e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 14956.008787083667,
+            "rhs_norm": 2891733459.0574374,
+            "normwise_backward_error": 1.0698854510367138e-06,
+            "stable_minus_assembled_norm": 2.7958050569346015e-10,
+            "residual": [
+              -14434.866178594504,
+              3714.579928877516,
+              1232.368937198862
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 14071.130094700706,
+            "rhs_norm": 2891731071.700541,
+            "normwise_backward_error": 1.0065853817533213e-06,
+            "stable_minus_assembled_norm": 4.1265008442712824e-10,
+            "residual": [
+              -12877.491650401444,
+              557.1716917033627,
+              5644.153669222465
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 7.744540116778422e-09
+        },
+        {
+          "point": 67845,
+          "observations": 3,
+          "max_projected_depth_cancellation_condition": 221325221.45145223,
+          "min_abs_projected_depth": 6.329076857308075e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 40140.65564891511,
+            "rhs_norm": 8182330879.125047,
+            "normwise_backward_error": 1.9884575427403687e-06,
+            "stable_minus_assembled_norm": 2.5006969890214387e-10,
+            "residual": [
+              -30658.93741944257,
+              3818.2390712407905,
+              25626.604196231987
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8194.291505796211,
+            "rhs_norm": 8182299887.528386,
+            "normwise_backward_error": 4.0592325887180753e-07,
+            "stable_minus_assembled_norm": 3.419119500849514e-10,
+            "residual": [
+              -6768.661614373588,
+              1654.686664357574,
+              4312.034934328185
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.391948689909924e-09
+        },
+        {
+          "point": 67848,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 179724903.5085614,
+          "min_abs_projected_depth": 7.793960095066679e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 925.0899835696556,
+            "rhs_norm": 4015715100.9588385,
+            "normwise_backward_error": 8.354552903088368e-08,
+            "stable_minus_assembled_norm": 2.661698050191676e-10,
+            "residual": [
+              125.73091680907964,
+              914.5471464603106,
+              59.889324261985166
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8679.131749854072,
+            "rhs_norm": 4015723287.7185264,
+            "normwise_backward_error": 7.838179356036397e-07,
+            "stable_minus_assembled_norm": 1.940444832594161e-10,
+            "residual": [
+              -4065.8073358795846,
+              3995.1710672142,
+              6544.856513517108
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.777916992813928e-09
+        },
+        {
+          "point": 67931,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 188818636.0986562,
+          "min_abs_projected_depth": 7.418676275031122e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 949.1839968732296,
+            "rhs_norm": 13155340438.883635,
+            "normwise_backward_error": 2.8877756683538536e-08,
+            "stable_minus_assembled_norm": 1.3370747601755887e-09,
+            "residual": [
+              59.22257315713068,
+              -947.317606036544,
+              -5.683312597306212
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 5917.921186833055,
+            "rhs_norm": 13155345451.56159,
+            "normwise_backward_error": 1.800454531107571e-07,
+            "stable_minus_assembled_norm": 7.229973772942127e-10,
+            "residual": [
+              -419.3505521072584,
+              3599.149063708617,
+              4678.895415076113
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 5.6702195886579395e-09
+        },
+        {
+          "point": 67932,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 183645984.5576407,
+          "min_abs_projected_depth": 7.62763389108509e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 21572.446665310326,
+            "rhs_norm": 13211301895.432634,
+            "normwise_backward_error": 6.411014485350981e-07,
+            "stable_minus_assembled_norm": 4.4544075688504284e-10,
+            "residual": [
+              15183.928435695852,
+              224.44190794603492,
+              -15322.15383741082
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 2282.30050777795,
+            "rhs_norm": 13211324646.03332,
+            "normwise_backward_error": 6.782657491775602e-08,
+            "stable_minus_assembled_norm": 1.146119227006427e-09,
+            "residual": [
+              -2233.8023465791193,
+              -186.68238373780332,
+              429.15308669876686
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.501610722063826e-09
+        },
+        {
+          "point": 74671,
+          "observations": 3,
+          "max_projected_depth_cancellation_condition": 91.12742766555857,
+          "min_abs_projected_depth": 0.06986772761438939,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 2.6767624716312013,
+            "rhs_norm": 123689063.13273373,
+            "normwise_backward_error": 8.615036149816818e-09,
+            "stable_minus_assembled_norm": 5.269143907478649e-12,
+            "residual": [
+              -2.580673783830889,
+              -0.29792582025016046,
+              -0.6453064052133755
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 2.676762714582516,
+            "rhs_norm": 123689063.13273394,
+            "normwise_backward_error": 8.615036931744358e-09,
+            "stable_minus_assembled_norm": 6.497640400672325e-12,
+            "residual": [
+              -2.5806740206407994,
+              -0.2979257937642217,
+              -0.6453064781782132
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 5.304883594204571e-15
+        },
+        {
+          "point": 79218,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 175642030.20817527,
+          "min_abs_projected_depth": 7.976551412783306e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 20519.855046765744,
+            "rhs_norm": 17533306378.59122,
+            "normwise_backward_error": 3.7590322804717045e-07,
+            "stable_minus_assembled_norm": 6.42595177220053e-10,
+            "residual": [
+              17261.339412592715,
+              -496.44923159810423,
+              -11084.410267758794
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 3278.349525328067,
+            "rhs_norm": 17533290152.515175,
+            "normwise_backward_error": 6.005610335780625e-08,
+            "stable_minus_assembled_norm": 5.202182490529806e-10,
+            "residual": [
+              -1877.490685725541,
+              -603.3370763418352,
+              2618.8907399018935
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 6.41528779171367e-09
+        },
+        {
+          "point": 80343,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 529.9680902191686,
+          "min_abs_projected_depth": 0.02848205510476437,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 1.746507902471985,
+            "rhs_norm": 99994402.40081462,
+            "normwise_backward_error": 8.317801895544478e-09,
+            "stable_minus_assembled_norm": 7.05371416721757e-12,
+            "residual": [
+              0.45727216377906643,
+              -0.3649944285193314,
+              -1.6455914100346263
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1.7465074496526694,
+            "rhs_norm": 99994402.40081753,
+            "normwise_backward_error": 8.317799738977164e-09,
+            "stable_minus_assembled_norm": 1.1178009928869126e-11,
+            "residual": [
+              0.4572728092019247,
+              -0.3649943032207865,
+              -1.6455907778889696
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 1.9289991173329535e-14
+        },
+        {
+          "point": 98124,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 1467609624.0034347,
+          "min_abs_projected_depth": 1.0371164526137844e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 640729.53102952,
+            "rhs_norm": 100544662180.95982,
+            "normwise_backward_error": 2.3045216072254927e-06,
+            "stable_minus_assembled_norm": 9.837723819909082e-09,
+            "residual": [
+              -640357.0010535442,
+              19978.315849488925,
+              -8837.987940582263
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1720823.3437055855,
+            "rhs_norm": 100547021500.85588,
+            "normwise_backward_error": 6.18925838772456e-06,
+            "stable_minus_assembled_norm": 1.5887859833467408e-09,
+            "residual": [
+              1719594.0582772794,
+              64440.759245229594,
+              8754.628915425148
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.485534327928263e-08
+        },
+        {
+          "point": 104395,
+          "observations": 6,
+          "max_projected_depth_cancellation_condition": 27.752998166815267,
+          "min_abs_projected_depth": 0.674197892231017,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.00037367202355334175,
+            "rhs_norm": 290.1343156957497,
+            "normwise_backward_error": 4.225681135393191e-07,
+            "stable_minus_assembled_norm": 1.3157480185250564e-16,
+            "residual": [
+              2.435975719088058e-05,
+              0.00010291089511424651,
+              0.0003583946582788799
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.0003736722242431374,
+            "rhs_norm": 290.1343156955911,
+            "normwise_backward_error": 4.225683404900436e-07,
+            "stable_minus_assembled_norm": 1.3404457605525494e-16,
+            "residual": [
+              2.4359448611177125e-05,
+              0.00010291098941611837,
+              0.0003583948614190339
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 1.2760753404008783e-15
+        },
+        {
+          "point": 114010,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 7.5665048959065935,
+          "min_abs_projected_depth": 1.2223581136277246,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.00025561839545999113,
+            "rhs_norm": 176.57182825644625,
+            "normwise_backward_error": 3.20584248104876e-07,
+            "stable_minus_assembled_norm": 1.488479678205197e-17,
+            "residual": [
+              0.00018975747904135696,
+              7.669117836980313e-05,
+              -0.00015313825911789786
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.0002556184848201184,
+            "rhs_norm": 176.5718282565081,
+            "normwise_backward_error": 3.205843601760077e-07,
+            "stable_minus_assembled_norm": 7.925807095049882e-18,
+            "residual": [
+              0.00018975752032443461,
+              7.669118907438618e-05,
+              -0.0001531383517620966
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.095035049295459e-16
+        }
+      ]
+    },
+    {
+      "arm": "exact",
+      "rep": 0,
+      "native_reduced_certified": true,
+      "label": "reference with certified reduced residual",
+      "camera_equation_applicability": "unclipped direction normal-equation diagnostic",
+      "point_residual_norm": 641275.5614285755,
+      "point_rhs_norm": 54474871059.65639,
+      "gp_norm": 164963827553.50906,
+      "WTdc_norm": 122080015115.95163,
+      "point_residual_relative_rhs": 1.1771951891842082e-05,
+      "point_normwise_backward_error_global": 3.957121370361768e-06,
+      "point_normwise_backward_error_max": 4.571765308353271e-06,
+      "point_normwise_backward_error_p95": 2.230898243172013e-13,
+      "point_stable_minus_assembled_norm": 4.6366495140438835e-06,
+      "scaled_full_gradient_norm": 8253.45332812805,
+      "Dp_whitened_point_residual_norm": 1.604545627871266e-05,
+      "scaled_camera_residual_norm": 2.356565420794605e-05,
+      "Dp_whitened_point_residual_relative_full_gradient": 1.9440900239938598e-09,
+      "scaled_full_normal_residual_relative_full_gradient": 3.454261983131145e-09,
+      "worst_tracks": [
+        {
+          "point": 67408,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 180681063.66140804,
+          "min_abs_projected_depth": 7.752714634200533e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 6476.762905184575,
+            "rhs_norm": 2126337524.7629204,
+            "normwise_backward_error": 1.1115206210767361e-06,
+            "stable_minus_assembled_norm": 1.2884766854348744e-10,
+            "residual": [
+              -6289.793547563941,
+              -217.8974309783698,
+              1529.5344286975
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 9910.646475732781,
+            "rhs_norm": 2126323569.4897344,
+            "normwise_backward_error": 1.7008364276271313e-06,
+            "stable_minus_assembled_norm": 2.670648766075105e-11,
+            "residual": [
+              6894.448112167431,
+              -542.4999421591674,
+              -7098.816282194015
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.507363413965252e-09
+        },
+        {
+          "point": 67491,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 226678412.8925482,
+          "min_abs_projected_depth": 6.179610663546026e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 14897.32506616277,
+            "rhs_norm": 5669325132.85533,
+            "normwise_backward_error": 1.0838195725869644e-06,
+            "stable_minus_assembled_norm": 9.351496713718577e-10,
+            "residual": [
+              -14403.009225748863,
+              3619.209389629774,
+              1176.8359120669375
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 14024.87239970513,
+            "rhs_norm": 5669322897.602238,
+            "normwise_backward_error": 1.0203465065764675e-06,
+            "stable_minus_assembled_norm": 7.021272958501438e-10,
+            "residual": [
+              -12852.812303780991,
+              471.4847462957259,
+              5592.849349463755
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 7.744540116778422e-09
+        },
+        {
+          "point": 67845,
+          "observations": 3,
+          "max_projected_depth_cancellation_condition": 221325221.45145223,
+          "min_abs_projected_depth": 6.329076857308075e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 40321.49046085614,
+            "rhs_norm": 9980242512.562082,
+            "normwise_backward_error": 1.6309689116222134e-06,
+            "stable_minus_assembled_norm": 6.035208382559379e-10,
+            "residual": [
+              -30698.930809151712,
+              3559.482840550969,
+              25898.423157938632
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8299.999247879226,
+            "rhs_norm": 9980215864.725142,
+            "normwise_backward_error": 3.3572804887697473e-07,
+            "stable_minus_assembled_norm": 6.364799619109544e-10,
+            "residual": [
+              -6801.230939520978,
+              1373.7381021389083,
+              4554.787464726549
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.391948689909924e-09
+        },
+        {
+          "point": 67848,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 179724903.5085614,
+          "min_abs_projected_depth": 7.793960095066679e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 936.4760542031144,
+            "rhs_norm": 5818768111.732127,
+            "normwise_backward_error": 6.629747380275055e-08,
+            "stable_minus_assembled_norm": 5.621825045697e-10,
+            "residual": [
+              86.42204295118427,
+              920.2138183747084,
+              150.74866188532906
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8784.469324793276,
+            "rhs_norm": 5818776193.186228,
+            "normwise_backward_error": 6.2189288435654e-07,
+            "stable_minus_assembled_norm": 3.8939970781745663e-10,
+            "residual": [
+              -4113.617852648877,
+              4006.5343440660727,
+              6647.761430016988
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.777916992813928e-09
+        },
+        {
+          "point": 67931,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 188818636.0986562,
+          "min_abs_projected_depth": 7.418676275031122e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 1066.5422417337,
+            "rhs_norm": 14343694545.486603,
+            "normwise_backward_error": 3.043594288601955e-08,
+            "stable_minus_assembled_norm": 7.101051340557436e-10,
+            "residual": [
+              -89.76806632270745,
+              -1050.7214559050044,
+              -159.49441925000428
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 5765.629606066323,
+            "rhs_norm": 14343699937.617155,
+            "normwise_backward_error": 1.645338930714367e-07,
+            "stable_minus_assembled_norm": 1.4222589627637e-09,
+            "residual": [
+              -584.7655745802113,
+              3500.289491448668,
+              4544.062879537254
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 5.6702195886579395e-09
+        },
+        {
+          "point": 67932,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 183645984.5576407,
+          "min_abs_projected_depth": 7.62763389108509e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 21725.434618146784,
+            "rhs_norm": 14248054437.69359,
+            "normwise_backward_error": 6.102812984135261e-07,
+            "stable_minus_assembled_norm": 6.947301355615294e-10,
+            "residual": [
+              15474.736180625929,
+              301.89666991942795,
+              -15245.848873975141
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1976.0959712400297,
+            "rhs_norm": 14248076476.31281,
+            "normwise_backward_error": 5.550976023329266e-08,
+            "stable_minus_assembled_norm": 6.441174780092503e-10,
+            "residual": [
+              -1914.546836571666,
+              -100.66013029724127,
+              478.8874985766961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.501610722063826e-09
+        },
+        {
+          "point": 79215,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 322547.8507879777,
+          "min_abs_projected_depth": 1.998713466467672e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.33719707922874187,
+            "rhs_norm": 17201199.77325126,
+            "normwise_backward_error": 8.445846855367451e-09,
+            "stable_minus_assembled_norm": 1.2777921377087282e-12,
+            "residual": [
+              0.1967020881570818,
+              0.04130773380967412,
+              0.2707468003182072
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.08663581853270516,
+            "rhs_norm": 17201200.115537763,
+            "normwise_backward_error": 2.169985727373151e-09,
+            "stable_minus_assembled_norm": 1.1948954471323479e-12,
+            "residual": [
+              -0.03768240729847605,
+              0.004419499814929395,
+              -0.07788625844402475
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 1.9615286430077772e-11
+        },
+        {
+          "point": 79218,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 175642030.20817527,
+          "min_abs_projected_depth": 7.976551412783306e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 20025.4613185576,
+            "rhs_norm": 16447278152.637701,
+            "normwise_backward_error": 3.5454713153520145e-07,
+            "stable_minus_assembled_norm": 8.061550897816511e-10,
+            "residual": [
+              16887.49195817404,
+              -802.7396238200163,
+              -10732.535836418305
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 3854.4180522090737,
+            "rhs_norm": 16447261862.276747,
+            "normwise_backward_error": 6.824178662293475e-08,
+            "stable_minus_assembled_norm": 8.8563678173249e-10,
+            "residual": [
+              -2264.2863715692074,
+              -906.837438685674,
+              2984.4918509721465
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 6.41528779171367e-09
+        },
+        {
+          "point": 98124,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 1467609624.0034347,
+          "min_abs_projected_depth": 1.0371164526137844e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 639116.2775489433,
+            "rhs_norm": 46022920177.93233,
+            "normwise_backward_error": 4.571765308340249e-06,
+            "stable_minus_assembled_norm": 6.532733242066084e-09,
+            "residual": [
+              -638756.1696618823,
+              19562.24807884912,
+              -8802.863000191952
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1717243.1151706711,
+            "rhs_norm": 46025257056.30746,
+            "normwise_backward_error": 1.2283681253155204e-05,
+            "stable_minus_assembled_norm": 3.9656526347185296e-09,
+            "residual": [
+              1716030.1781687883,
+              63921.72772279639,
+              8851.945548877951
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.485534327928263e-08
+        },
+        {
+          "point": 122233,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 691427.0293324741,
+          "min_abs_projected_depth": 2.46602015724455e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.27789009061886033,
+            "rhs_norm": 3115163.053935469,
+            "normwise_backward_error": 3.527599212245102e-08,
+            "stable_minus_assembled_norm": 3.287472172904036e-13,
+            "residual": [
+              -0.15734262913106267,
+              0.15970131141724409,
+              -0.16420015424443335
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.10528612430511926,
+            "rhs_norm": 3115163.102632896,
+            "normwise_backward_error": 1.336525696386039e-08,
+            "stable_minus_assembled_norm": 2.1342956994359616e-13,
+            "residual": [
+              -0.053833066523537365,
+              0.08301897950102344,
+              -0.03598635800513961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.827300571215406e-11
+        }
+      ]
+    },
+    {
+      "arm": "exact_clip",
+      "rep": 0,
+      "native_reduced_certified": true,
+      "label": "reference with certified reduced residual",
+      "camera_equation_applicability": "clipped camera direction is not expected to satisfy reduced/full normal equations",
+      "point_residual_norm": 641275.5614285755,
+      "point_rhs_norm": 54474871059.65639,
+      "gp_norm": 164963827553.50906,
+      "WTdc_norm": 122080015115.95163,
+      "point_residual_relative_rhs": 1.1771951891842082e-05,
+      "point_normwise_backward_error_global": 3.957121370361768e-06,
+      "point_normwise_backward_error_max": 4.571765308353271e-06,
+      "point_normwise_backward_error_p95": 2.230898243172013e-13,
+      "point_stable_minus_assembled_norm": 4.6366495140438835e-06,
+      "scaled_full_gradient_norm": 8253.45332812805,
+      "Dp_whitened_point_residual_norm": 1.604545627871266e-05,
+      "scaled_camera_residual_norm": 2.356565420794605e-05,
+      "Dp_whitened_point_residual_relative_full_gradient": 1.9440900239938598e-09,
+      "scaled_full_normal_residual_relative_full_gradient": 3.454261983131145e-09,
+      "worst_tracks": [
+        {
+          "point": 67408,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 180681063.66140804,
+          "min_abs_projected_depth": 7.752714634200533e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 6476.762905184575,
+            "rhs_norm": 2126337524.7629204,
+            "normwise_backward_error": 1.1115206210767361e-06,
+            "stable_minus_assembled_norm": 1.2884766854348744e-10,
+            "residual": [
+              -6289.793547563941,
+              -217.8974309783698,
+              1529.5344286975
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 9910.646475732781,
+            "rhs_norm": 2126323569.4897344,
+            "normwise_backward_error": 1.7008364276271313e-06,
+            "stable_minus_assembled_norm": 2.670648766075105e-11,
+            "residual": [
+              6894.448112167431,
+              -542.4999421591674,
+              -7098.816282194015
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.507363413965252e-09
+        },
+        {
+          "point": 67491,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 226678412.8925482,
+          "min_abs_projected_depth": 6.179610663546026e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 14897.32506616277,
+            "rhs_norm": 5669325132.85533,
+            "normwise_backward_error": 1.0838195725869644e-06,
+            "stable_minus_assembled_norm": 9.351496713718577e-10,
+            "residual": [
+              -14403.009225748863,
+              3619.209389629774,
+              1176.8359120669375
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 14024.87239970513,
+            "rhs_norm": 5669322897.602238,
+            "normwise_backward_error": 1.0203465065764675e-06,
+            "stable_minus_assembled_norm": 7.021272958501438e-10,
+            "residual": [
+              -12852.812303780991,
+              471.4847462957259,
+              5592.849349463755
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 7.744540116778422e-09
+        },
+        {
+          "point": 67845,
+          "observations": 3,
+          "max_projected_depth_cancellation_condition": 221325221.45145223,
+          "min_abs_projected_depth": 6.329076857308075e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 40321.49046085614,
+            "rhs_norm": 9980242512.562082,
+            "normwise_backward_error": 1.6309689116222134e-06,
+            "stable_minus_assembled_norm": 6.035208382559379e-10,
+            "residual": [
+              -30698.930809151712,
+              3559.482840550969,
+              25898.423157938632
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8299.999247879226,
+            "rhs_norm": 9980215864.725142,
+            "normwise_backward_error": 3.3572804887697473e-07,
+            "stable_minus_assembled_norm": 6.364799619109544e-10,
+            "residual": [
+              -6801.230939520978,
+              1373.7381021389083,
+              4554.787464726549
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.391948689909924e-09
+        },
+        {
+          "point": 67848,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 179724903.5085614,
+          "min_abs_projected_depth": 7.793960095066679e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 936.4760542031144,
+            "rhs_norm": 5818768111.732127,
+            "normwise_backward_error": 6.629747380275055e-08,
+            "stable_minus_assembled_norm": 5.621825045697e-10,
+            "residual": [
+              86.42204295118427,
+              920.2138183747084,
+              150.74866188532906
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8784.469324793276,
+            "rhs_norm": 5818776193.186228,
+            "normwise_backward_error": 6.2189288435654e-07,
+            "stable_minus_assembled_norm": 3.8939970781745663e-10,
+            "residual": [
+              -4113.617852648877,
+              4006.5343440660727,
+              6647.761430016988
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.777916992813928e-09
+        },
+        {
+          "point": 67931,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 188818636.0986562,
+          "min_abs_projected_depth": 7.418676275031122e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 1066.5422417337,
+            "rhs_norm": 14343694545.486603,
+            "normwise_backward_error": 3.043594288601955e-08,
+            "stable_minus_assembled_norm": 7.101051340557436e-10,
+            "residual": [
+              -89.76806632270745,
+              -1050.7214559050044,
+              -159.49441925000428
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 5765.629606066323,
+            "rhs_norm": 14343699937.617155,
+            "normwise_backward_error": 1.645338930714367e-07,
+            "stable_minus_assembled_norm": 1.4222589627637e-09,
+            "residual": [
+              -584.7655745802113,
+              3500.289491448668,
+              4544.062879537254
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 5.6702195886579395e-09
+        },
+        {
+          "point": 67932,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 183645984.5576407,
+          "min_abs_projected_depth": 7.62763389108509e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 21725.434618146784,
+            "rhs_norm": 14248054437.69359,
+            "normwise_backward_error": 6.102812984135261e-07,
+            "stable_minus_assembled_norm": 6.947301355615294e-10,
+            "residual": [
+              15474.736180625929,
+              301.89666991942795,
+              -15245.848873975141
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1976.0959712400297,
+            "rhs_norm": 14248076476.31281,
+            "normwise_backward_error": 5.550976023329266e-08,
+            "stable_minus_assembled_norm": 6.441174780092503e-10,
+            "residual": [
+              -1914.546836571666,
+              -100.66013029724127,
+              478.8874985766961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.501610722063826e-09
+        },
+        {
+          "point": 79215,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 322547.8507879777,
+          "min_abs_projected_depth": 1.998713466467672e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.33719707922874187,
+            "rhs_norm": 17201199.77325126,
+            "normwise_backward_error": 8.445846855367451e-09,
+            "stable_minus_assembled_norm": 1.2777921377087282e-12,
+            "residual": [
+              0.1967020881570818,
+              0.04130773380967412,
+              0.2707468003182072
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.08663581853270516,
+            "rhs_norm": 17201200.115537763,
+            "normwise_backward_error": 2.169985727373151e-09,
+            "stable_minus_assembled_norm": 1.1948954471323479e-12,
+            "residual": [
+              -0.03768240729847605,
+              0.004419499814929395,
+              -0.07788625844402475
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 1.9615286430077772e-11
+        },
+        {
+          "point": 79218,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 175642030.20817527,
+          "min_abs_projected_depth": 7.976551412783306e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 20025.4613185576,
+            "rhs_norm": 16447278152.637701,
+            "normwise_backward_error": 3.5454713153520145e-07,
+            "stable_minus_assembled_norm": 8.061550897816511e-10,
+            "residual": [
+              16887.49195817404,
+              -802.7396238200163,
+              -10732.535836418305
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 3854.4180522090737,
+            "rhs_norm": 16447261862.276747,
+            "normwise_backward_error": 6.824178662293475e-08,
+            "stable_minus_assembled_norm": 8.8563678173249e-10,
+            "residual": [
+              -2264.2863715692074,
+              -906.837438685674,
+              2984.4918509721465
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 6.41528779171367e-09
+        },
+        {
+          "point": 98124,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 1467609624.0034347,
+          "min_abs_projected_depth": 1.0371164526137844e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 639116.2775489433,
+            "rhs_norm": 46022920177.93233,
+            "normwise_backward_error": 4.571765308340249e-06,
+            "stable_minus_assembled_norm": 6.532733242066084e-09,
+            "residual": [
+              -638756.1696618823,
+              19562.24807884912,
+              -8802.863000191952
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1717243.1151706711,
+            "rhs_norm": 46025257056.30746,
+            "normwise_backward_error": 1.2283681253155204e-05,
+            "stable_minus_assembled_norm": 3.9656526347185296e-09,
+            "residual": [
+              1716030.1781687883,
+              63921.72772279639,
+              8851.945548877951
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.485534327928263e-08
+        },
+        {
+          "point": 122233,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 691427.0293324741,
+          "min_abs_projected_depth": 2.46602015724455e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.27789009061886033,
+            "rhs_norm": 3115163.053935469,
+            "normwise_backward_error": 3.527599212245102e-08,
+            "stable_minus_assembled_norm": 3.287472172904036e-13,
+            "residual": [
+              -0.15734262913106267,
+              0.15970131141724409,
+              -0.16420015424443335
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.10528612430511926,
+            "rhs_norm": 3115163.102632896,
+            "normwise_backward_error": 1.336525696386039e-08,
+            "stable_minus_assembled_norm": 2.1342956994359616e-13,
+            "residual": [
+              -0.053833066523537365,
+              0.08301897950102344,
+              -0.03598635800513961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.827300571215406e-11
+        }
+      ]
+    },
+    {
+      "arm": "exact",
+      "rep": 1,
+      "native_reduced_certified": true,
+      "label": "reference with certified reduced residual",
+      "camera_equation_applicability": "unclipped direction normal-equation diagnostic",
+      "point_residual_norm": 641275.5614285755,
+      "point_rhs_norm": 54474871059.65639,
+      "gp_norm": 164963827553.50906,
+      "WTdc_norm": 122080015115.95163,
+      "point_residual_relative_rhs": 1.1771951891842082e-05,
+      "point_normwise_backward_error_global": 3.957121370361768e-06,
+      "point_normwise_backward_error_max": 4.571765308353271e-06,
+      "point_normwise_backward_error_p95": 2.230898243172013e-13,
+      "point_stable_minus_assembled_norm": 4.6366495140438835e-06,
+      "scaled_full_gradient_norm": 8253.45332812805,
+      "Dp_whitened_point_residual_norm": 1.604545627871266e-05,
+      "scaled_camera_residual_norm": 2.356565420794605e-05,
+      "Dp_whitened_point_residual_relative_full_gradient": 1.9440900239938598e-09,
+      "scaled_full_normal_residual_relative_full_gradient": 3.454261983131145e-09,
+      "worst_tracks": [
+        {
+          "point": 67408,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 180681063.66140804,
+          "min_abs_projected_depth": 7.752714634200533e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 6476.762905184575,
+            "rhs_norm": 2126337524.7629204,
+            "normwise_backward_error": 1.1115206210767361e-06,
+            "stable_minus_assembled_norm": 1.2884766854348744e-10,
+            "residual": [
+              -6289.793547563941,
+              -217.8974309783698,
+              1529.5344286975
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 9910.646475732781,
+            "rhs_norm": 2126323569.4897344,
+            "normwise_backward_error": 1.7008364276271313e-06,
+            "stable_minus_assembled_norm": 2.670648766075105e-11,
+            "residual": [
+              6894.448112167431,
+              -542.4999421591674,
+              -7098.816282194015
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.507363413965252e-09
+        },
+        {
+          "point": 67491,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 226678412.8925482,
+          "min_abs_projected_depth": 6.179610663546026e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 14897.32506616277,
+            "rhs_norm": 5669325132.85533,
+            "normwise_backward_error": 1.0838195725869644e-06,
+            "stable_minus_assembled_norm": 9.351496713718577e-10,
+            "residual": [
+              -14403.009225748863,
+              3619.209389629774,
+              1176.8359120669375
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 14024.87239970513,
+            "rhs_norm": 5669322897.602238,
+            "normwise_backward_error": 1.0203465065764675e-06,
+            "stable_minus_assembled_norm": 7.021272958501438e-10,
+            "residual": [
+              -12852.812303780991,
+              471.4847462957259,
+              5592.849349463755
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 7.744540116778422e-09
+        },
+        {
+          "point": 67845,
+          "observations": 3,
+          "max_projected_depth_cancellation_condition": 221325221.45145223,
+          "min_abs_projected_depth": 6.329076857308075e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 40321.49046085614,
+            "rhs_norm": 9980242512.562082,
+            "normwise_backward_error": 1.6309689116222134e-06,
+            "stable_minus_assembled_norm": 6.035208382559379e-10,
+            "residual": [
+              -30698.930809151712,
+              3559.482840550969,
+              25898.423157938632
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8299.999247879226,
+            "rhs_norm": 9980215864.725142,
+            "normwise_backward_error": 3.3572804887697473e-07,
+            "stable_minus_assembled_norm": 6.364799619109544e-10,
+            "residual": [
+              -6801.230939520978,
+              1373.7381021389083,
+              4554.787464726549
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.391948689909924e-09
+        },
+        {
+          "point": 67848,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 179724903.5085614,
+          "min_abs_projected_depth": 7.793960095066679e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 936.4760542031144,
+            "rhs_norm": 5818768111.732127,
+            "normwise_backward_error": 6.629747380275055e-08,
+            "stable_minus_assembled_norm": 5.621825045697e-10,
+            "residual": [
+              86.42204295118427,
+              920.2138183747084,
+              150.74866188532906
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8784.469324793276,
+            "rhs_norm": 5818776193.186228,
+            "normwise_backward_error": 6.2189288435654e-07,
+            "stable_minus_assembled_norm": 3.8939970781745663e-10,
+            "residual": [
+              -4113.617852648877,
+              4006.5343440660727,
+              6647.761430016988
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.777916992813928e-09
+        },
+        {
+          "point": 67931,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 188818636.0986562,
+          "min_abs_projected_depth": 7.418676275031122e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 1066.5422417337,
+            "rhs_norm": 14343694545.486603,
+            "normwise_backward_error": 3.043594288601955e-08,
+            "stable_minus_assembled_norm": 7.101051340557436e-10,
+            "residual": [
+              -89.76806632270745,
+              -1050.7214559050044,
+              -159.49441925000428
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 5765.629606066323,
+            "rhs_norm": 14343699937.617155,
+            "normwise_backward_error": 1.645338930714367e-07,
+            "stable_minus_assembled_norm": 1.4222589627637e-09,
+            "residual": [
+              -584.7655745802113,
+              3500.289491448668,
+              4544.062879537254
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 5.6702195886579395e-09
+        },
+        {
+          "point": 67932,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 183645984.5576407,
+          "min_abs_projected_depth": 7.62763389108509e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 21725.434618146784,
+            "rhs_norm": 14248054437.69359,
+            "normwise_backward_error": 6.102812984135261e-07,
+            "stable_minus_assembled_norm": 6.947301355615294e-10,
+            "residual": [
+              15474.736180625929,
+              301.89666991942795,
+              -15245.848873975141
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1976.0959712400297,
+            "rhs_norm": 14248076476.31281,
+            "normwise_backward_error": 5.550976023329266e-08,
+            "stable_minus_assembled_norm": 6.441174780092503e-10,
+            "residual": [
+              -1914.546836571666,
+              -100.66013029724127,
+              478.8874985766961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.501610722063826e-09
+        },
+        {
+          "point": 79215,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 322547.8507879777,
+          "min_abs_projected_depth": 1.998713466467672e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.33719707922874187,
+            "rhs_norm": 17201199.77325126,
+            "normwise_backward_error": 8.445846855367451e-09,
+            "stable_minus_assembled_norm": 1.2777921377087282e-12,
+            "residual": [
+              0.1967020881570818,
+              0.04130773380967412,
+              0.2707468003182072
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.08663581853270516,
+            "rhs_norm": 17201200.115537763,
+            "normwise_backward_error": 2.169985727373151e-09,
+            "stable_minus_assembled_norm": 1.1948954471323479e-12,
+            "residual": [
+              -0.03768240729847605,
+              0.004419499814929395,
+              -0.07788625844402475
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 1.9615286430077772e-11
+        },
+        {
+          "point": 79218,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 175642030.20817527,
+          "min_abs_projected_depth": 7.976551412783306e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 20025.4613185576,
+            "rhs_norm": 16447278152.637701,
+            "normwise_backward_error": 3.5454713153520145e-07,
+            "stable_minus_assembled_norm": 8.061550897816511e-10,
+            "residual": [
+              16887.49195817404,
+              -802.7396238200163,
+              -10732.535836418305
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 3854.4180522090737,
+            "rhs_norm": 16447261862.276747,
+            "normwise_backward_error": 6.824178662293475e-08,
+            "stable_minus_assembled_norm": 8.8563678173249e-10,
+            "residual": [
+              -2264.2863715692074,
+              -906.837438685674,
+              2984.4918509721465
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 6.41528779171367e-09
+        },
+        {
+          "point": 98124,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 1467609624.0034347,
+          "min_abs_projected_depth": 1.0371164526137844e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 639116.2775489433,
+            "rhs_norm": 46022920177.93233,
+            "normwise_backward_error": 4.571765308340249e-06,
+            "stable_minus_assembled_norm": 6.532733242066084e-09,
+            "residual": [
+              -638756.1696618823,
+              19562.24807884912,
+              -8802.863000191952
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1717243.1151706711,
+            "rhs_norm": 46025257056.30746,
+            "normwise_backward_error": 1.2283681253155204e-05,
+            "stable_minus_assembled_norm": 3.9656526347185296e-09,
+            "residual": [
+              1716030.1781687883,
+              63921.72772279639,
+              8851.945548877951
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.485534327928263e-08
+        },
+        {
+          "point": 122233,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 691427.0293324741,
+          "min_abs_projected_depth": 2.46602015724455e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.27789009061886033,
+            "rhs_norm": 3115163.053935469,
+            "normwise_backward_error": 3.527599212245102e-08,
+            "stable_minus_assembled_norm": 3.287472172904036e-13,
+            "residual": [
+              -0.15734262913106267,
+              0.15970131141724409,
+              -0.16420015424443335
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.10528612430511926,
+            "rhs_norm": 3115163.102632896,
+            "normwise_backward_error": 1.336525696386039e-08,
+            "stable_minus_assembled_norm": 2.1342956994359616e-13,
+            "residual": [
+              -0.053833066523537365,
+              0.08301897950102344,
+              -0.03598635800513961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.827300571215406e-11
+        }
+      ]
+    },
+    {
+      "arm": "exact_clip",
+      "rep": 1,
+      "native_reduced_certified": true,
+      "label": "reference with certified reduced residual",
+      "camera_equation_applicability": "clipped camera direction is not expected to satisfy reduced/full normal equations",
+      "point_residual_norm": 641275.5614285755,
+      "point_rhs_norm": 54474871059.65639,
+      "gp_norm": 164963827553.50906,
+      "WTdc_norm": 122080015115.95163,
+      "point_residual_relative_rhs": 1.1771951891842082e-05,
+      "point_normwise_backward_error_global": 3.957121370361768e-06,
+      "point_normwise_backward_error_max": 4.571765308353271e-06,
+      "point_normwise_backward_error_p95": 2.230898243172013e-13,
+      "point_stable_minus_assembled_norm": 4.6366495140438835e-06,
+      "scaled_full_gradient_norm": 8253.45332812805,
+      "Dp_whitened_point_residual_norm": 1.604545627871266e-05,
+      "scaled_camera_residual_norm": 2.356565420794605e-05,
+      "Dp_whitened_point_residual_relative_full_gradient": 1.9440900239938598e-09,
+      "scaled_full_normal_residual_relative_full_gradient": 3.454261983131145e-09,
+      "worst_tracks": [
+        {
+          "point": 67408,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 180681063.66140804,
+          "min_abs_projected_depth": 7.752714634200533e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 6476.762905184575,
+            "rhs_norm": 2126337524.7629204,
+            "normwise_backward_error": 1.1115206210767361e-06,
+            "stable_minus_assembled_norm": 1.2884766854348744e-10,
+            "residual": [
+              -6289.793547563941,
+              -217.8974309783698,
+              1529.5344286975
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 9910.646475732781,
+            "rhs_norm": 2126323569.4897344,
+            "normwise_backward_error": 1.7008364276271313e-06,
+            "stable_minus_assembled_norm": 2.670648766075105e-11,
+            "residual": [
+              6894.448112167431,
+              -542.4999421591674,
+              -7098.816282194015
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.507363413965252e-09
+        },
+        {
+          "point": 67491,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 226678412.8925482,
+          "min_abs_projected_depth": 6.179610663546026e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 14897.32506616277,
+            "rhs_norm": 5669325132.85533,
+            "normwise_backward_error": 1.0838195725869644e-06,
+            "stable_minus_assembled_norm": 9.351496713718577e-10,
+            "residual": [
+              -14403.009225748863,
+              3619.209389629774,
+              1176.8359120669375
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 14024.87239970513,
+            "rhs_norm": 5669322897.602238,
+            "normwise_backward_error": 1.0203465065764675e-06,
+            "stable_minus_assembled_norm": 7.021272958501438e-10,
+            "residual": [
+              -12852.812303780991,
+              471.4847462957259,
+              5592.849349463755
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 7.744540116778422e-09
+        },
+        {
+          "point": 67845,
+          "observations": 3,
+          "max_projected_depth_cancellation_condition": 221325221.45145223,
+          "min_abs_projected_depth": 6.329076857308075e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 40321.49046085614,
+            "rhs_norm": 9980242512.562082,
+            "normwise_backward_error": 1.6309689116222134e-06,
+            "stable_minus_assembled_norm": 6.035208382559379e-10,
+            "residual": [
+              -30698.930809151712,
+              3559.482840550969,
+              25898.423157938632
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8299.999247879226,
+            "rhs_norm": 9980215864.725142,
+            "normwise_backward_error": 3.3572804887697473e-07,
+            "stable_minus_assembled_norm": 6.364799619109544e-10,
+            "residual": [
+              -6801.230939520978,
+              1373.7381021389083,
+              4554.787464726549
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.391948689909924e-09
+        },
+        {
+          "point": 67848,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 179724903.5085614,
+          "min_abs_projected_depth": 7.793960095066679e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 936.4760542031144,
+            "rhs_norm": 5818768111.732127,
+            "normwise_backward_error": 6.629747380275055e-08,
+            "stable_minus_assembled_norm": 5.621825045697e-10,
+            "residual": [
+              86.42204295118427,
+              920.2138183747084,
+              150.74866188532906
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8784.469324793276,
+            "rhs_norm": 5818776193.186228,
+            "normwise_backward_error": 6.2189288435654e-07,
+            "stable_minus_assembled_norm": 3.8939970781745663e-10,
+            "residual": [
+              -4113.617852648877,
+              4006.5343440660727,
+              6647.761430016988
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.777916992813928e-09
+        },
+        {
+          "point": 67931,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 188818636.0986562,
+          "min_abs_projected_depth": 7.418676275031122e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 1066.5422417337,
+            "rhs_norm": 14343694545.486603,
+            "normwise_backward_error": 3.043594288601955e-08,
+            "stable_minus_assembled_norm": 7.101051340557436e-10,
+            "residual": [
+              -89.76806632270745,
+              -1050.7214559050044,
+              -159.49441925000428
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 5765.629606066323,
+            "rhs_norm": 14343699937.617155,
+            "normwise_backward_error": 1.645338930714367e-07,
+            "stable_minus_assembled_norm": 1.4222589627637e-09,
+            "residual": [
+              -584.7655745802113,
+              3500.289491448668,
+              4544.062879537254
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 5.6702195886579395e-09
+        },
+        {
+          "point": 67932,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 183645984.5576407,
+          "min_abs_projected_depth": 7.62763389108509e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 21725.434618146784,
+            "rhs_norm": 14248054437.69359,
+            "normwise_backward_error": 6.102812984135261e-07,
+            "stable_minus_assembled_norm": 6.947301355615294e-10,
+            "residual": [
+              15474.736180625929,
+              301.89666991942795,
+              -15245.848873975141
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1976.0959712400297,
+            "rhs_norm": 14248076476.31281,
+            "normwise_backward_error": 5.550976023329266e-08,
+            "stable_minus_assembled_norm": 6.441174780092503e-10,
+            "residual": [
+              -1914.546836571666,
+              -100.66013029724127,
+              478.8874985766961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.501610722063826e-09
+        },
+        {
+          "point": 79215,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 322547.8507879777,
+          "min_abs_projected_depth": 1.998713466467672e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.33719707922874187,
+            "rhs_norm": 17201199.77325126,
+            "normwise_backward_error": 8.445846855367451e-09,
+            "stable_minus_assembled_norm": 1.2777921377087282e-12,
+            "residual": [
+              0.1967020881570818,
+              0.04130773380967412,
+              0.2707468003182072
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.08663581853270516,
+            "rhs_norm": 17201200.115537763,
+            "normwise_backward_error": 2.169985727373151e-09,
+            "stable_minus_assembled_norm": 1.1948954471323479e-12,
+            "residual": [
+              -0.03768240729847605,
+              0.004419499814929395,
+              -0.07788625844402475
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 1.9615286430077772e-11
+        },
+        {
+          "point": 79218,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 175642030.20817527,
+          "min_abs_projected_depth": 7.976551412783306e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 20025.4613185576,
+            "rhs_norm": 16447278152.637701,
+            "normwise_backward_error": 3.5454713153520145e-07,
+            "stable_minus_assembled_norm": 8.061550897816511e-10,
+            "residual": [
+              16887.49195817404,
+              -802.7396238200163,
+              -10732.535836418305
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 3854.4180522090737,
+            "rhs_norm": 16447261862.276747,
+            "normwise_backward_error": 6.824178662293475e-08,
+            "stable_minus_assembled_norm": 8.8563678173249e-10,
+            "residual": [
+              -2264.2863715692074,
+              -906.837438685674,
+              2984.4918509721465
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 6.41528779171367e-09
+        },
+        {
+          "point": 98124,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 1467609624.0034347,
+          "min_abs_projected_depth": 1.0371164526137844e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 639116.2775489433,
+            "rhs_norm": 46022920177.93233,
+            "normwise_backward_error": 4.571765308340249e-06,
+            "stable_minus_assembled_norm": 6.532733242066084e-09,
+            "residual": [
+              -638756.1696618823,
+              19562.24807884912,
+              -8802.863000191952
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1717243.1151706711,
+            "rhs_norm": 46025257056.30746,
+            "normwise_backward_error": 1.2283681253155204e-05,
+            "stable_minus_assembled_norm": 3.9656526347185296e-09,
+            "residual": [
+              1716030.1781687883,
+              63921.72772279639,
+              8851.945548877951
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.485534327928263e-08
+        },
+        {
+          "point": 122233,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 691427.0293324741,
+          "min_abs_projected_depth": 2.46602015724455e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.27789009061886033,
+            "rhs_norm": 3115163.053935469,
+            "normwise_backward_error": 3.527599212245102e-08,
+            "stable_minus_assembled_norm": 3.287472172904036e-13,
+            "residual": [
+              -0.15734262913106267,
+              0.15970131141724409,
+              -0.16420015424443335
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.10528612430511926,
+            "rhs_norm": 3115163.102632896,
+            "normwise_backward_error": 1.336525696386039e-08,
+            "stable_minus_assembled_norm": 2.1342956994359616e-13,
+            "residual": [
+              -0.053833066523537365,
+              0.08301897950102344,
+              -0.03598635800513961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.827300571215406e-11
+        }
+      ]
+    },
+    {
+      "arm": "exact",
+      "rep": 2,
+      "native_reduced_certified": true,
+      "label": "reference with certified reduced residual",
+      "camera_equation_applicability": "unclipped direction normal-equation diagnostic",
+      "point_residual_norm": 641275.5614285755,
+      "point_rhs_norm": 54474871059.65639,
+      "gp_norm": 164963827553.50906,
+      "WTdc_norm": 122080015115.95163,
+      "point_residual_relative_rhs": 1.1771951891842082e-05,
+      "point_normwise_backward_error_global": 3.957121370361768e-06,
+      "point_normwise_backward_error_max": 4.571765308353271e-06,
+      "point_normwise_backward_error_p95": 2.230898243172013e-13,
+      "point_stable_minus_assembled_norm": 4.6366495140438835e-06,
+      "scaled_full_gradient_norm": 8253.45332812805,
+      "Dp_whitened_point_residual_norm": 1.604545627871266e-05,
+      "scaled_camera_residual_norm": 2.356565420794605e-05,
+      "Dp_whitened_point_residual_relative_full_gradient": 1.9440900239938598e-09,
+      "scaled_full_normal_residual_relative_full_gradient": 3.454261983131145e-09,
+      "worst_tracks": [
+        {
+          "point": 67408,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 180681063.66140804,
+          "min_abs_projected_depth": 7.752714634200533e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 6476.762905184575,
+            "rhs_norm": 2126337524.7629204,
+            "normwise_backward_error": 1.1115206210767361e-06,
+            "stable_minus_assembled_norm": 1.2884766854348744e-10,
+            "residual": [
+              -6289.793547563941,
+              -217.8974309783698,
+              1529.5344286975
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 9910.646475732781,
+            "rhs_norm": 2126323569.4897344,
+            "normwise_backward_error": 1.7008364276271313e-06,
+            "stable_minus_assembled_norm": 2.670648766075105e-11,
+            "residual": [
+              6894.448112167431,
+              -542.4999421591674,
+              -7098.816282194015
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.507363413965252e-09
+        },
+        {
+          "point": 67491,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 226678412.8925482,
+          "min_abs_projected_depth": 6.179610663546026e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 14897.32506616277,
+            "rhs_norm": 5669325132.85533,
+            "normwise_backward_error": 1.0838195725869644e-06,
+            "stable_minus_assembled_norm": 9.351496713718577e-10,
+            "residual": [
+              -14403.009225748863,
+              3619.209389629774,
+              1176.8359120669375
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 14024.87239970513,
+            "rhs_norm": 5669322897.602238,
+            "normwise_backward_error": 1.0203465065764675e-06,
+            "stable_minus_assembled_norm": 7.021272958501438e-10,
+            "residual": [
+              -12852.812303780991,
+              471.4847462957259,
+              5592.849349463755
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 7.744540116778422e-09
+        },
+        {
+          "point": 67845,
+          "observations": 3,
+          "max_projected_depth_cancellation_condition": 221325221.45145223,
+          "min_abs_projected_depth": 6.329076857308075e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 40321.49046085614,
+            "rhs_norm": 9980242512.562082,
+            "normwise_backward_error": 1.6309689116222134e-06,
+            "stable_minus_assembled_norm": 6.035208382559379e-10,
+            "residual": [
+              -30698.930809151712,
+              3559.482840550969,
+              25898.423157938632
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8299.999247879226,
+            "rhs_norm": 9980215864.725142,
+            "normwise_backward_error": 3.3572804887697473e-07,
+            "stable_minus_assembled_norm": 6.364799619109544e-10,
+            "residual": [
+              -6801.230939520978,
+              1373.7381021389083,
+              4554.787464726549
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.391948689909924e-09
+        },
+        {
+          "point": 67848,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 179724903.5085614,
+          "min_abs_projected_depth": 7.793960095066679e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 936.4760542031144,
+            "rhs_norm": 5818768111.732127,
+            "normwise_backward_error": 6.629747380275055e-08,
+            "stable_minus_assembled_norm": 5.621825045697e-10,
+            "residual": [
+              86.42204295118427,
+              920.2138183747084,
+              150.74866188532906
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8784.469324793276,
+            "rhs_norm": 5818776193.186228,
+            "normwise_backward_error": 6.2189288435654e-07,
+            "stable_minus_assembled_norm": 3.8939970781745663e-10,
+            "residual": [
+              -4113.617852648877,
+              4006.5343440660727,
+              6647.761430016988
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.777916992813928e-09
+        },
+        {
+          "point": 67931,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 188818636.0986562,
+          "min_abs_projected_depth": 7.418676275031122e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 1066.5422417337,
+            "rhs_norm": 14343694545.486603,
+            "normwise_backward_error": 3.043594288601955e-08,
+            "stable_minus_assembled_norm": 7.101051340557436e-10,
+            "residual": [
+              -89.76806632270745,
+              -1050.7214559050044,
+              -159.49441925000428
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 5765.629606066323,
+            "rhs_norm": 14343699937.617155,
+            "normwise_backward_error": 1.645338930714367e-07,
+            "stable_minus_assembled_norm": 1.4222589627637e-09,
+            "residual": [
+              -584.7655745802113,
+              3500.289491448668,
+              4544.062879537254
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 5.6702195886579395e-09
+        },
+        {
+          "point": 67932,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 183645984.5576407,
+          "min_abs_projected_depth": 7.62763389108509e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 21725.434618146784,
+            "rhs_norm": 14248054437.69359,
+            "normwise_backward_error": 6.102812984135261e-07,
+            "stable_minus_assembled_norm": 6.947301355615294e-10,
+            "residual": [
+              15474.736180625929,
+              301.89666991942795,
+              -15245.848873975141
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1976.0959712400297,
+            "rhs_norm": 14248076476.31281,
+            "normwise_backward_error": 5.550976023329266e-08,
+            "stable_minus_assembled_norm": 6.441174780092503e-10,
+            "residual": [
+              -1914.546836571666,
+              -100.66013029724127,
+              478.8874985766961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.501610722063826e-09
+        },
+        {
+          "point": 79215,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 322547.8507879777,
+          "min_abs_projected_depth": 1.998713466467672e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.33719707922874187,
+            "rhs_norm": 17201199.77325126,
+            "normwise_backward_error": 8.445846855367451e-09,
+            "stable_minus_assembled_norm": 1.2777921377087282e-12,
+            "residual": [
+              0.1967020881570818,
+              0.04130773380967412,
+              0.2707468003182072
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.08663581853270516,
+            "rhs_norm": 17201200.115537763,
+            "normwise_backward_error": 2.169985727373151e-09,
+            "stable_minus_assembled_norm": 1.1948954471323479e-12,
+            "residual": [
+              -0.03768240729847605,
+              0.004419499814929395,
+              -0.07788625844402475
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 1.9615286430077772e-11
+        },
+        {
+          "point": 79218,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 175642030.20817527,
+          "min_abs_projected_depth": 7.976551412783306e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 20025.4613185576,
+            "rhs_norm": 16447278152.637701,
+            "normwise_backward_error": 3.5454713153520145e-07,
+            "stable_minus_assembled_norm": 8.061550897816511e-10,
+            "residual": [
+              16887.49195817404,
+              -802.7396238200163,
+              -10732.535836418305
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 3854.4180522090737,
+            "rhs_norm": 16447261862.276747,
+            "normwise_backward_error": 6.824178662293475e-08,
+            "stable_minus_assembled_norm": 8.8563678173249e-10,
+            "residual": [
+              -2264.2863715692074,
+              -906.837438685674,
+              2984.4918509721465
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 6.41528779171367e-09
+        },
+        {
+          "point": 98124,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 1467609624.0034347,
+          "min_abs_projected_depth": 1.0371164526137844e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 639116.2775489433,
+            "rhs_norm": 46022920177.93233,
+            "normwise_backward_error": 4.571765308340249e-06,
+            "stable_minus_assembled_norm": 6.532733242066084e-09,
+            "residual": [
+              -638756.1696618823,
+              19562.24807884912,
+              -8802.863000191952
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1717243.1151706711,
+            "rhs_norm": 46025257056.30746,
+            "normwise_backward_error": 1.2283681253155204e-05,
+            "stable_minus_assembled_norm": 3.9656526347185296e-09,
+            "residual": [
+              1716030.1781687883,
+              63921.72772279639,
+              8851.945548877951
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.485534327928263e-08
+        },
+        {
+          "point": 122233,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 691427.0293324741,
+          "min_abs_projected_depth": 2.46602015724455e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.27789009061886033,
+            "rhs_norm": 3115163.053935469,
+            "normwise_backward_error": 3.527599212245102e-08,
+            "stable_minus_assembled_norm": 3.287472172904036e-13,
+            "residual": [
+              -0.15734262913106267,
+              0.15970131141724409,
+              -0.16420015424443335
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.10528612430511926,
+            "rhs_norm": 3115163.102632896,
+            "normwise_backward_error": 1.336525696386039e-08,
+            "stable_minus_assembled_norm": 2.1342956994359616e-13,
+            "residual": [
+              -0.053833066523537365,
+              0.08301897950102344,
+              -0.03598635800513961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.827300571215406e-11
+        }
+      ]
+    },
+    {
+      "arm": "exact_clip",
+      "rep": 2,
+      "native_reduced_certified": true,
+      "label": "reference with certified reduced residual",
+      "camera_equation_applicability": "clipped camera direction is not expected to satisfy reduced/full normal equations",
+      "point_residual_norm": 641275.5614285755,
+      "point_rhs_norm": 54474871059.65639,
+      "gp_norm": 164963827553.50906,
+      "WTdc_norm": 122080015115.95163,
+      "point_residual_relative_rhs": 1.1771951891842082e-05,
+      "point_normwise_backward_error_global": 3.957121370361768e-06,
+      "point_normwise_backward_error_max": 4.571765308353271e-06,
+      "point_normwise_backward_error_p95": 2.230898243172013e-13,
+      "point_stable_minus_assembled_norm": 4.6366495140438835e-06,
+      "scaled_full_gradient_norm": 8253.45332812805,
+      "Dp_whitened_point_residual_norm": 1.604545627871266e-05,
+      "scaled_camera_residual_norm": 2.356565420794605e-05,
+      "Dp_whitened_point_residual_relative_full_gradient": 1.9440900239938598e-09,
+      "scaled_full_normal_residual_relative_full_gradient": 3.454261983131145e-09,
+      "worst_tracks": [
+        {
+          "point": 67408,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 180681063.66140804,
+          "min_abs_projected_depth": 7.752714634200533e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 6476.762905184575,
+            "rhs_norm": 2126337524.7629204,
+            "normwise_backward_error": 1.1115206210767361e-06,
+            "stable_minus_assembled_norm": 1.2884766854348744e-10,
+            "residual": [
+              -6289.793547563941,
+              -217.8974309783698,
+              1529.5344286975
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 9910.646475732781,
+            "rhs_norm": 2126323569.4897344,
+            "normwise_backward_error": 1.7008364276271313e-06,
+            "stable_minus_assembled_norm": 2.670648766075105e-11,
+            "residual": [
+              6894.448112167431,
+              -542.4999421591674,
+              -7098.816282194015
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.507363413965252e-09
+        },
+        {
+          "point": 67491,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 226678412.8925482,
+          "min_abs_projected_depth": 6.179610663546026e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 14897.32506616277,
+            "rhs_norm": 5669325132.85533,
+            "normwise_backward_error": 1.0838195725869644e-06,
+            "stable_minus_assembled_norm": 9.351496713718577e-10,
+            "residual": [
+              -14403.009225748863,
+              3619.209389629774,
+              1176.8359120669375
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 14024.87239970513,
+            "rhs_norm": 5669322897.602238,
+            "normwise_backward_error": 1.0203465065764675e-06,
+            "stable_minus_assembled_norm": 7.021272958501438e-10,
+            "residual": [
+              -12852.812303780991,
+              471.4847462957259,
+              5592.849349463755
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 7.744540116778422e-09
+        },
+        {
+          "point": 67845,
+          "observations": 3,
+          "max_projected_depth_cancellation_condition": 221325221.45145223,
+          "min_abs_projected_depth": 6.329076857308075e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 40321.49046085614,
+            "rhs_norm": 9980242512.562082,
+            "normwise_backward_error": 1.6309689116222134e-06,
+            "stable_minus_assembled_norm": 6.035208382559379e-10,
+            "residual": [
+              -30698.930809151712,
+              3559.482840550969,
+              25898.423157938632
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8299.999247879226,
+            "rhs_norm": 9980215864.725142,
+            "normwise_backward_error": 3.3572804887697473e-07,
+            "stable_minus_assembled_norm": 6.364799619109544e-10,
+            "residual": [
+              -6801.230939520978,
+              1373.7381021389083,
+              4554.787464726549
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.391948689909924e-09
+        },
+        {
+          "point": 67848,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 179724903.5085614,
+          "min_abs_projected_depth": 7.793960095066679e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 936.4760542031144,
+            "rhs_norm": 5818768111.732127,
+            "normwise_backward_error": 6.629747380275055e-08,
+            "stable_minus_assembled_norm": 5.621825045697e-10,
+            "residual": [
+              86.42204295118427,
+              920.2138183747084,
+              150.74866188532906
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 8784.469324793276,
+            "rhs_norm": 5818776193.186228,
+            "normwise_backward_error": 6.2189288435654e-07,
+            "stable_minus_assembled_norm": 3.8939970781745663e-10,
+            "residual": [
+              -4113.617852648877,
+              4006.5343440660727,
+              6647.761430016988
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.777916992813928e-09
+        },
+        {
+          "point": 67931,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 188818636.0986562,
+          "min_abs_projected_depth": 7.418676275031122e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 1066.5422417337,
+            "rhs_norm": 14343694545.486603,
+            "normwise_backward_error": 3.043594288601955e-08,
+            "stable_minus_assembled_norm": 7.101051340557436e-10,
+            "residual": [
+              -89.76806632270745,
+              -1050.7214559050044,
+              -159.49441925000428
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 5765.629606066323,
+            "rhs_norm": 14343699937.617155,
+            "normwise_backward_error": 1.645338930714367e-07,
+            "stable_minus_assembled_norm": 1.4222589627637e-09,
+            "residual": [
+              -584.7655745802113,
+              3500.289491448668,
+              4544.062879537254
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 5.6702195886579395e-09
+        },
+        {
+          "point": 67932,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 183645984.5576407,
+          "min_abs_projected_depth": 7.62763389108509e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 21725.434618146784,
+            "rhs_norm": 14248054437.69359,
+            "normwise_backward_error": 6.102812984135261e-07,
+            "stable_minus_assembled_norm": 6.947301355615294e-10,
+            "residual": [
+              15474.736180625929,
+              301.89666991942795,
+              -15245.848873975141
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1976.0959712400297,
+            "rhs_norm": 14248076476.31281,
+            "normwise_backward_error": 5.550976023329266e-08,
+            "stable_minus_assembled_norm": 6.441174780092503e-10,
+            "residual": [
+              -1914.546836571666,
+              -100.66013029724127,
+              478.8874985766961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.501610722063826e-09
+        },
+        {
+          "point": 79215,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 322547.8507879777,
+          "min_abs_projected_depth": 1.998713466467672e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.33719707922874187,
+            "rhs_norm": 17201199.77325126,
+            "normwise_backward_error": 8.445846855367451e-09,
+            "stable_minus_assembled_norm": 1.2777921377087282e-12,
+            "residual": [
+              0.1967020881570818,
+              0.04130773380967412,
+              0.2707468003182072
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.08663581853270516,
+            "rhs_norm": 17201200.115537763,
+            "normwise_backward_error": 2.169985727373151e-09,
+            "stable_minus_assembled_norm": 1.1948954471323479e-12,
+            "residual": [
+              -0.03768240729847605,
+              0.004419499814929395,
+              -0.07788625844402475
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 1.9615286430077772e-11
+        },
+        {
+          "point": 79218,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 175642030.20817527,
+          "min_abs_projected_depth": 7.976551412783306e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 20025.4613185576,
+            "rhs_norm": 16447278152.637701,
+            "normwise_backward_error": 3.5454713153520145e-07,
+            "stable_minus_assembled_norm": 8.061550897816511e-10,
+            "residual": [
+              16887.49195817404,
+              -802.7396238200163,
+              -10732.535836418305
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 3854.4180522090737,
+            "rhs_norm": 16447261862.276747,
+            "normwise_backward_error": 6.824178662293475e-08,
+            "stable_minus_assembled_norm": 8.8563678173249e-10,
+            "residual": [
+              -2264.2863715692074,
+              -906.837438685674,
+              2984.4918509721465
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 6.41528779171367e-09
+        },
+        {
+          "point": 98124,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 1467609624.0034347,
+          "min_abs_projected_depth": 1.0371164526137844e-08,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 639116.2775489433,
+            "rhs_norm": 46022920177.93233,
+            "normwise_backward_error": 4.571765308340249e-06,
+            "stable_minus_assembled_norm": 6.532733242066084e-09,
+            "residual": [
+              -638756.1696618823,
+              19562.24807884912,
+              -8802.863000191952
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 1717243.1151706711,
+            "rhs_norm": 46025257056.30746,
+            "normwise_backward_error": 1.2283681253155204e-05,
+            "stable_minus_assembled_norm": 3.9656526347185296e-09,
+            "residual": [
+              1716030.1781687883,
+              63921.72772279639,
+              8851.945548877951
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 8.485534327928263e-08
+        },
+        {
+          "point": 122233,
+          "observations": 2,
+          "max_projected_depth_cancellation_condition": 691427.0293324741,
+          "min_abs_projected_depth": 2.46602015724455e-05,
+          "fp64_rows_extended_accumulation": {
+            "absolute_residual_norm": 0.27789009061886033,
+            "rhs_norm": 3115163.053935469,
+            "normwise_backward_error": 3.527599212245102e-08,
+            "stable_minus_assembled_norm": 3.287472172904036e-13,
+            "residual": [
+              -0.15734262913106267,
+              0.15970131141724409,
+              -0.16420015424443335
+            ]
+          },
+          "extended_geometry_and_accumulation": {
+            "absolute_residual_norm": 0.10528612430511926,
+            "rhs_norm": 3115163.102632896,
+            "normwise_backward_error": 1.336525696386039e-08,
+            "stable_minus_assembled_norm": 2.1342956994359616e-13,
+            "residual": [
+              -0.053833066523537365,
+              0.08301897950102344,
+              -0.03598635800513961
+            ]
+          },
+          "point_J_relative_fp64_vs_extended": 4.827300571215406e-11
+        }
+      ]
+    }
+  ],
+  "cpu_seconds": 2.5494332229718566,
+  "scope": "Certification diagnostic only; reduced residual, full residual, nonlinear usefulness and backward stability are distinct"
+}

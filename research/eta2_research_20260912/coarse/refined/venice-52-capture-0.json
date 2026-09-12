@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "kind": "supplementary CPU point back-substitution at fixed source camera direction",
+  "capture": "/tmp/prism-ba-coarse/research/eta2_research_20260912/evidence/collect/venice-52-capture-0",
+  "bal": "/workspace/bal/venice-52.txt",
+  "baseline": {
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "header_count": 44,
+    "champion_json_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+    "flags": {
+      "OCA_ATTR_RADIUS": "1",
+      "OCA_ATTR_RESCUE": "1",
+      "OCA_ATTR_STRICT": "1",
+      "OCA_BACKTRACK_REARM": "1",
+      "OCA_CAMERA_TR": "0",
+      "OCA_CG_STOP": "0",
+      "OCA_CLASSICAL_LM": "1",
+      "OCA_COMPACT_FRAGMENTS": "2",
+      "OCA_DEMAND_MENU": "0",
+      "OCA_DIAG_NORM": "1",
+      "OCA_FORCE_UNSHARED": "1",
+      "OCA_FTOL": "1e-5",
+      "OCA_FTOL_K": "8",
+      "OCA_GRID_DOWN": "2",
+      "OCA_MENU_BACKTRACK": "8",
+      "OCA_MENU_GATE": "1e-2",
+      "OCA_MULTI_RHS": "1",
+      "OCA_NSHIFTS": "1",
+      "OCA_PCG": "1",
+      "OCA_POINT_SAFEGUARD": "1",
+      "OCA_RETRY_CACHE": "1",
+      "OCA_RHO_LAMBDA": "1",
+      "OCA_RHO_SHIFT": "1",
+      "OCA_SCHUR_NUMERIC_GUARD": "1",
+      "OCA_SWITCH_RESTART": "0",
+      "OCA_TR_RECURRENCE": "0",
+      "OCA_RLA_FIXED_ETA": "2"
+    },
+    "cli": [
+      "--algo",
+      "mfree_shifted_cg",
+      "--dof9",
+      "--zero_k2",
+      "--lam0",
+      "0.1",
+      "--max_iter",
+      "600"
+    ],
+    "binary_not_run": true
+  },
+  "metadata": {
+    "ncam": 52.0,
+    "npt": 64053.0,
+    "nobs": 347173.0,
+    "outer": 93.0,
+    "cost": 246359.0245822989,
+    "lambda": 8.923524855210429e-07,
+    "tau": 8.923524855210429e-07,
+    "radius": 6450.705179259341,
+    "floor": 8.923524855210429e-07,
+    "previous_rhs_norm": 0.8572411996006841,
+    "rhs_norm": 0.8194078556081976,
+    "eta": 0.5,
+    "eta2_cg": 1.0,
+    "eta2_recursive_residual": 0.28459958287887194,
+    "eta2_cutoff": 0.0,
+    "terminal_witness": 1.0
+  },
+  "refined_step": {
+    "path": "/tmp/prism-ba-coarse/research/eta2_research_20260912/coarse/refined/venice-52-capture-0.step",
+    "sha256": "8bda4be60140241b5896462b8287c279a5b3c16462e928e2047d51b064d73ff1",
+    "shape": [
+      192627
+    ],
+    "dtype": "little-endian float64",
+    "source_camera_step_sha256": "ae77724edd3aa9ac40ccc601363748bca0c956f61c9aa17df50b2ff0cc8b6a68",
+    "unchanged_camera_direction": true,
+    "measured_full_scaled_residual": 7.164610766381173e-11,
+    "certification": "independent CPU full scaled normal residual, not interval arithmetic or native certification"
+  },
+  "followup_point_equation_diagnosis": {
+    "saved_step": {
+      "stable_absolute_residual": 4406.591957824337,
+      "conditional_rhs_norm": 1465592143.515409,
+      "stable_relative_conditional_rhs": 3.0066973116098773e-06,
+      "global_normwise_backward_error": 4.5508594314858587e-07,
+      "max_track_backward_error": 4.552674859214304e-07,
+      "stable_minus_assembled_norm": 6.176764197059221e-07,
+      "point_Dp_whitened_relative_full_gradient": 1.615951671795277e-06,
+      "camera_E_scaled_relative_full_gradient": 2.8552377554159936e-06,
+      "full_scaled_normal_relative_full_gradient": 3.2808051520215143e-06
+    },
+    "fresh_CPU_backsubstitution": {
+      "stable_absolute_residual": 2.903388966555194e-07,
+      "conditional_rhs_norm": 1465592143.515409,
+      "stable_relative_conditional_rhs": 1.9810347506305858e-16,
+      "global_normwise_backward_error": 2.998441753036079e-17,
+      "max_track_backward_error": 1.036255823540837e-15,
+      "stable_minus_assembled_norm": 3.327181351623993e-07,
+      "point_Dp_whitened_relative_full_gradient": 2.414210610902998e-13,
+      "camera_E_scaled_relative_full_gradient": 7.164570091251647e-11,
+      "full_scaled_normal_relative_full_gradient": 7.164610766381173e-11
+    },
+    "full_scaled_gradient_norm": 1.035043612488983,
+    "fresh_minus_saved_point_norm": 4.803335071243175e-06,
+    "note": "Follow-up diagnosis only: original combined parity gate is retained unchanged; fresh points are not a native nonlinear proposal."
+  },
+  "camera_residual": {
+    "dense": 9.037933335596019e-11,
+    "jacobian": 9.048877285741866e-11
+  },
+  "input_sha256": {
+    "R_state.f64": "4ad2f2e9c9598537ea0ad7c71d0e57b70d1b618ee3c9d3e0810c58079b6ab613",
+    "t_state.f64": "af2ed72f68477274019f97f97a604bf028c6db5e0f0abf61b3a624c313832f36",
+    "X_state.f64": "ed91dbf7e878a2810ce6698a010871394144f21c74e2ad2edaccfd8b0920a528",
+    "intr_state.f64": "90317018527afbf3ed5adf68e0e6c97daf72cba73509dee22b4a78668888a520",
+    "E.f64": "dcb07b9c3f40bc869955f6673d505e5e48195496e857661cf30aac3429e0a61a",
+    "Hcc.f64": "d059ad270384c64c245fdf404d4bf97e9ef3cf59880a98c77c242fe3ce9f298b",
+    "Cdiag.f64": "367d7cb8c81b2bad2e93a9e382d1812c7f899609f981c3f525608431034fabbd",
+    "exact-0.step": "ae77724edd3aa9ac40ccc601363748bca0c956f61c9aa17df50b2ff0cc8b6a68",
+    "metadata.txt": "c8f3c16d23f9be260fb965bab5d7d37c67d9b01b0bc9c8cd2a49944aa8e67184",
+    "manifest.json": "4c0bb84318a8757b5b7bea521701de1322a4d28a3ac91b8e92db6c8b88110576",
+    "BAL": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b"
+  },
+  "implementation_sha256": {
+    "spectrum.py": "9ad52942c56ad8274425787ab56cc88b7bcb0c6c96071dda533aa70c3d757c14",
+    "charts/reference.py": "35a14def911bd478b0ea309c2b47b6c1742ff79a2f9f2880959f1236d79569ec"
+  },
+  "cpu_seconds": 5.863003704696894
+}

@@ -1,0 +1,2724 @@
+{
+  "kind": "Brief0 fixed-state independent CPU audit",
+  "capture": "research/eta2_research_20260912/evidence/toy/toy-capture-1",
+  "bal": "research/eta2_research_20260912/build/toy.txt",
+  "capture_sha256": {
+    "metadata.txt": "2061f6dd5f86ce44fb50ee7101f330fe28f3113faf42bc9a7fff5ad55b0babae",
+    "native_directions.csv": "06a4e03c4a04661b007c8d197b10b695f9345696d2f9cf2361e3ec17da26a69d",
+    "R_state.f64": "ad8a6c1a9706748d421bf82915b8c6328c113923e76bf08ff39ecf4b87cf2d02",
+    "t_state.f64": "08465d0817140eb2d438285c325367c9e097a8d4a5b6a93e61e078184364a1ca",
+    "X_state.f64": "3702d6c0b032501f206f122d548d60e302fb2f8114959c0bb1a791902e7002f1",
+    "intr_state.f64": "88a8b08e73a1d8eb0d33dc4d0cc96517df9d806737987864c34c09e9d74af1fd"
+  },
+  "source_sha256": "4931b9cda4f993ec4d375bb9c4ecb9420a12c267e0bceb0857022f829110a08f",
+  "chart_reference_sha256": "35a14def911bd478b0ea309c2b47b6c1742ff79a2f9f2880959f1236d79569ec",
+  "baseline_verification": {
+    "source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+    "verified_headers": 44,
+    "champion_config": {
+      "label": "sustained-eta2-lambda0.1",
+      "status": "best tested global configuration on six-scene fixed-target panel; defaults unchanged",
+      "binary": "/tmp/prism-rl-sustained/build/prism-tr",
+      "binary_sha256": "1e3d2cf22a8a43075114e0ca2024923dad330461e35d0074938d0412cd77ecc0",
+      "initial_lambda": 0.1,
+      "flags": {
+        "OCA_ATTR_RADIUS": "1",
+        "OCA_ATTR_RESCUE": "1",
+        "OCA_ATTR_STRICT": "1",
+        "OCA_BACKTRACK_REARM": "1",
+        "OCA_CAMERA_TR": "0",
+        "OCA_CG_STOP": "0",
+        "OCA_CLASSICAL_LM": "1",
+        "OCA_COMPACT_FRAGMENTS": "2",
+        "OCA_DEMAND_MENU": "0",
+        "OCA_DIAG_NORM": "1",
+        "OCA_FORCE_UNSHARED": "1",
+        "OCA_FTOL": "1e-5",
+        "OCA_FTOL_K": "8",
+        "OCA_GRID_DOWN": "2",
+        "OCA_MENU_BACKTRACK": "8",
+        "OCA_MENU_GATE": "1e-2",
+        "OCA_MULTI_RHS": "1",
+        "OCA_NSHIFTS": "1",
+        "OCA_PCG": "1",
+        "OCA_POINT_SAFEGUARD": "1",
+        "OCA_RETRY_CACHE": "1",
+        "OCA_RHO_LAMBDA": "1",
+        "OCA_RHO_SHIFT": "1",
+        "OCA_SCHUR_NUMERIC_GUARD": "1",
+        "OCA_SWITCH_RESTART": "0",
+        "OCA_TR_RECURRENCE": "0",
+        "OCA_RLA_FIXED_ETA": "2"
+      },
+      "cli": [
+        "--algo",
+        "mfree_shifted_cg",
+        "--dof9",
+        "--zero_k2",
+        "--lam0",
+        "0.1",
+        "--max_iter",
+        "600"
+      ],
+      "evidence": "/tmp/prism-rl-sustained/verdict.json",
+      "limitations": [
+        "Muell lambda10 + eta2 is a counterexample",
+        "Largest tighter-target gain is only1.035x",
+        "Not a learned RL improvement"
+      ]
+    },
+    "arithmetic_note": "Native Scalar=double with FP32 compact cross blocks/point rows; this CPU reference is Gram-consistent FP64"
+  },
+  "metadata": {
+    "ncam": 4.0,
+    "npt": 24.0,
+    "nobs": 96.0,
+    "outer": 0.0,
+    "cost": 364516.1939040979,
+    "lambda": 0.1,
+    "tau": 0.1,
+    "radius": 245.38404495694635,
+    "floor": 1e-16,
+    "previous_rhs_norm": -1.0,
+    "rhs_norm": 236.70992188655185,
+    "eta": 0.5,
+    "eta2_cg": 1.0,
+    "eta2_recursive_residual": 0.4869257141735318,
+    "eta2_cutoff": 0.0,
+    "terminal_witness": 0.0
+  },
+  "objective": "All original SIMPLE_RADIAL pixel observations; unshared intrinsics; k2=0; no robust loss or cheirality rejection",
+  "geometry": {
+    "camera_center_centroid": [
+      -0.0033974901876838715,
+      0.08748423883953839,
+      0.015463685974872755
+    ],
+    "scene_radius": 1.0158524227367445,
+    "parallax_geometric_pairs": 144,
+    "cpu_geometry_seconds": 0.0008201613090932369
+  },
+  "radius_definition": "max_i ||C_i - mean(C)||_2, C_i=-R_i^T t_i, initial witness state; distinct from controller radius",
+  "parallax_definition": "initial maximum angle between X_j-C_i rays over all observation pairs, no absolute-dot folding; tracks<2 undefined",
+  "agreement_tolerance": {
+    "relative": 5e-10,
+    "absolute": 1e-08,
+    "prediction_scale": "sum abs(r_l (Jd)_l) + 0.5 sum (Jd)_l^2",
+    "decrease_scale": "CPU initial plus candidate cost",
+    "certified_error_bound": false
+  },
+  "rows": [
+    {
+      "arm": "eta2",
+      "rep": 0,
+      "native": {
+        "arm": "eta2",
+        "rep": 0,
+        "cost": 2492408.9048091886,
+        "prediction": 355912.55825184693,
+        "decrease": -2127892.710905091,
+        "rho": -5.978695220412467,
+        "camera_norm": 245.38404495694635,
+        "pcg_iterations": 1,
+        "true_residual": 0.4869257141735318,
+        "certified": 0,
+        "seconds": 0.0,
+        "reason": "native_inexact"
+      },
+      "source_reference_solve_certified": null,
+      "direction_label": "native_inexact",
+      "clipped": false,
+      "linear_certificate_applies_to": null,
+      "valid_finite_direction": true,
+      "finite_scores_and_predictions": true,
+      "eligible_for_solve_model_conclusion": true,
+      "costs": {
+        "initial": 364516.19390409795,
+        "full": 2492408.9048091886,
+        "camera": 280782.91445237584,
+        "point": 2279069.941998143
+      },
+      "predictions": {
+        "full": 355912.55825184693,
+        "camera": 81977.09924156211,
+        "point": 332056.1924784133
+      },
+      "true_decreases": {
+        "full": -2127892.710905091,
+        "camera": 83733.2794517221,
+        "point": -1914553.7480940453
+      },
+      "rho": {
+        "full": -5.978695220412467,
+        "camera": 1.0214228147422617,
+        "point": -5.765752277661586
+      },
+      "prediction_absolute_term_scales": {
+        "full": 948010.1266849545,
+        "camera": 136427.73054051521,
+        "point": 773999.1211206273
+      },
+      "native_agreement": {
+        "initial_cost": {
+          "status": "within_budget",
+          "cpu": 364516.19390409795,
+          "native": 364516.1939040979,
+          "absolute_error": 5.820766091346741e-11,
+          "normalization_scale": 364516.19390409795,
+          "normalized_error": 1.5968470506081684e-16,
+          "tolerance": 0.00018226809695204898
+        },
+        "candidate_cost": {
+          "status": "within_budget",
+          "cpu": 2492408.9048091886,
+          "native": 2492408.9048091886,
+          "absolute_error": 0.0,
+          "normalization_scale": 2492408.9048091886,
+          "normalized_error": 0.0,
+          "tolerance": 0.0012462144524045943
+        },
+        "prediction": {
+          "status": "within_budget",
+          "cpu": 355912.55825184693,
+          "native": 355912.55825184693,
+          "absolute_error": 0.0,
+          "normalization_scale": 948010.1266849545,
+          "normalized_error": 0.0,
+          "tolerance": 0.00047401506334247725
+        },
+        "true_decrease": {
+          "status": "within_budget",
+          "cpu": -2127892.710905091,
+          "native": -2127892.710905091,
+          "absolute_error": 0.0,
+          "normalization_scale": 2856925.0987132867,
+          "normalized_error": 0.0,
+          "tolerance": 0.0014284725493566434
+        }
+      },
+      "model_error": {
+        "full": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 2483805.2691569375,
+          "absolute_sum": 2483914.656228827,
+          "positive_sum": 2483859.9626928824,
+          "negative_sum": -54.6935359446825,
+          "positive_points": 19,
+          "negative_points": 5
+        },
+        "camera": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": -1756.1802101599912,
+          "absolute_sum": 3900.78826051428,
+          "positive_sum": 1072.3040251771445,
+          "negative_sum": -2828.4842353371355,
+          "positive_points": 19,
+          "negative_points": 5
+        },
+        "point": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 2246609.9405724583,
+          "absolute_sum": 2248209.0489859674,
+          "positive_sum": 2247409.494779213,
+          "negative_sum": -799.5542067546133,
+          "positive_points": 18,
+          "negative_points": 6
+        },
+        "cross": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 238951.50879463946,
+          "absolute_sum": 267916.2644503763,
+          "positive_sum": 253433.88662250788,
+          "negative_sum": -14482.377827868413,
+          "positive_points": 18,
+          "negative_points": 6
+        }
+      },
+      "point_error_bins": {
+        "track_length": {
+          "0-1": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "2": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "3-5": {
+            "points": 24,
+            "nonfinite_points": 0,
+            "signed_sum": 2246609.9405724583,
+            "absolute_sum": 2248209.0489859674,
+            "positive_sum": 2247409.494779213,
+            "negative_sum": -799.5542067546133,
+            "positive_points": 18,
+            "negative_points": 6
+          },
+          ">5": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        },
+        "parallax": {
+          "<1deg": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "1-5deg": {
+            "points": 1,
+            "nonfinite_points": 0,
+            "signed_sum": 922.7601714115933,
+            "absolute_sum": 922.7601714115933,
+            "positive_sum": 922.7601714115933,
+            "negative_sum": 0.0,
+            "positive_points": 1,
+            "negative_points": 0
+          },
+          ">5deg": {
+            "points": 23,
+            "nonfinite_points": 0,
+            "signed_sum": 2245687.1804010468,
+            "absolute_sum": 2247286.288814556,
+            "positive_sum": 2246486.7346078013,
+            "negative_sum": -799.5542067546133,
+            "positive_points": 17,
+            "negative_points": 6
+          },
+          "undefined": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        }
+      },
+      "top200_absolute_point_error": {
+        "count": 24,
+        "absolute_sum": 2248209.0489859674,
+        "signed_sum": 2246609.9405724583,
+        "fraction_of_absolute_point_error": 1.0,
+        "point_indices": [
+          10,
+          23,
+          1,
+          16,
+          5,
+          18,
+          0,
+          19,
+          17,
+          9,
+          22,
+          12,
+          4,
+          3,
+          15,
+          20,
+          6,
+          7,
+          21,
+          13,
+          11,
+          14,
+          8,
+          2
+        ],
+        "point_signed_errors": [
+          2141641.0151007622,
+          50575.83175074308,
+          42961.06729660112,
+          2369.0511412608193,
+          2292.7685778021105,
+          2254.3702641958457,
+          1925.5714745587502,
+          922.7601714115933,
+          911.30601929184,
+          403.49014905743127,
+          -325.57557412095287,
+          315.4058414565794,
+          302.5478292541094,
+          261.5348883044668,
+          -213.8800688010478,
+          -146.85703075306932,
+          138.80820754983392,
+          -112.64289314817903,
+          89.35526141108883,
+          39.49524799514465,
+          4.595246728408455,
+          0.5203108282988325,
+          -0.35970698407546564,
+          -0.23893294728889813
+        ],
+        "track_lengths": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "parallax_degrees": [
+          9.456817434935124,
+          94.96509351043765,
+          14.94220600504889,
+          51.89164647348644,
+          47.06639691843892,
+          36.51034367358094,
+          12.598397042693977,
+          4.619543059674491,
+          31.682803990913524,
+          37.979379950420046,
+          18.48352740815184,
+          30.235445410864454,
+          29.686165931210876,
+          26.731509611813806,
+          21.77597035885221,
+          8.075255373574134,
+          31.95275555968376,
+          5.755055914985482,
+          23.342473565771094,
+          29.30832624028265,
+          29.90743579242051,
+          20.3153712048784,
+          20.771989207316814,
+          16.721978355908895
+        ]
+      },
+      "flings": {
+        "scene_radius": 1.0158524227367445,
+        "count": 14,
+        "maximum_displacement": 19.3466797912164,
+        "median_displacement": 1.1900702693047933,
+        "p95_displacement": 10.811337553623892
+      },
+      "cheirality_flip_observations": {
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "behind_camera_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "projection_horizon_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "invalid_projection_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "point_equation": {
+        "absolute_residual_norm": 0.008783143749807055,
+        "rhs_norm": 583481.8413727591,
+        "relative_residual_norm": 1.5052985589308027e-08,
+        "maximum_point_absolute_residual_norm": 0.00809079233130719,
+        "diagonal_source": "saved_Cdiag",
+        "tau": 0.1,
+        "tau_equals_lambda": true,
+        "equation": "Jp^T (r+Jc dc+Jp dp) + diag(damping) dp = 0",
+        "scope": "independent residual of this actual direction, including clipped back-substitution; no stationarity certificate"
+      },
+      "cpu_audit_seconds": 0.001449901144951582,
+      "direction_sha256": "84ff5589fa5fffb8a5560211d1d394a3355cb946a8e14669bb4a3cdcb29adc05"
+    },
+    {
+      "arm": "exact",
+      "rep": 0,
+      "native": {
+        "arm": "exact",
+        "rep": 0,
+        "cost": 744279.1273915495,
+        "prediction": 358215.67294140393,
+        "decrease": -379762.93348745164,
+        "rho": -1.0601516409628797,
+        "camera_norm": 408.2059292339638,
+        "pcg_iterations": 18,
+        "true_residual": 3.3128087385347504e-11,
+        "certified": 1,
+        "seconds": 0.02913698,
+        "reason": "true_residual"
+      },
+      "source_reference_solve_certified": true,
+      "direction_label": "certified_reference",
+      "clipped": false,
+      "linear_certificate_applies_to": "source_unclipped_camera_solve",
+      "valid_finite_direction": true,
+      "finite_scores_and_predictions": true,
+      "eligible_for_solve_model_conclusion": true,
+      "costs": {
+        "initial": 364516.19390409795,
+        "full": 744279.1273915492,
+        "camera": 132842.32613769962,
+        "point": 7985339.613319283
+      },
+      "predictions": {
+        "full": 358215.6729414039,
+        "camera": 276447.2192052569,
+        "point": 183742.51235623108
+      },
+      "true_decreases": {
+        "full": -379762.93348745117,
+        "camera": 231673.86776639835,
+        "point": -7620823.419415185
+      },
+      "rho": {
+        "full": -1.0601516409628786,
+        "camera": 0.8380401453573126,
+        "point": -41.475559040143644
+      },
+      "prediction_absolute_term_scales": {
+        "full": 1001849.4890173299,
+        "camera": 604215.0195974825,
+        "point": 316535.0339246333
+      },
+      "native_agreement": {
+        "initial_cost": {
+          "status": "within_budget",
+          "cpu": 364516.19390409795,
+          "native": 364516.1939040979,
+          "absolute_error": 5.820766091346741e-11,
+          "normalization_scale": 364516.19390409795,
+          "normalized_error": 1.5968470506081684e-16,
+          "tolerance": 0.00018226809695204898
+        },
+        "candidate_cost": {
+          "status": "within_budget",
+          "cpu": 744279.1273915492,
+          "native": 744279.1273915495,
+          "absolute_error": 3.4924596548080444e-10,
+          "normalization_scale": 744279.1273915492,
+          "normalized_error": 4.692405747085712e-16,
+          "tolerance": 0.00037214956369577463
+        },
+        "prediction": {
+          "status": "within_budget",
+          "cpu": 358215.6729414039,
+          "native": 358215.67294140393,
+          "absolute_error": 5.820766091346741e-11,
+          "normalization_scale": 1001849.4890173299,
+          "normalized_error": 5.81002052220047e-17,
+          "tolerance": 0.000500934744508665
+        },
+        "true_decrease": {
+          "status": "within_budget",
+          "cpu": -379762.93348745117,
+          "native": -379762.93348745164,
+          "absolute_error": 4.656612873077393e-10,
+          "normalization_scale": 1108795.3212956472,
+          "normalized_error": 4.199704655712343e-16,
+          "tolerance": 0.0005544076606478237
+        }
+      },
+      "model_error": {
+        "full": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 737978.6064288551,
+          "absolute_sum": 737978.6064288551,
+          "positive_sum": 737978.6064288551,
+          "negative_sum": 0.0,
+          "positive_points": 24,
+          "negative_points": 0
+        },
+        "camera": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 44773.35143885853,
+          "absolute_sum": 45932.98141467948,
+          "positive_sum": 45353.16642676901,
+          "negative_sum": -579.8149879104732,
+          "positive_points": 17,
+          "negative_points": 7
+        },
+        "point": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 7804565.931771416,
+          "absolute_sum": 7806724.813837628,
+          "positive_sum": 7805645.372804522,
+          "negative_sum": -1079.441033105442,
+          "positive_points": 20,
+          "negative_points": 4
+        },
+        "cross": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": -7111360.676781421,
+          "absolute_sum": 7115564.592434,
+          "positive_sum": 2101.957826289855,
+          "negative_sum": -7113462.63460771,
+          "positive_points": 12,
+          "negative_points": 12
+        }
+      },
+      "point_error_bins": {
+        "track_length": {
+          "0-1": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "2": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "3-5": {
+            "points": 24,
+            "nonfinite_points": 0,
+            "signed_sum": 7804565.931771416,
+            "absolute_sum": 7806724.813837628,
+            "positive_sum": 7805645.372804522,
+            "negative_sum": -1079.441033105442,
+            "positive_points": 20,
+            "negative_points": 4
+          },
+          ">5": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        },
+        "parallax": {
+          "<1deg": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "1-5deg": {
+            "points": 1,
+            "nonfinite_points": 0,
+            "signed_sum": -909.7366466265971,
+            "absolute_sum": 909.7366466265971,
+            "positive_sum": 0.0,
+            "negative_sum": -909.7366466265971,
+            "positive_points": 0,
+            "negative_points": 1
+          },
+          ">5deg": {
+            "points": 23,
+            "nonfinite_points": 0,
+            "signed_sum": 7805475.668418043,
+            "absolute_sum": 7805815.077191001,
+            "positive_sum": 7805645.372804522,
+            "negative_sum": -169.70438647884492,
+            "positive_points": 20,
+            "negative_points": 3
+          },
+          "undefined": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        }
+      },
+      "top200_absolute_point_error": {
+        "count": 24,
+        "absolute_sum": 7806724.813837628,
+        "signed_sum": 7804565.931771416,
+        "fraction_of_absolute_point_error": 1.0,
+        "point_indices": [
+          10,
+          1,
+          23,
+          0,
+          22,
+          18,
+          5,
+          15,
+          16,
+          19,
+          17,
+          3,
+          12,
+          9,
+          20,
+          21,
+          7,
+          11,
+          6,
+          14,
+          13,
+          4,
+          2,
+          8
+        ],
+        "point_signed_errors": [
+          7678626.5505537335,
+          100824.02255245812,
+          14835.155587667236,
+          2448.1960765267945,
+          2213.2897168449285,
+          1918.0322260044547,
+          1147.1877581922333,
+          1014.3198449262093,
+          966.1963853563589,
+          -909.7366466265971,
+          791.5951306827637,
+          260.0633679910646,
+          233.0640279981624,
+          115.8379532487416,
+          -101.25181241987032,
+          77.19765127335162,
+          61.31023547574273,
+          55.1666141033233,
+          -55.055455141660985,
+          31.19925402073622,
+          -13.39711891731362,
+          12.891071978592635,
+          8.226866956357426,
+          5.869929083348136
+        ],
+        "track_lengths": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "parallax_degrees": [
+          9.456817434935124,
+          14.94220600504889,
+          94.96509351043765,
+          12.598397042693977,
+          18.48352740815184,
+          36.51034367358094,
+          47.06639691843892,
+          21.77597035885221,
+          51.89164647348644,
+          4.619543059674491,
+          31.682803990913524,
+          26.731509611813806,
+          30.235445410864454,
+          37.979379950420046,
+          8.075255373574134,
+          23.342473565771094,
+          5.755055914985482,
+          29.90743579242051,
+          31.95275555968376,
+          20.3153712048784,
+          29.30832624028265,
+          29.686165931210876,
+          16.721978355908895,
+          20.771989207316814
+        ]
+      },
+      "flings": {
+        "scene_radius": 1.0158524227367445,
+        "count": 11,
+        "maximum_displacement": 17.39905506851012,
+        "median_displacement": 0.9377889046040009,
+        "p95_displacement": 10.996561725767865
+      },
+      "cheirality_flip_observations": {
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "behind_camera_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "projection_horizon_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "invalid_projection_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "point_equation": {
+        "absolute_residual_norm": 2.648881790803603e-10,
+        "rhs_norm": 190994.56892484418,
+        "relative_residual_norm": 1.386888541236966e-15,
+        "maximum_point_absolute_residual_norm": 2.6210278535640566e-10,
+        "diagonal_source": "saved_Cdiag",
+        "tau": 0.1,
+        "tau_equals_lambda": true,
+        "equation": "Jp^T (r+Jc dc+Jp dp) + diag(damping) dp = 0",
+        "scope": "independent residual of this actual direction, including clipped back-substitution; no stationarity certificate"
+      },
+      "cpu_audit_seconds": 0.001131921075284481,
+      "direction_sha256": "8b6da4597e358bb3107496102bd2baf1692906c5e9ef1e4cb9887e0169258bef"
+    },
+    {
+      "arm": "exact_clip",
+      "rep": 0,
+      "native": {
+        "arm": "exact_clip",
+        "rep": 0,
+        "cost": 1347872.6363437013,
+        "prediction": 354979.94293202984,
+        "decrease": -983356.4424396034,
+        "rho": -2.770174659214176,
+        "camera_norm": 245.38404495694627,
+        "pcg_iterations": 18,
+        "true_residual": 3.3128087385347504e-11,
+        "certified": 1,
+        "seconds": 0.02913698,
+        "reason": "true_residual"
+      },
+      "source_reference_solve_certified": true,
+      "direction_label": "certified_reference",
+      "clipped": true,
+      "linear_certificate_applies_to": "source_unclipped_camera_solve",
+      "valid_finite_direction": true,
+      "finite_scores_and_predictions": true,
+      "eligible_for_solve_model_conclusion": true,
+      "costs": {
+        "initial": 364516.19390409795,
+        "full": 1347872.6363437013,
+        "camera": 189599.53772570455,
+        "point": 3031291.6863917015
+      },
+      "predictions": {
+        "full": 354979.94293203,
+        "camera": 204018.74319601152,
+        "point": 277382.3485063597
+      },
+      "true_decreases": {
+        "full": -983356.4424396032,
+        "camera": 174916.6561783934,
+        "point": -2666775.4924876033
+      },
+      "rho": {
+        "full": -2.770174659214174,
+        "camera": 0.857355816618975,
+        "point": -9.614077849032492
+      },
+      "prediction_absolute_term_scales": {
+        "full": 956744.0957839207,
+        "camera": 325372.05424730084,
+        "point": 515215.6035560366
+      },
+      "native_agreement": {
+        "initial_cost": {
+          "status": "within_budget",
+          "cpu": 364516.19390409795,
+          "native": 364516.1939040979,
+          "absolute_error": 5.820766091346741e-11,
+          "normalization_scale": 364516.19390409795,
+          "normalized_error": 1.5968470506081684e-16,
+          "tolerance": 0.00018226809695204898
+        },
+        "candidate_cost": {
+          "status": "within_budget",
+          "cpu": 1347872.6363437013,
+          "native": 1347872.6363437013,
+          "absolute_error": 0.0,
+          "normalization_scale": 1347872.6363437013,
+          "normalized_error": 0.0,
+          "tolerance": 0.0006739463181718508
+        },
+        "prediction": {
+          "status": "within_budget",
+          "cpu": 354979.94293203,
+          "native": 354979.94293202984,
+          "absolute_error": 1.7462298274040222e-10,
+          "normalization_scale": 956744.0957839207,
+          "normalized_error": 1.8251796223244274e-16,
+          "tolerance": 0.0004783820478919604
+        },
+        "true_decrease": {
+          "status": "within_budget",
+          "cpu": -983356.4424396032,
+          "native": -983356.4424396034,
+          "absolute_error": 2.3283064365386963e-10,
+          "normalization_scale": 1712388.8302477992,
+          "normalized_error": 1.3596832655126393e-16,
+          "tolerance": 0.0008562044151238997
+        }
+      },
+      "model_error": {
+        "full": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 1338336.3853716333,
+          "absolute_sum": 1338458.509573094,
+          "positive_sum": 1338397.4474723637,
+          "negative_sum": -61.06210073045847,
+          "positive_points": 22,
+          "negative_points": 2
+        },
+        "camera": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 29102.087017618116,
+          "absolute_sum": 29103.107430114098,
+          "positive_sum": 29102.597223866105,
+          "negative_sum": -0.5102062479903537,
+          "positive_points": 23,
+          "negative_points": 1
+        },
+        "point": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 2944157.840993963,
+          "absolute_sum": 2944642.8627190324,
+          "positive_sum": 2944400.351856498,
+          "negative_sum": -242.51086253457981,
+          "positive_points": 21,
+          "negative_points": 3
+        },
+        "cross": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": -1634923.5426399482,
+          "absolute_sum": 1636087.2258697988,
+          "positive_sum": 581.8416149253273,
+          "negative_sum": -1635505.3842548735,
+          "positive_points": 11,
+          "negative_points": 13
+        }
+      },
+      "point_error_bins": {
+        "track_length": {
+          "0-1": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "2": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "3-5": {
+            "points": 24,
+            "nonfinite_points": 0,
+            "signed_sum": 2944157.840993963,
+            "absolute_sum": 2944642.8627190324,
+            "positive_sum": 2944400.351856498,
+            "negative_sum": -242.51086253457981,
+            "positive_points": 21,
+            "negative_points": 3
+          },
+          ">5": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        },
+        "parallax": {
+          "<1deg": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "1-5deg": {
+            "points": 1,
+            "nonfinite_points": 0,
+            "signed_sum": 16390.70033902775,
+            "absolute_sum": 16390.70033902775,
+            "positive_sum": 16390.70033902775,
+            "negative_sum": 0.0,
+            "positive_points": 1,
+            "negative_points": 0
+          },
+          ">5deg": {
+            "points": 23,
+            "nonfinite_points": 0,
+            "signed_sum": 2927767.1406549355,
+            "absolute_sum": 2928252.162380005,
+            "positive_sum": 2928009.65151747,
+            "negative_sum": -242.51086253457981,
+            "positive_points": 20,
+            "negative_points": 3
+          },
+          "undefined": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        }
+      },
+      "top200_absolute_point_error": {
+        "count": 24,
+        "absolute_sum": 2944642.8627190324,
+        "signed_sum": 2944157.840993963,
+        "fraction_of_absolute_point_error": 1.0,
+        "point_indices": [
+          10,
+          1,
+          23,
+          19,
+          18,
+          0,
+          5,
+          16,
+          17,
+          22,
+          12,
+          15,
+          9,
+          3,
+          4,
+          20,
+          21,
+          7,
+          14,
+          6,
+          13,
+          2,
+          8,
+          11
+        ],
+        "point_signed_errors": [
+          2712903.656087797,
+          165614.265203008,
+          38314.77233655946,
+          16390.70033902775,
+          2206.6528949033363,
+          2161.164191184105,
+          1963.2305012557765,
+          1935.7009528002875,
+          898.9243549530302,
+          457.3434480196515,
+          312.95679531102985,
+          311.5078976525689,
+          302.41359855140394,
+          282.44452645648136,
+          174.4816569773795,
+          -172.1454378759914,
+          101.73517601134486,
+          -68.51232948110237,
+          29.693946280625692,
+          21.06866815904943,
+          13.243005925214558,
+          3.150455252308774,
+          -1.853095177486054,
+          1.245820411917347
+        ],
+        "track_lengths": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "parallax_degrees": [
+          9.456817434935124,
+          14.94220600504889,
+          94.96509351043765,
+          4.619543059674491,
+          36.51034367358094,
+          12.598397042693977,
+          47.06639691843892,
+          51.89164647348644,
+          31.682803990913524,
+          18.48352740815184,
+          30.235445410864454,
+          21.77597035885221,
+          37.979379950420046,
+          26.731509611813806,
+          29.686165931210876,
+          8.075255373574134,
+          23.342473565771094,
+          5.755055914985482,
+          20.3153712048784,
+          31.95275555968376,
+          29.30832624028265,
+          16.721978355908895,
+          20.771989207316814,
+          29.90743579242051
+        ]
+      },
+      "flings": {
+        "scene_radius": 1.0158524227367445,
+        "count": 13,
+        "maximum_displacement": 22.03179743784072,
+        "median_displacement": 1.0294030332572568,
+        "p95_displacement": 11.609103977899458
+      },
+      "cheirality_flip_observations": {
+        "full": 4,
+        "camera": 0,
+        "point": 4
+      },
+      "behind_camera_observations": {
+        "initial": 0,
+        "full": 4,
+        "camera": 0,
+        "point": 4
+      },
+      "projection_horizon_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "invalid_projection_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "point_equation": {
+        "absolute_residual_norm": 2.666159191749807e-10,
+        "rhs_norm": 375441.23341280187,
+        "relative_residual_norm": 7.101402175552558e-16,
+        "maximum_point_absolute_residual_norm": 2.6324530345743225e-10,
+        "diagonal_source": "saved_Cdiag",
+        "tau": 0.1,
+        "tau_equals_lambda": true,
+        "equation": "Jp^T (r+Jc dc+Jp dp) + diag(damping) dp = 0",
+        "scope": "independent residual of this actual direction, including clipped back-substitution; no stationarity certificate"
+      },
+      "cpu_audit_seconds": 0.0010657510720193386,
+      "direction_sha256": "ed645c9ad308012c89b0b999b381bec1c96991d9e88028ae9d2f0572f9409bd8"
+    },
+    {
+      "arm": "exact",
+      "rep": 1,
+      "native": {
+        "arm": "exact",
+        "rep": 1,
+        "cost": 744279.1273915495,
+        "prediction": 358215.67294140393,
+        "decrease": -379762.93348745164,
+        "rho": -1.0601516409628797,
+        "camera_norm": 408.2059292339638,
+        "pcg_iterations": 18,
+        "true_residual": 3.3128087385347504e-11,
+        "certified": 1,
+        "seconds": 0.0283139,
+        "reason": "true_residual"
+      },
+      "source_reference_solve_certified": true,
+      "direction_label": "certified_reference",
+      "clipped": false,
+      "linear_certificate_applies_to": "source_unclipped_camera_solve",
+      "valid_finite_direction": true,
+      "finite_scores_and_predictions": true,
+      "eligible_for_solve_model_conclusion": true,
+      "costs": {
+        "initial": 364516.19390409795,
+        "full": 744279.1273915492,
+        "camera": 132842.32613769962,
+        "point": 7985339.613319283
+      },
+      "predictions": {
+        "full": 358215.6729414039,
+        "camera": 276447.2192052569,
+        "point": 183742.51235623108
+      },
+      "true_decreases": {
+        "full": -379762.93348745117,
+        "camera": 231673.86776639835,
+        "point": -7620823.419415185
+      },
+      "rho": {
+        "full": -1.0601516409628786,
+        "camera": 0.8380401453573126,
+        "point": -41.475559040143644
+      },
+      "prediction_absolute_term_scales": {
+        "full": 1001849.4890173299,
+        "camera": 604215.0195974825,
+        "point": 316535.0339246333
+      },
+      "native_agreement": {
+        "initial_cost": {
+          "status": "within_budget",
+          "cpu": 364516.19390409795,
+          "native": 364516.1939040979,
+          "absolute_error": 5.820766091346741e-11,
+          "normalization_scale": 364516.19390409795,
+          "normalized_error": 1.5968470506081684e-16,
+          "tolerance": 0.00018226809695204898
+        },
+        "candidate_cost": {
+          "status": "within_budget",
+          "cpu": 744279.1273915492,
+          "native": 744279.1273915495,
+          "absolute_error": 3.4924596548080444e-10,
+          "normalization_scale": 744279.1273915492,
+          "normalized_error": 4.692405747085712e-16,
+          "tolerance": 0.00037214956369577463
+        },
+        "prediction": {
+          "status": "within_budget",
+          "cpu": 358215.6729414039,
+          "native": 358215.67294140393,
+          "absolute_error": 5.820766091346741e-11,
+          "normalization_scale": 1001849.4890173299,
+          "normalized_error": 5.81002052220047e-17,
+          "tolerance": 0.000500934744508665
+        },
+        "true_decrease": {
+          "status": "within_budget",
+          "cpu": -379762.93348745117,
+          "native": -379762.93348745164,
+          "absolute_error": 4.656612873077393e-10,
+          "normalization_scale": 1108795.3212956472,
+          "normalized_error": 4.199704655712343e-16,
+          "tolerance": 0.0005544076606478237
+        }
+      },
+      "model_error": {
+        "full": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 737978.6064288551,
+          "absolute_sum": 737978.6064288551,
+          "positive_sum": 737978.6064288551,
+          "negative_sum": 0.0,
+          "positive_points": 24,
+          "negative_points": 0
+        },
+        "camera": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 44773.35143885853,
+          "absolute_sum": 45932.98141467948,
+          "positive_sum": 45353.16642676901,
+          "negative_sum": -579.8149879104732,
+          "positive_points": 17,
+          "negative_points": 7
+        },
+        "point": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 7804565.931771416,
+          "absolute_sum": 7806724.813837628,
+          "positive_sum": 7805645.372804522,
+          "negative_sum": -1079.441033105442,
+          "positive_points": 20,
+          "negative_points": 4
+        },
+        "cross": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": -7111360.676781421,
+          "absolute_sum": 7115564.592434,
+          "positive_sum": 2101.957826289855,
+          "negative_sum": -7113462.63460771,
+          "positive_points": 12,
+          "negative_points": 12
+        }
+      },
+      "point_error_bins": {
+        "track_length": {
+          "0-1": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "2": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "3-5": {
+            "points": 24,
+            "nonfinite_points": 0,
+            "signed_sum": 7804565.931771416,
+            "absolute_sum": 7806724.813837628,
+            "positive_sum": 7805645.372804522,
+            "negative_sum": -1079.441033105442,
+            "positive_points": 20,
+            "negative_points": 4
+          },
+          ">5": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        },
+        "parallax": {
+          "<1deg": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "1-5deg": {
+            "points": 1,
+            "nonfinite_points": 0,
+            "signed_sum": -909.7366466265971,
+            "absolute_sum": 909.7366466265971,
+            "positive_sum": 0.0,
+            "negative_sum": -909.7366466265971,
+            "positive_points": 0,
+            "negative_points": 1
+          },
+          ">5deg": {
+            "points": 23,
+            "nonfinite_points": 0,
+            "signed_sum": 7805475.668418043,
+            "absolute_sum": 7805815.077191001,
+            "positive_sum": 7805645.372804522,
+            "negative_sum": -169.70438647884492,
+            "positive_points": 20,
+            "negative_points": 3
+          },
+          "undefined": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        }
+      },
+      "top200_absolute_point_error": {
+        "count": 24,
+        "absolute_sum": 7806724.813837628,
+        "signed_sum": 7804565.931771416,
+        "fraction_of_absolute_point_error": 1.0,
+        "point_indices": [
+          10,
+          1,
+          23,
+          0,
+          22,
+          18,
+          5,
+          15,
+          16,
+          19,
+          17,
+          3,
+          12,
+          9,
+          20,
+          21,
+          7,
+          11,
+          6,
+          14,
+          13,
+          4,
+          2,
+          8
+        ],
+        "point_signed_errors": [
+          7678626.5505537335,
+          100824.02255245812,
+          14835.155587667236,
+          2448.1960765267945,
+          2213.2897168449285,
+          1918.0322260044547,
+          1147.1877581922333,
+          1014.3198449262093,
+          966.1963853563589,
+          -909.7366466265971,
+          791.5951306827637,
+          260.0633679910646,
+          233.0640279981624,
+          115.8379532487416,
+          -101.25181241987032,
+          77.19765127335162,
+          61.31023547574273,
+          55.1666141033233,
+          -55.055455141660985,
+          31.19925402073622,
+          -13.39711891731362,
+          12.891071978592635,
+          8.226866956357426,
+          5.869929083348136
+        ],
+        "track_lengths": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "parallax_degrees": [
+          9.456817434935124,
+          14.94220600504889,
+          94.96509351043765,
+          12.598397042693977,
+          18.48352740815184,
+          36.51034367358094,
+          47.06639691843892,
+          21.77597035885221,
+          51.89164647348644,
+          4.619543059674491,
+          31.682803990913524,
+          26.731509611813806,
+          30.235445410864454,
+          37.979379950420046,
+          8.075255373574134,
+          23.342473565771094,
+          5.755055914985482,
+          29.90743579242051,
+          31.95275555968376,
+          20.3153712048784,
+          29.30832624028265,
+          29.686165931210876,
+          16.721978355908895,
+          20.771989207316814
+        ]
+      },
+      "flings": {
+        "scene_radius": 1.0158524227367445,
+        "count": 11,
+        "maximum_displacement": 17.39905506851012,
+        "median_displacement": 0.9377889046040009,
+        "p95_displacement": 10.996561725767865
+      },
+      "cheirality_flip_observations": {
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "behind_camera_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "projection_horizon_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "invalid_projection_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "point_equation": {
+        "absolute_residual_norm": 2.648881790803603e-10,
+        "rhs_norm": 190994.56892484418,
+        "relative_residual_norm": 1.386888541236966e-15,
+        "maximum_point_absolute_residual_norm": 2.6210278535640566e-10,
+        "diagonal_source": "saved_Cdiag",
+        "tau": 0.1,
+        "tau_equals_lambda": true,
+        "equation": "Jp^T (r+Jc dc+Jp dp) + diag(damping) dp = 0",
+        "scope": "independent residual of this actual direction, including clipped back-substitution; no stationarity certificate"
+      },
+      "cpu_audit_seconds": 0.00105958990752697,
+      "direction_sha256": "8b6da4597e358bb3107496102bd2baf1692906c5e9ef1e4cb9887e0169258bef"
+    },
+    {
+      "arm": "exact_clip",
+      "rep": 1,
+      "native": {
+        "arm": "exact_clip",
+        "rep": 1,
+        "cost": 1347872.6363437013,
+        "prediction": 354979.94293202984,
+        "decrease": -983356.4424396034,
+        "rho": -2.770174659214176,
+        "camera_norm": 245.38404495694627,
+        "pcg_iterations": 18,
+        "true_residual": 3.3128087385347504e-11,
+        "certified": 1,
+        "seconds": 0.0283139,
+        "reason": "true_residual"
+      },
+      "source_reference_solve_certified": true,
+      "direction_label": "certified_reference",
+      "clipped": true,
+      "linear_certificate_applies_to": "source_unclipped_camera_solve",
+      "valid_finite_direction": true,
+      "finite_scores_and_predictions": true,
+      "eligible_for_solve_model_conclusion": true,
+      "costs": {
+        "initial": 364516.19390409795,
+        "full": 1347872.6363437013,
+        "camera": 189599.53772570455,
+        "point": 3031291.6863917015
+      },
+      "predictions": {
+        "full": 354979.94293203,
+        "camera": 204018.74319601152,
+        "point": 277382.3485063597
+      },
+      "true_decreases": {
+        "full": -983356.4424396032,
+        "camera": 174916.6561783934,
+        "point": -2666775.4924876033
+      },
+      "rho": {
+        "full": -2.770174659214174,
+        "camera": 0.857355816618975,
+        "point": -9.614077849032492
+      },
+      "prediction_absolute_term_scales": {
+        "full": 956744.0957839207,
+        "camera": 325372.05424730084,
+        "point": 515215.6035560366
+      },
+      "native_agreement": {
+        "initial_cost": {
+          "status": "within_budget",
+          "cpu": 364516.19390409795,
+          "native": 364516.1939040979,
+          "absolute_error": 5.820766091346741e-11,
+          "normalization_scale": 364516.19390409795,
+          "normalized_error": 1.5968470506081684e-16,
+          "tolerance": 0.00018226809695204898
+        },
+        "candidate_cost": {
+          "status": "within_budget",
+          "cpu": 1347872.6363437013,
+          "native": 1347872.6363437013,
+          "absolute_error": 0.0,
+          "normalization_scale": 1347872.6363437013,
+          "normalized_error": 0.0,
+          "tolerance": 0.0006739463181718508
+        },
+        "prediction": {
+          "status": "within_budget",
+          "cpu": 354979.94293203,
+          "native": 354979.94293202984,
+          "absolute_error": 1.7462298274040222e-10,
+          "normalization_scale": 956744.0957839207,
+          "normalized_error": 1.8251796223244274e-16,
+          "tolerance": 0.0004783820478919604
+        },
+        "true_decrease": {
+          "status": "within_budget",
+          "cpu": -983356.4424396032,
+          "native": -983356.4424396034,
+          "absolute_error": 2.3283064365386963e-10,
+          "normalization_scale": 1712388.8302477992,
+          "normalized_error": 1.3596832655126393e-16,
+          "tolerance": 0.0008562044151238997
+        }
+      },
+      "model_error": {
+        "full": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 1338336.3853716333,
+          "absolute_sum": 1338458.509573094,
+          "positive_sum": 1338397.4474723637,
+          "negative_sum": -61.06210073045847,
+          "positive_points": 22,
+          "negative_points": 2
+        },
+        "camera": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 29102.087017618116,
+          "absolute_sum": 29103.107430114098,
+          "positive_sum": 29102.597223866105,
+          "negative_sum": -0.5102062479903537,
+          "positive_points": 23,
+          "negative_points": 1
+        },
+        "point": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 2944157.840993963,
+          "absolute_sum": 2944642.8627190324,
+          "positive_sum": 2944400.351856498,
+          "negative_sum": -242.51086253457981,
+          "positive_points": 21,
+          "negative_points": 3
+        },
+        "cross": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": -1634923.5426399482,
+          "absolute_sum": 1636087.2258697988,
+          "positive_sum": 581.8416149253273,
+          "negative_sum": -1635505.3842548735,
+          "positive_points": 11,
+          "negative_points": 13
+        }
+      },
+      "point_error_bins": {
+        "track_length": {
+          "0-1": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "2": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "3-5": {
+            "points": 24,
+            "nonfinite_points": 0,
+            "signed_sum": 2944157.840993963,
+            "absolute_sum": 2944642.8627190324,
+            "positive_sum": 2944400.351856498,
+            "negative_sum": -242.51086253457981,
+            "positive_points": 21,
+            "negative_points": 3
+          },
+          ">5": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        },
+        "parallax": {
+          "<1deg": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "1-5deg": {
+            "points": 1,
+            "nonfinite_points": 0,
+            "signed_sum": 16390.70033902775,
+            "absolute_sum": 16390.70033902775,
+            "positive_sum": 16390.70033902775,
+            "negative_sum": 0.0,
+            "positive_points": 1,
+            "negative_points": 0
+          },
+          ">5deg": {
+            "points": 23,
+            "nonfinite_points": 0,
+            "signed_sum": 2927767.1406549355,
+            "absolute_sum": 2928252.162380005,
+            "positive_sum": 2928009.65151747,
+            "negative_sum": -242.51086253457981,
+            "positive_points": 20,
+            "negative_points": 3
+          },
+          "undefined": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        }
+      },
+      "top200_absolute_point_error": {
+        "count": 24,
+        "absolute_sum": 2944642.8627190324,
+        "signed_sum": 2944157.840993963,
+        "fraction_of_absolute_point_error": 1.0,
+        "point_indices": [
+          10,
+          1,
+          23,
+          19,
+          18,
+          0,
+          5,
+          16,
+          17,
+          22,
+          12,
+          15,
+          9,
+          3,
+          4,
+          20,
+          21,
+          7,
+          14,
+          6,
+          13,
+          2,
+          8,
+          11
+        ],
+        "point_signed_errors": [
+          2712903.656087797,
+          165614.265203008,
+          38314.77233655946,
+          16390.70033902775,
+          2206.6528949033363,
+          2161.164191184105,
+          1963.2305012557765,
+          1935.7009528002875,
+          898.9243549530302,
+          457.3434480196515,
+          312.95679531102985,
+          311.5078976525689,
+          302.41359855140394,
+          282.44452645648136,
+          174.4816569773795,
+          -172.1454378759914,
+          101.73517601134486,
+          -68.51232948110237,
+          29.693946280625692,
+          21.06866815904943,
+          13.243005925214558,
+          3.150455252308774,
+          -1.853095177486054,
+          1.245820411917347
+        ],
+        "track_lengths": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "parallax_degrees": [
+          9.456817434935124,
+          14.94220600504889,
+          94.96509351043765,
+          4.619543059674491,
+          36.51034367358094,
+          12.598397042693977,
+          47.06639691843892,
+          51.89164647348644,
+          31.682803990913524,
+          18.48352740815184,
+          30.235445410864454,
+          21.77597035885221,
+          37.979379950420046,
+          26.731509611813806,
+          29.686165931210876,
+          8.075255373574134,
+          23.342473565771094,
+          5.755055914985482,
+          20.3153712048784,
+          31.95275555968376,
+          29.30832624028265,
+          16.721978355908895,
+          20.771989207316814,
+          29.90743579242051
+        ]
+      },
+      "flings": {
+        "scene_radius": 1.0158524227367445,
+        "count": 13,
+        "maximum_displacement": 22.03179743784072,
+        "median_displacement": 1.0294030332572568,
+        "p95_displacement": 11.609103977899458
+      },
+      "cheirality_flip_observations": {
+        "full": 4,
+        "camera": 0,
+        "point": 4
+      },
+      "behind_camera_observations": {
+        "initial": 0,
+        "full": 4,
+        "camera": 0,
+        "point": 4
+      },
+      "projection_horizon_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "invalid_projection_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "point_equation": {
+        "absolute_residual_norm": 2.666159191749807e-10,
+        "rhs_norm": 375441.23341280187,
+        "relative_residual_norm": 7.101402175552558e-16,
+        "maximum_point_absolute_residual_norm": 2.6324530345743225e-10,
+        "diagonal_source": "saved_Cdiag",
+        "tau": 0.1,
+        "tau_equals_lambda": true,
+        "equation": "Jp^T (r+Jc dc+Jp dp) + diag(damping) dp = 0",
+        "scope": "independent residual of this actual direction, including clipped back-substitution; no stationarity certificate"
+      },
+      "cpu_audit_seconds": 0.0010497202165424824,
+      "direction_sha256": "ed645c9ad308012c89b0b999b381bec1c96991d9e88028ae9d2f0572f9409bd8"
+    },
+    {
+      "arm": "exact",
+      "rep": 2,
+      "native": {
+        "arm": "exact",
+        "rep": 2,
+        "cost": 744279.1273915495,
+        "prediction": 358215.67294140393,
+        "decrease": -379762.93348745164,
+        "rho": -1.0601516409628797,
+        "camera_norm": 408.2059292339638,
+        "pcg_iterations": 18,
+        "true_residual": 3.3128087385347504e-11,
+        "certified": 1,
+        "seconds": 0.02833745,
+        "reason": "true_residual"
+      },
+      "source_reference_solve_certified": true,
+      "direction_label": "certified_reference",
+      "clipped": false,
+      "linear_certificate_applies_to": "source_unclipped_camera_solve",
+      "valid_finite_direction": true,
+      "finite_scores_and_predictions": true,
+      "eligible_for_solve_model_conclusion": true,
+      "costs": {
+        "initial": 364516.19390409795,
+        "full": 744279.1273915492,
+        "camera": 132842.32613769962,
+        "point": 7985339.613319283
+      },
+      "predictions": {
+        "full": 358215.6729414039,
+        "camera": 276447.2192052569,
+        "point": 183742.51235623108
+      },
+      "true_decreases": {
+        "full": -379762.93348745117,
+        "camera": 231673.86776639835,
+        "point": -7620823.419415185
+      },
+      "rho": {
+        "full": -1.0601516409628786,
+        "camera": 0.8380401453573126,
+        "point": -41.475559040143644
+      },
+      "prediction_absolute_term_scales": {
+        "full": 1001849.4890173299,
+        "camera": 604215.0195974825,
+        "point": 316535.0339246333
+      },
+      "native_agreement": {
+        "initial_cost": {
+          "status": "within_budget",
+          "cpu": 364516.19390409795,
+          "native": 364516.1939040979,
+          "absolute_error": 5.820766091346741e-11,
+          "normalization_scale": 364516.19390409795,
+          "normalized_error": 1.5968470506081684e-16,
+          "tolerance": 0.00018226809695204898
+        },
+        "candidate_cost": {
+          "status": "within_budget",
+          "cpu": 744279.1273915492,
+          "native": 744279.1273915495,
+          "absolute_error": 3.4924596548080444e-10,
+          "normalization_scale": 744279.1273915492,
+          "normalized_error": 4.692405747085712e-16,
+          "tolerance": 0.00037214956369577463
+        },
+        "prediction": {
+          "status": "within_budget",
+          "cpu": 358215.6729414039,
+          "native": 358215.67294140393,
+          "absolute_error": 5.820766091346741e-11,
+          "normalization_scale": 1001849.4890173299,
+          "normalized_error": 5.81002052220047e-17,
+          "tolerance": 0.000500934744508665
+        },
+        "true_decrease": {
+          "status": "within_budget",
+          "cpu": -379762.93348745117,
+          "native": -379762.93348745164,
+          "absolute_error": 4.656612873077393e-10,
+          "normalization_scale": 1108795.3212956472,
+          "normalized_error": 4.199704655712343e-16,
+          "tolerance": 0.0005544076606478237
+        }
+      },
+      "model_error": {
+        "full": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 737978.6064288551,
+          "absolute_sum": 737978.6064288551,
+          "positive_sum": 737978.6064288551,
+          "negative_sum": 0.0,
+          "positive_points": 24,
+          "negative_points": 0
+        },
+        "camera": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 44773.35143885853,
+          "absolute_sum": 45932.98141467948,
+          "positive_sum": 45353.16642676901,
+          "negative_sum": -579.8149879104732,
+          "positive_points": 17,
+          "negative_points": 7
+        },
+        "point": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 7804565.931771416,
+          "absolute_sum": 7806724.813837628,
+          "positive_sum": 7805645.372804522,
+          "negative_sum": -1079.441033105442,
+          "positive_points": 20,
+          "negative_points": 4
+        },
+        "cross": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": -7111360.676781421,
+          "absolute_sum": 7115564.592434,
+          "positive_sum": 2101.957826289855,
+          "negative_sum": -7113462.63460771,
+          "positive_points": 12,
+          "negative_points": 12
+        }
+      },
+      "point_error_bins": {
+        "track_length": {
+          "0-1": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "2": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "3-5": {
+            "points": 24,
+            "nonfinite_points": 0,
+            "signed_sum": 7804565.931771416,
+            "absolute_sum": 7806724.813837628,
+            "positive_sum": 7805645.372804522,
+            "negative_sum": -1079.441033105442,
+            "positive_points": 20,
+            "negative_points": 4
+          },
+          ">5": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        },
+        "parallax": {
+          "<1deg": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "1-5deg": {
+            "points": 1,
+            "nonfinite_points": 0,
+            "signed_sum": -909.7366466265971,
+            "absolute_sum": 909.7366466265971,
+            "positive_sum": 0.0,
+            "negative_sum": -909.7366466265971,
+            "positive_points": 0,
+            "negative_points": 1
+          },
+          ">5deg": {
+            "points": 23,
+            "nonfinite_points": 0,
+            "signed_sum": 7805475.668418043,
+            "absolute_sum": 7805815.077191001,
+            "positive_sum": 7805645.372804522,
+            "negative_sum": -169.70438647884492,
+            "positive_points": 20,
+            "negative_points": 3
+          },
+          "undefined": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        }
+      },
+      "top200_absolute_point_error": {
+        "count": 24,
+        "absolute_sum": 7806724.813837628,
+        "signed_sum": 7804565.931771416,
+        "fraction_of_absolute_point_error": 1.0,
+        "point_indices": [
+          10,
+          1,
+          23,
+          0,
+          22,
+          18,
+          5,
+          15,
+          16,
+          19,
+          17,
+          3,
+          12,
+          9,
+          20,
+          21,
+          7,
+          11,
+          6,
+          14,
+          13,
+          4,
+          2,
+          8
+        ],
+        "point_signed_errors": [
+          7678626.5505537335,
+          100824.02255245812,
+          14835.155587667236,
+          2448.1960765267945,
+          2213.2897168449285,
+          1918.0322260044547,
+          1147.1877581922333,
+          1014.3198449262093,
+          966.1963853563589,
+          -909.7366466265971,
+          791.5951306827637,
+          260.0633679910646,
+          233.0640279981624,
+          115.8379532487416,
+          -101.25181241987032,
+          77.19765127335162,
+          61.31023547574273,
+          55.1666141033233,
+          -55.055455141660985,
+          31.19925402073622,
+          -13.39711891731362,
+          12.891071978592635,
+          8.226866956357426,
+          5.869929083348136
+        ],
+        "track_lengths": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "parallax_degrees": [
+          9.456817434935124,
+          14.94220600504889,
+          94.96509351043765,
+          12.598397042693977,
+          18.48352740815184,
+          36.51034367358094,
+          47.06639691843892,
+          21.77597035885221,
+          51.89164647348644,
+          4.619543059674491,
+          31.682803990913524,
+          26.731509611813806,
+          30.235445410864454,
+          37.979379950420046,
+          8.075255373574134,
+          23.342473565771094,
+          5.755055914985482,
+          29.90743579242051,
+          31.95275555968376,
+          20.3153712048784,
+          29.30832624028265,
+          29.686165931210876,
+          16.721978355908895,
+          20.771989207316814
+        ]
+      },
+      "flings": {
+        "scene_radius": 1.0158524227367445,
+        "count": 11,
+        "maximum_displacement": 17.39905506851012,
+        "median_displacement": 0.9377889046040009,
+        "p95_displacement": 10.996561725767865
+      },
+      "cheirality_flip_observations": {
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "behind_camera_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "projection_horizon_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "invalid_projection_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "point_equation": {
+        "absolute_residual_norm": 2.648881790803603e-10,
+        "rhs_norm": 190994.56892484418,
+        "relative_residual_norm": 1.386888541236966e-15,
+        "maximum_point_absolute_residual_norm": 2.6210278535640566e-10,
+        "diagonal_source": "saved_Cdiag",
+        "tau": 0.1,
+        "tau_equals_lambda": true,
+        "equation": "Jp^T (r+Jc dc+Jp dp) + diag(damping) dp = 0",
+        "scope": "independent residual of this actual direction, including clipped back-substitution; no stationarity certificate"
+      },
+      "cpu_audit_seconds": 0.0010508210398256779,
+      "direction_sha256": "8b6da4597e358bb3107496102bd2baf1692906c5e9ef1e4cb9887e0169258bef"
+    },
+    {
+      "arm": "exact_clip",
+      "rep": 2,
+      "native": {
+        "arm": "exact_clip",
+        "rep": 2,
+        "cost": 1347872.6363437013,
+        "prediction": 354979.94293202984,
+        "decrease": -983356.4424396034,
+        "rho": -2.770174659214176,
+        "camera_norm": 245.38404495694627,
+        "pcg_iterations": 18,
+        "true_residual": 3.3128087385347504e-11,
+        "certified": 1,
+        "seconds": 0.02833745,
+        "reason": "true_residual"
+      },
+      "source_reference_solve_certified": true,
+      "direction_label": "certified_reference",
+      "clipped": true,
+      "linear_certificate_applies_to": "source_unclipped_camera_solve",
+      "valid_finite_direction": true,
+      "finite_scores_and_predictions": true,
+      "eligible_for_solve_model_conclusion": true,
+      "costs": {
+        "initial": 364516.19390409795,
+        "full": 1347872.6363437013,
+        "camera": 189599.53772570455,
+        "point": 3031291.6863917015
+      },
+      "predictions": {
+        "full": 354979.94293203,
+        "camera": 204018.74319601152,
+        "point": 277382.3485063597
+      },
+      "true_decreases": {
+        "full": -983356.4424396032,
+        "camera": 174916.6561783934,
+        "point": -2666775.4924876033
+      },
+      "rho": {
+        "full": -2.770174659214174,
+        "camera": 0.857355816618975,
+        "point": -9.614077849032492
+      },
+      "prediction_absolute_term_scales": {
+        "full": 956744.0957839207,
+        "camera": 325372.05424730084,
+        "point": 515215.6035560366
+      },
+      "native_agreement": {
+        "initial_cost": {
+          "status": "within_budget",
+          "cpu": 364516.19390409795,
+          "native": 364516.1939040979,
+          "absolute_error": 5.820766091346741e-11,
+          "normalization_scale": 364516.19390409795,
+          "normalized_error": 1.5968470506081684e-16,
+          "tolerance": 0.00018226809695204898
+        },
+        "candidate_cost": {
+          "status": "within_budget",
+          "cpu": 1347872.6363437013,
+          "native": 1347872.6363437013,
+          "absolute_error": 0.0,
+          "normalization_scale": 1347872.6363437013,
+          "normalized_error": 0.0,
+          "tolerance": 0.0006739463181718508
+        },
+        "prediction": {
+          "status": "within_budget",
+          "cpu": 354979.94293203,
+          "native": 354979.94293202984,
+          "absolute_error": 1.7462298274040222e-10,
+          "normalization_scale": 956744.0957839207,
+          "normalized_error": 1.8251796223244274e-16,
+          "tolerance": 0.0004783820478919604
+        },
+        "true_decrease": {
+          "status": "within_budget",
+          "cpu": -983356.4424396032,
+          "native": -983356.4424396034,
+          "absolute_error": 2.3283064365386963e-10,
+          "normalization_scale": 1712388.8302477992,
+          "normalized_error": 1.3596832655126393e-16,
+          "tolerance": 0.0008562044151238997
+        }
+      },
+      "model_error": {
+        "full": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 1338336.3853716333,
+          "absolute_sum": 1338458.509573094,
+          "positive_sum": 1338397.4474723637,
+          "negative_sum": -61.06210073045847,
+          "positive_points": 22,
+          "negative_points": 2
+        },
+        "camera": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 29102.087017618116,
+          "absolute_sum": 29103.107430114098,
+          "positive_sum": 29102.597223866105,
+          "negative_sum": -0.5102062479903537,
+          "positive_points": 23,
+          "negative_points": 1
+        },
+        "point": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": 2944157.840993963,
+          "absolute_sum": 2944642.8627190324,
+          "positive_sum": 2944400.351856498,
+          "negative_sum": -242.51086253457981,
+          "positive_points": 21,
+          "negative_points": 3
+        },
+        "cross": {
+          "points": 24,
+          "nonfinite_points": 0,
+          "signed_sum": -1634923.5426399482,
+          "absolute_sum": 1636087.2258697988,
+          "positive_sum": 581.8416149253273,
+          "negative_sum": -1635505.3842548735,
+          "positive_points": 11,
+          "negative_points": 13
+        }
+      },
+      "point_error_bins": {
+        "track_length": {
+          "0-1": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "2": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "3-5": {
+            "points": 24,
+            "nonfinite_points": 0,
+            "signed_sum": 2944157.840993963,
+            "absolute_sum": 2944642.8627190324,
+            "positive_sum": 2944400.351856498,
+            "negative_sum": -242.51086253457981,
+            "positive_points": 21,
+            "negative_points": 3
+          },
+          ">5": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        },
+        "parallax": {
+          "<1deg": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          },
+          "1-5deg": {
+            "points": 1,
+            "nonfinite_points": 0,
+            "signed_sum": 16390.70033902775,
+            "absolute_sum": 16390.70033902775,
+            "positive_sum": 16390.70033902775,
+            "negative_sum": 0.0,
+            "positive_points": 1,
+            "negative_points": 0
+          },
+          ">5deg": {
+            "points": 23,
+            "nonfinite_points": 0,
+            "signed_sum": 2927767.1406549355,
+            "absolute_sum": 2928252.162380005,
+            "positive_sum": 2928009.65151747,
+            "negative_sum": -242.51086253457981,
+            "positive_points": 20,
+            "negative_points": 3
+          },
+          "undefined": {
+            "points": 0,
+            "nonfinite_points": 0,
+            "signed_sum": 0.0,
+            "absolute_sum": 0.0,
+            "positive_sum": 0.0,
+            "negative_sum": 0.0,
+            "positive_points": 0,
+            "negative_points": 0
+          }
+        }
+      },
+      "top200_absolute_point_error": {
+        "count": 24,
+        "absolute_sum": 2944642.8627190324,
+        "signed_sum": 2944157.840993963,
+        "fraction_of_absolute_point_error": 1.0,
+        "point_indices": [
+          10,
+          1,
+          23,
+          19,
+          18,
+          0,
+          5,
+          16,
+          17,
+          22,
+          12,
+          15,
+          9,
+          3,
+          4,
+          20,
+          21,
+          7,
+          14,
+          6,
+          13,
+          2,
+          8,
+          11
+        ],
+        "point_signed_errors": [
+          2712903.656087797,
+          165614.265203008,
+          38314.77233655946,
+          16390.70033902775,
+          2206.6528949033363,
+          2161.164191184105,
+          1963.2305012557765,
+          1935.7009528002875,
+          898.9243549530302,
+          457.3434480196515,
+          312.95679531102985,
+          311.5078976525689,
+          302.41359855140394,
+          282.44452645648136,
+          174.4816569773795,
+          -172.1454378759914,
+          101.73517601134486,
+          -68.51232948110237,
+          29.693946280625692,
+          21.06866815904943,
+          13.243005925214558,
+          3.150455252308774,
+          -1.853095177486054,
+          1.245820411917347
+        ],
+        "track_lengths": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "parallax_degrees": [
+          9.456817434935124,
+          14.94220600504889,
+          94.96509351043765,
+          4.619543059674491,
+          36.51034367358094,
+          12.598397042693977,
+          47.06639691843892,
+          51.89164647348644,
+          31.682803990913524,
+          18.48352740815184,
+          30.235445410864454,
+          21.77597035885221,
+          37.979379950420046,
+          26.731509611813806,
+          29.686165931210876,
+          8.075255373574134,
+          23.342473565771094,
+          5.755055914985482,
+          20.3153712048784,
+          31.95275555968376,
+          29.30832624028265,
+          16.721978355908895,
+          20.771989207316814,
+          29.90743579242051
+        ]
+      },
+      "flings": {
+        "scene_radius": 1.0158524227367445,
+        "count": 13,
+        "maximum_displacement": 22.03179743784072,
+        "median_displacement": 1.0294030332572568,
+        "p95_displacement": 11.609103977899458
+      },
+      "cheirality_flip_observations": {
+        "full": 4,
+        "camera": 0,
+        "point": 4
+      },
+      "behind_camera_observations": {
+        "initial": 0,
+        "full": 4,
+        "camera": 0,
+        "point": 4
+      },
+      "projection_horizon_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "invalid_projection_observations": {
+        "initial": 0,
+        "full": 0,
+        "camera": 0,
+        "point": 0
+      },
+      "point_equation": {
+        "absolute_residual_norm": 2.666159191749807e-10,
+        "rhs_norm": 375441.23341280187,
+        "relative_residual_norm": 7.101402175552558e-16,
+        "maximum_point_absolute_residual_norm": 2.6324530345743225e-10,
+        "diagonal_source": "saved_Cdiag",
+        "tau": 0.1,
+        "tau_equals_lambda": true,
+        "equation": "Jp^T (r+Jc dc+Jp dp) + diag(damping) dp = 0",
+        "scope": "independent residual of this actual direction, including clipped back-substitution; no stationarity certificate"
+      },
+      "cpu_audit_seconds": 0.0010455208830535412,
+      "direction_sha256": "ed645c9ad308012c89b0b999b381bec1c96991d9e88028ae9d2f0572f9409bd8"
+    }
+  ],
+  "source_certification_screen": {
+    "status": "mechanism_screen_only",
+    "comparisons": [
+      {
+        "rep": 0,
+        "classification": "both_model_ratios_poor_inspect_signed_decomposition"
+      },
+      {
+        "rep": 1,
+        "classification": "both_model_ratios_poor_inspect_signed_decomposition"
+      },
+      {
+        "rep": 2,
+        "classification": "both_model_ratios_poor_inspect_signed_decomposition"
+      }
+    ],
+    "warning": "No causal block attribution, hit-rate claim, or solver promotion follows from this screen"
+  },
+  "point_array_archives": [],
+  "point_array_bytes": 0,
+  "cpu_total_seconds": 0.015549579169601202,
+  "scope": "Fixed-state diagnostic only; instrumented/CPU elapsed time is not native solver performance"
+}
