@@ -18,3 +18,17 @@ Large endpoint states and diagnostic arrays are ignored here but are retained
 losslessly with hashes and restoration metadata.  Compact protocols, code,
 tables, and verdicts are committed.
 
+Current decisions:
+
+- A1 exact targeted two-view repair closes the recorded E4 point-level model
+  error, but its native greedy use worsens Venice and does not improve the
+  Final3068 hit rate.
+- A2 adaptive robust-stage exit loses the wave-4 O5 signal; A4 `rho_min=1e-3`
+  is unresolved on Final3068 and significantly worse on Venice.
+- B0 assigns 53.19% of practical-panel native wall to Krylov work.
+- B3's phase-switched Schur-Jacobi arm is rejected despite selected product
+  savings: it is slower overall and loses tail reliability.  Nystrom is not
+  pursued on that base.
+- B1 factored Jacobian storage is the next speed experiment because it attacks
+  bandwidth in Krylov, reduced-RHS, point-factor, and prediction kernels while
+  preserving the mathematical operator.
