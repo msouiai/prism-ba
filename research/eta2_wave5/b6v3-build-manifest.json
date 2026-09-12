@@ -1,0 +1,43 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/build/b6v3.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/build/prism-b6v3",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "source_sha256": "e1d36ef1370aa47ff93b8639cd23c18f11ae582331e0b5a119ae9242652573b0",
+  "binary_sha256": "cd0c82bf5ae5ad7e1d50ad2347f4101edc72df031142c3681fc4fd5f2fe64014",
+  "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "reversible_patch_count": 7,
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave5/build_b6v3.py": "6e60cb0b71f4f50064c404c96a4f2751e3c441bc437de6086a64590314fabea2",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/cg_latency_exact.cuh": "69cb905688bf3f48b37caccb1b39a323f9270958e0ab17cdaf58df9c4466ec5a",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/vector_rounding_audit.cu": "2294efc2dbbe0c529e3cb22244966681b8662b55e952efaf239ad7ef4dc781c1"
+  },
+  "protocol_sha256": "5216a18ee4c71872de6f53dc83089845d13f5f1d0a650a8c517045e8b20a8523",
+  "vector_audit_command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/vector_rounding_audit.cu",
+    "-o",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/build/b6v3-vector-audit",
+    "-lcublas"
+  ],
+  "vector_audit_output": "VECTOR_ROUNDING_AUDIT n=1000003 mismatch_x=0 mismatch_r=0 mismatch_p=0"
+}

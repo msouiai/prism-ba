@@ -46,3 +46,7 @@ Current decisions:
   practical-panel geometric mean, identical work counts, 8/10 Final3068 hits
   in both arms, and no Venice endpoint movement.  It remains an overlay while
   exact-rounding vector fusion is tested for the remaining launch overhead.
+- B6v3 exact-rounding vector fusion passes a 1,000,003-element bitwise audit
+  but is rejected: 0.24% panel gain versus 1.44% for dots-only in the same
+  three-arm cohort.  Its custom kernels help deep CG and do not pay reliably
+  in the smallest cells.
