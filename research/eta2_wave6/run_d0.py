@@ -60,10 +60,10 @@ def add_trace_fields(row):
                                  if not x.startswith("#")))
     row["accepted_cost_strings"] = [x["cost"] for x in curves]
     row["accepted_cost_hash"] = canonical_hash(row["accepted_cost_strings"])
-    prefixes = ("PCG_PREP ", "ATTR_RADIUS ", "CLASSICAL_LM ", "POINT_SAFE ",
-                "  MFCG it ", "NUMERIC_REPAIR ")
+    prefixes = ("PCG_PREP ", "ATTR_RADIUS ", "CLASSICAL_LM ", "POINT_SAFE o=",
+                "MFCG it ", "NUMERIC_REPAIR ")
     lines = [line.strip() for line in (folder / "stdout.log").read_text().splitlines()
-             if line.startswith(prefixes)]
+             if line.strip().startswith(prefixes)]
     row["decision_lines"] = lines
     row["decision_hash"] = canonical_hash(lines)
     N.write(folder / "result.json", row)
@@ -136,6 +136,10 @@ def main():
         print(json.dumps(reg, indent=2))
         return
     rows = execute(reg) if args.stage == "run" else json.loads((P / "d0v3-results.json").read_text())
+    # Re-normalize from immutable raw logs so a harness-only normalization
+    # correction can be audited without rerunning the numerical experiment.
+    rows = [add_trace_fields(row) for row in rows]
+    N.write(P / "d0v3-results.json", rows)
     result = summarize(reg, rows)
     print(json.dumps(result, indent=2))
     if not result["passed"]:
