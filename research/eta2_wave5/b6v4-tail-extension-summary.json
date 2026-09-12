@@ -1,0 +1,103 @@
+{
+  "protocol_sha256": "1cd36f8e5f6dca8800a3ab611efc23673fa317a73c11a4de2155ab93dfd7f041",
+  "cohort_sources": {
+    "controls": [
+      "b6v4-tails-results.json",
+      "b6v5-tails-final-results.json"
+    ],
+    "active": [
+      "b6v4-tails-results.json",
+      "b6v4-tail-extension-results.json"
+    ]
+  },
+  "arms": {
+    "off": {
+      "n": 30,
+      "hits": 19,
+      "hit_rate": 0.6333333333333333,
+      "wilson95": [
+        0.4551356365479487,
+        0.7812607919389929
+      ],
+      "conditional_target_median": 3.9787,
+      "conditional_target_range": [
+        1.771,
+        7.1189
+      ],
+      "endpoint_median": 1743711.0672928612,
+      "endpoint_range": [
+        1729654.3380187424,
+        1951851.9615984506
+      ]
+    },
+    "prep": {
+      "n": 30,
+      "hits": 14,
+      "hit_rate": 0.4666666666666667,
+      "wilson95": [
+        0.30232388907699753,
+        0.638577003801267
+      ],
+      "conditional_target_median": 3.0726,
+      "conditional_target_range": [
+        1.7289,
+        4.0923
+      ],
+      "endpoint_median": 1758111.081368493,
+      "endpoint_range": [
+        1736300.2195386465,
+        1945703.9221276105
+      ]
+    },
+    "dots": {
+      "n": 30,
+      "hits": 18,
+      "hit_rate": 0.6,
+      "wilson95": [
+        0.42320360253322475,
+        0.7540937188319815
+      ],
+      "conditional_target_median": 3.97315,
+      "conditional_target_range": [
+        1.5528,
+        6.4559
+      ],
+      "endpoint_median": 1743795.862139084,
+      "endpoint_range": [
+        1709925.0436231392,
+        1947228.727820838
+      ]
+    },
+    "dots-prep": {
+      "n": 30,
+      "hits": 17,
+      "hit_rate": 0.5666666666666667,
+      "wilson95": [
+        0.3919730700081361,
+        0.7262251442353347
+      ],
+      "conditional_target_median": 3.5002,
+      "conditional_target_range": [
+        1.8657,
+        6.5845
+      ],
+      "endpoint_median": 1743881.7846163777,
+      "endpoint_range": [
+        1736229.9314967426,
+        1952576.5292659742
+      ]
+    }
+  },
+  "comparisons": {
+    "prep_vs_off": {
+      "hit_rate_delta": -0.16666666666666663,
+      "fisher_two_sided_p": 0.29930159468235973,
+      "evidence_of_registered_loss": false
+    },
+    "dots-prep_vs_dots": {
+      "hit_rate_delta": -0.033333333333333326,
+      "fisher_two_sided_p": 1.0,
+      "evidence_of_registered_loss": false
+    }
+  }
+}

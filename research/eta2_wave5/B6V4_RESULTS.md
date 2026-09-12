@@ -3,11 +3,13 @@
 ## Verdict
 
 The full preparation arm is the largest transparent throughput improvement in
-wave 5, but it remains a research candidate pending a larger Final3068
-distribution gate.  It is **6.73% faster** on the nine-cell practical panel
-and **2.00% faster** on Muell, with identical work on stable cells.  Combined
-with B6v2 dots, it is **7.78% faster** than off on the panel and **2.35%
-faster** on Muell.
+wave 5.  It is **6.73% faster** on the nine-cell practical panel and **2.00%
+faster** on Muell, with identical work on stable cells.  Combined with B6v2
+dots, it is **7.78% faster** than off on the panel and **2.35% faster** on
+Muell.  The preregistered N=30 Final3068 extension does not establish equal
+reliability for preparation pruning alone.  It leaves the combined dots+prep
+arm as the defensible research candidate, while the frozen champion remains
+unchanged.
 
 The arithmetic audit passed bit-for-bit for point factor plus solve, direct
 equilibration, and fused RHS finalisation.  The fourth change removes a Schur
@@ -63,6 +65,31 @@ not used to promote the pruning arm.  A preregistered extension pools the
 arithmetic-identical controls from B6v4 and B6v5 and adds 20 active runs per
 pruning arm.
 
+## Preregistered N=30 tail extension
+
+The extension was fixed before the added runs.  It pooled the pre-existing
+off and dots controls from B6v4 and B6v5, which execute the same arithmetic in
+each respective arm, and added 20 fresh runs to each active B6v4 arm.  The
+registered evidence-of-loss boundary was a hit-rate reduction of at least 15
+percentage points with two-sided Fisher exact `p < 0.05`.
+
+| Arm | Hits | Wilson 95% interval | Conditional target-time median [range] | Endpoint median |
+|---|---:|---:|---:|---:|
+| off | 19/30 | 45.5--78.1% | 3.979 [1.771, 7.119] s | 1,743,711.07 |
+| prep | 14/30 | 30.2--63.9% | 3.073 [1.729, 4.092] s | 1,758,111.08 |
+| dots | 18/30 | 42.3--75.4% | 3.973 [1.553, 6.456] s | 1,743,795.86 |
+| dots+prep | 17/30 | 39.2--72.6% | 3.500 [1.866, 6.585] s | 1,743,881.78 |
+
+Prep/off differs by -16.67 percentage points, but the evidence remains
+unresolved (`p=0.2993`); failure to reject a loss is not evidence of
+equivalence.  This prevents promotion of preparation pruning by itself.
+Dots+prep/dots differs by only -3.33 points (`p=1.0`), while conditional
+target time is 11.9% lower, although the ranges overlap.  Together with the
+stable-panel and Muell results, the combined arm is the strongest wave-5
+systems candidate.  A stronger reliability-equivalence claim would require a
+larger cohort or a paired deterministic design that this stochastic solver
+does not currently provide.
+
 ## Durable finding
 
 The original broad fusion suggestion was partly obsolete: the champion
@@ -70,3 +97,7 @@ already fused RHS and diagonal construction.  The useful optimization was
 found by following the value's lifetime and proving that half of that fused
 kernel's output was dead under classical LM.  This is a concrete example of
 why a named “fused kernel” is not evidence that its work is needed.
+
+Compact extension evidence is in `B6V4_TAIL_EXTENSION_PROTOCOL.md`,
+`b6v4-tail-extension-results.json`, and
+`b6v4-tail-extension-summary.json`.

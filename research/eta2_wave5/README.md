@@ -59,3 +59,13 @@ Current decisions:
   A loose forcing tolerance defines a set of valid directions rather than one
   direction, so ordinary iterative-refinement guarantees do not make this a
   transparent acceleration.  The arm is rejected before Muell and tail runs.
+- B6v4 removes preparation work whose Schur-diagonal output is immediately
+  discarded by the frozen classical-LM path.  Combined with dots-only batching
+  it is 7.78% faster on the practical panel and 2.35% faster on Muell, with
+  unchanged stable-cell work counts.  The N=30 Final3068 extension gives
+  17/30 hits versus 18/30 for dots-only.  This combined arm is the strongest
+  wave-5 research candidate; the intervals are still too wide for a formal
+  reliability-equivalence claim.
+- B6v5 preserves the old RHS atomic work and applies only three bitwise fusions.
+  It is 1.79% faster on the panel but neutral on Muell, confirming that the
+  discarded diagonal work is the source of B6v4's large-scene gain.
