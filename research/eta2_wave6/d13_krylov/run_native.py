@@ -94,6 +94,18 @@ def enrich(row: dict) -> dict:
             "products": int(summary[3]),
             "basis_vectors": int(summary[4]),
         }
+    restart = re.search(
+        r"D13_RESTART summary solves=(\d+) touched=(\d+) replacements=(\d+) depth=(\d+) periodic=(\d+)",
+        stdout,
+    )
+    if restart:
+        row["restart"] = {
+            "solves": int(restart[1]),
+            "touched": int(restart[2]),
+            "replacements": int(restart[3]),
+            "depth": int(restart[4]),
+            "periodic": bool(int(restart[5])),
+        }
     N.write(folder / "result.json", row)
     return row
 
@@ -152,6 +164,17 @@ def summarize(rows: list[dict], arms: tuple[str, ...] = ("control", "gmres8")) -
                     item["products"] for item in details
                 )
                 record[arm]["basis_vectors"] = sorted({item["basis_vectors"] for item in details})
+            restart_details = [row["restart"] for row in group if "restart" in row]
+            if restart_details:
+                record[arm]["median_restart_replacements"] = statistics.median(
+                    item["replacements"] for item in restart_details
+                )
+                record[arm]["median_restart_touched"] = statistics.median(
+                    item["touched"] for item in restart_details
+                )
+                record[arm]["median_restart_solves"] = statistics.median(
+                    item["solves"] for item in restart_details
+                )
         if len(arms) == 2 and all(record[arm]["median_target_seconds"] is not None for arm in arms):
             record["time_ratio"] = (
                 record[arms[1]]["median_target_seconds"] /

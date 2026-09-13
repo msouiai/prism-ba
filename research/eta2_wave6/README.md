@@ -73,6 +73,12 @@ Current high-level results:
   the nine-cell panel, loses one tight Trafalgar hit, and turns Muell from 3/3
   hits at 4.22 s into 0/3 at the 12 s cap.  Its different early directions
   prevent the solver from reaching the states on which the isolated solve won.
+- periodic exact-residual Hcc-PCG restart at depth eight also fails natively.
+  It is 1.456x slower on the nine-cell panel, loses on every cell, and turns
+  Muell from 3/3 hits at 4.23 s into 0/3 within 12 s while increasing Schur
+  products from 980 to 3,309.  The fixed-witness gain was real, but repeated
+  conjugacy erasure changes and ultimately degrades the nonlinear trajectory.
 
-See `D13_NATIVE_RESULTS.md` for the current decision.  The scientific
+See `D13_NATIVE_RESULTS.md` and `D13B_PERIODIC_PCG_RESULTS.md` for the current
+decisions.  The scientific
 champion remains unchanged.
