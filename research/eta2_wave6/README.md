@@ -115,6 +115,13 @@ Current high-level results:
   fixed ratio threshold; in the fifth, camera 34 owns the oversized step but
   camera 32 owns the weakest local block.  The archived mechanism is real but
   conditional on the trajectory that created it, so D20 is not promoted.
+- a three-attempt arithmetic-trajectory portfolio turns B6v7's run-to-run
+  basin variation into 37/38 Final3068 target hits and crosses its registered
+  high-reliability SPRT boundary.  It rescues 13/14 first-attempt misses and
+  records mean/p90 wall of 5.93/10.04 s, better than the historical
+  Eta2-to-MFREE composition.  Its median is 4.263 s, above the registered
+  3.923 s ceiling and 11% slower than that historical cascade, so it is a
+  Pareto alternative rather than the new operational winner.
 
 See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
 `D14_CA_PCG_RESULTS.md`, `D15_COUNT_PRIOR_RESULTS.md`, and
@@ -122,4 +129,5 @@ See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
 follow-up is in `D17_COUNT_IMPULSE_RESULTS.md`, and the geometric-prior screen
 is in `D18_GEOMETRIC_PRIOR_RESULTS.md`.  D20's fixed and native conclusions are
 in `D20_SLOPPY_QUOTIENT_RESULTS.md` and `D20_NATIVE_RESULTS.md`.  The scientific
-champion remains unchanged.
+champion remains unchanged.  The portfolio result is in
+`D21_RESTART_PORTFOLIO_RESULTS.md`.
