@@ -33,3 +33,8 @@ one-product pipeline fill/drain cost on a hard system.
 This is established Krylov algebra, not an Eta2 novelty claim.  Its purpose is
 to decide whether the remaining synchronization ceiling on this single GPU is
 large enough to exploit.
+
+The completed D14 screen finds no crossover.  Reduction phases fall from 259
+to 130 on the capped Muell system with a `1.0001x` time ratio; the converged
+Muell system is `1.023x` slower because of its one extra product.  The native
+gate fails, so this cell is now closed for the measured single-GPU path.

@@ -78,7 +78,12 @@ Current high-level results:
   Muell from 3/3 hits at 4.23 s into 0/3 within 12 s while increasing Schur
   products from 980 to 3,309.  The fixed-witness gain was real, but repeated
   conjugacy erasure changes and ultimately degrades the nonlinear trajectory.
+- one-reduction Chronopoulos--Gear PCG halves scalar reduction phases but has
+  no fixed-system speed crossover on this GPU.  The capped Muell capture is
+  unchanged at 399.7 ms, the converged Muell capture is 2.3% slower from its
+  extra drain product, and shallow systems are 30--49% slower.  Numerical
+  audits pass; the native gate is not opened.
 
-See `D13_NATIVE_RESULTS.md` and `D13B_PERIODIC_PCG_RESULTS.md` for the current
-decisions.  The scientific
+See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`, and
+`D14_CA_PCG_RESULTS.md` for the current decisions.  The scientific
 champion remains unchanged.
