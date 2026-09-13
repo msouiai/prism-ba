@@ -1,0 +1,211 @@
+{
+  "backend_probes": {
+    "cudss_0.8.0.10": {
+      "outcome": "terminated after >60 s in symbolic analysis",
+      "scene": "ladybug-598",
+      "usable": false,
+      "wheel_sha256": "602eb6e394c6595a698ed10b74cf5e251a0fbbd6e84da9a755e02fafb6c60ef1"
+    },
+    "cusolver_lowlevel": {
+      "outcome": "terminated after >90 s before analysis/factor result",
+      "scene": "ladybug-598",
+      "usable": false
+    },
+    "final1936_q3": {
+      "outcome": "terminated after >60 s in serial construction/factor path; no scored solve",
+      "reason": "frozen Hcc already reaches eta in one iteration (two products, 16.35 ms total)",
+      "usable": false
+    }
+  },
+  "final-1936": {
+    "frozen_hcc": {
+      "iterations": 1,
+      "products": 2,
+      "setup_ms": 0.116768003,
+      "solve_ms": 16.2262402,
+      "total_ms": 16.3468475,
+      "true_relative": 0.1668565384756593
+    },
+    "topology": {
+      "graph_edges": 1809641,
+      "graph_s": 0.462418103,
+      "nc": 1936,
+      "no": 5213733,
+      "np": 649673,
+      "pair_visits": 254128129,
+      "selected_edges_q2": 111161,
+      "selected_edges_q3": 178084,
+      "selection_s": 0.911127208,
+      "tree_s": 0.19424713
+    }
+  },
+  "gates": {
+    "calibration_iteration_match": true,
+    "calibration_residual_abs_delta": 1.2317924458216112e-13,
+    "fixed_cpu_gate_pass": true,
+    "ladybug_products_not_increased": true,
+    "muell_factor_fill_fraction_of_dense": 0.057025944420393,
+    "muell_factor_plus_solve_below_frozen": true,
+    "muell_product_reduction_fraction": 0.9523809523809523,
+    "native_backend_gate_pass": false
+  },
+  "ladybug-598": {
+    "arms": {
+      "0": {
+        "assembly_ms": 1.65604,
+        "factor_ms": 0.21795,
+        "factor_nnz": 16744,
+        "factor_plus_solve_ms": 2.135331,
+        "hit": 1,
+        "iterations": 2,
+        "matrix_nnz": 38870,
+        "neg": 0,
+        "offdiag_blocks": 0,
+        "preconditioner_ms": 0.18083,
+        "products": 3,
+        "selected": 0,
+        "solve_ms": 1.917381,
+        "symbolic_ms": 0.562521,
+        "true_relative": 0.4673798250864095
+      },
+      "2": {
+        "assembly_ms": 55.52284,
+        "factor_ms": 454.912947,
+        "factor_nnz": 2308520,
+        "factor_plus_solve_ms": 463.910012,
+        "hit": 1,
+        "iterations": 2,
+        "matrix_nnz": 917334,
+        "neg": 0,
+        "offdiag_blocks": 6863,
+        "preconditioner_ms": 7.069094,
+        "products": 3,
+        "selected": 138436,
+        "solve_ms": 8.997065,
+        "symbolic_ms": 38.999201,
+        "true_relative": 0.4229560353039166
+      },
+      "3": {
+        "assembly_ms": 64.332635,
+        "factor_ms": 594.825383,
+        "factor_nnz": 2739880,
+        "factor_plus_solve_ms": 605.469739,
+        "hit": 1,
+        "iterations": 2,
+        "matrix_nnz": 1292630,
+        "neg": 0,
+        "offdiag_blocks": 9795,
+        "preconditioner_ms": 8.714184,
+        "products": 3,
+        "selected": 174287,
+        "solve_ms": 10.644356,
+        "symbolic_ms": 37.116931,
+        "true_relative": 0.44517487142184686
+      }
+    },
+    "frozen_hcc": {
+      "iterations": 2,
+      "products": 3,
+      "setup_ms": 0.103744,
+      "solve_ms": 1.74268794,
+      "total_ms": 1.8538239,
+      "true_relative": 0.46737982509045145
+    },
+    "log_sha256": "94d2bfd235fae90e56e0724d8e9064b2bed5d640e5704da5e0e3ca107ad485d7",
+    "topology": {
+      "graph_edges": 45310,
+      "graph_s": 0.004691593,
+      "nc": 598,
+      "no": 304170,
+      "np": 69218,
+      "pair_visits": 1333786,
+      "selected_edges_q2": 6863,
+      "selected_edges_q3": 9795,
+      "selection_s": 0.007603984,
+      "tree_s": 0.006766014
+    }
+  },
+  "muell-gba146": {
+    "arms": {
+      "0": {
+        "assembly_ms": 1.878201,
+        "factor_ms": 0.18611,
+        "factor_nnz": 13804,
+        "factor_plus_solve_ms": 133.918933,
+        "hit": 1,
+        "iterations": 41,
+        "matrix_nnz": 32045,
+        "neg": 0,
+        "offdiag_blocks": 0,
+        "preconditioner_ms": 3.107651,
+        "products": 42,
+        "selected": 0,
+        "solve_ms": 133.732823,
+        "symbolic_ms": 0.45652,
+        "true_relative": 0.49729670082722005
+      },
+      "2": {
+        "assembly_ms": 156.889605,
+        "factor_ms": 82.696125,
+        "factor_nnz": 966572,
+        "factor_plus_solve_ms": 665.080652,
+        "hit": 0,
+        "iterations": 128,
+        "matrix_nnz": 868781,
+        "neg": 0,
+        "offdiag_blocks": 6537,
+        "preconditioner_ms": 180.627723,
+        "products": 129,
+        "selected": 627974,
+        "solve_ms": 582.384527,
+        "symbolic_ms": 25.943414,
+        "true_relative": 0.7711963404617493
+      },
+      "3": {
+        "assembly_ms": 301.382024,
+        "factor_ms": 111.592961,
+        "factor_nnz": 1122668,
+        "factor_plus_solve_ms": 119.363916,
+        "hit": 1,
+        "iterations": 1,
+        "matrix_nnz": 1306413,
+        "neg": 0,
+        "offdiag_blocks": 9956,
+        "preconditioner_ms": 1.623201,
+        "products": 2,
+        "selected": 915496,
+        "solve_ms": 7.770955,
+        "symbolic_ms": 45.475105,
+        "true_relative": 0.4965524494877158
+      }
+    },
+    "frozen_hcc": {
+      "iterations": 41,
+      "products": 42,
+      "setup_ms": 0.110848002,
+      "solve_ms": 131.085693,
+      "total_ms": 131.194748,
+      "true_relative": 0.49729670082734323
+    },
+    "log_sha256": "38500b806b9b65b4d88549a3aaae032da18cbc5817e4ab572f99078e617a91db",
+    "topology": {
+      "graph_edges": 39647,
+      "graph_s": 0.028674755,
+      "nc": 493,
+      "no": 2118671,
+      "np": 313987,
+      "pair_visits": 14368355,
+      "selected_edges_q2": 6537,
+      "selected_edges_q3": 9956,
+      "selection_s": 0.066156136,
+      "tree_s": 0.004461873
+    }
+  },
+  "source_hashes": {
+    "D11_VISIBILITY_SUBGRAPH_PROTOCOL.md": "11f88ec21b1bbed65e4d5cf5227c123276c684df1e82b2ba6595c4a1273fde15",
+    "build.py": "1f378a0ccc3f80127fe136ce1ae884b1d1904cf078dd0fdf582a836570de9b53",
+    "gsp_fixed.cu": "7883507e9c173b92d0403aad6af8191128e0769375872113ae01a606575ca05a",
+    "run.py": "afcd632e5ba1cc8c630cf5e0883246c2ef2ef657d40ee33e1be4512791f16e37",
+    "summarize.py": "e55bf7272668b4303a23d2a315fb987ceafa91bc3e5b1dbc1da40cbac6980d35"
+  }
+}

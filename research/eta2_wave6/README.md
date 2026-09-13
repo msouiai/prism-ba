@@ -48,6 +48,13 @@ Current high-level results:
   with 20 events in each class and nearly identical median concentration.  The
   preregistered diagnostic gate fails, so no active filter or threshold sweep
   is run.
+- a q=3 generalized visibility-subgraph preconditioner collapses the hard
+  Muell fixed solve from 42 products to 2.  Reused-symbolic CPU LDLT plus solve
+  is 119.36 ms versus frozen Hcc's 131.19 ms, but serial numeric formation adds
+  301.38 ms, Ladybug grows from 1.85 to 605.47 ms without saving a product,
+  and both available GPU sparse-direct backends take over 60 seconds in
+  symbolic analysis.  It is retained as a strong algebraic diagnostic and not
+  promoted into Eta2.
 
-See `D10_TRACK_DAMAGE_FILTER_RESULTS.md` for the current decision.  The scientific
+See `D11_VISIBILITY_SUBGRAPH_RESULTS.md` for the current decision.  The scientific
 champion remains unchanged.
