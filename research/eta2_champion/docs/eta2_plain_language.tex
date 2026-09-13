@@ -225,6 +225,47 @@ Because PCG stops early, its particular finite iterate matters.  Changing the pr
 
 This is the central clarification.
 
+\subsection{Where the measurement sits inside CG}
+
+There are two nested loops.  The \emph{outer} BA loop builds a local camera--point model and eventually decides whether to change the cameras and points.  Inside it, the \emph{inner} PCG loop approximately solves the reduced camera equation $A_\lambda z=b_\lambda$.  One BA outer iteration can therefore contain many PCG iterations.
+
+PCG does not jump directly to the final camera vector.  It builds an estimate $z$ by adding one internal search direction $p$ at a time.  A simplified preconditioned-CG iteration is:
+
+\begin{minipage}{\linewidth}
+\small
+\begin{verbatim}
+r = b - A*z                   # unsolved part of the equation
+y = ApplyPreconditioner(r)
+p = y                         # first internal search direction
+
+repeat:
+    w   = ApplyDampedSchur(p)  # w = A*p; the expensive operation
+    pAp = dot(p, w)            # denominator required by ordinary CG
+    pp  = dot(p, p)
+
+    if not (pAp > 1e-14*pp):  # Eta2's numerical-curvature guard
+        raise damping, rebuild, and restart PCG
+
+    alpha = dot(r, y) / pAp    # safe only when pAp is positive
+    z     = z + alpha*p
+    r_new = r - alpha*w
+    y_new = ApplyPreconditioner(r_new)
+    beta  = dot(r_new, y_new) / dot(r, y)
+    p     = y_new + beta*p
+    r, y  = r_new, y_new
+end
+\end{verbatim}
+\end{minipage}
+
+The vector $p$ in this code is \textbf{not yet the BA update}.  It is one direction used to construct the accumulated camera estimate $z$.  It contains scaled camera coordinates only; the point variables have already been eliminated mathematically and are represented implicitly inside \texttt{ApplyDampedSchur}.  The point update is recovered only after PCG finishes and the camera vector has been radius-limited.
+
+The position of the test is crucial: it occurs after computing $A_\lambda p$ and \emph{before} computing \texttt{alpha}.  Ordinary CG already needs $p^TA_\lambda p$ as the denominator of its step length.  If that number is negative, \texttt{alpha} points the wrong way for a convex quadratic.  If it is extremely close to zero, division can create a huge step.  Eta2 turns this already-required denominator into an explicit safety test.
+
+\plainbox{deepblue}{\textbf{What is actually added to CG?}
+The expensive Schur product $A_\lambda p$ and the dot product $p^TA_\lambda p$ are required by ordinary PCG.  Eta2 additionally forms $p^Tp$, compares the two numbers, and---only on failure---aborts that inner solve, raises damping, rebuilds the damped system, and restarts.  There is no extra nonlinear cost evaluation and no eigenvalue decomposition.}
+
+\subsection{Why the dot product measures directional curvature}
+
 During PCG, let $p$ be the current search direction in the scaled camera coordinates.  PCG already computes
 \[
   A_\lambda p
@@ -258,7 +299,7 @@ The coefficient $p^TA_\lambda p$ controls the bending along the line.  Division 
 \label{fig:curvature}
 \end{figure}
 
-The actual check in the frozen source is equivalent to:
+The core of the actual check in the frozen source is therefore:
 \begin{verbatim}
 Ap  = ApplyDampedSchur(p)
 pAp = dot(p, Ap)
@@ -271,6 +312,14 @@ else:
     continue the ordinary PCG recurrence
 \end{verbatim}
 Thus the check has almost no extra algebraic cost: $A_\lambda p$ and $p^TA_\lambda p$ are already needed for the ordinary PCG step length.
+
+For a tiny numerical example, take $p=(1,2)^T$ and a scaled quadratic operator $A=\operatorname{diag}(2,0.5)$.  CG obtains $Ap=(2,1)^T$, so
+\[
+  p^TAp=1\cdot2+2\cdot1=4,
+  \qquad p^Tp=1^2+2^2=5,
+  \qquad q=0.8.
+\]
+The positive result says that the quadratic bends upward along this one direction.  Eta2 performs exactly these operations on much larger camera vectors without ever storing $A$.
 
 \subsection{How to interpret the sign}
 
@@ -360,6 +409,19 @@ For frozen blocks, increasing the coupled damping from $\lambda$ to $\lambda'$ i
 This is a directional guarantee in exact arithmetic.  It is not a guarantee that every direction of the rebuilt numerical operator is positive, so the next PCG run still checks its own directions.
 
 \plainbox{greenbox}{\textbf{Why the floor persists.}  If the controller immediately returned to the tiny damping that exposed the numerical failure, it could repeat the same breakdown.  Retaining the repaired value as a lower bound prevents that immediate loop.  The floor can over-damp later work, so it is a bounded safeguard rather than a free acceleration.}
+
+\subsection{Is the curvature guard Eta2's biggest change?}
+
+\textbf{No.}  It is best viewed as a rare robustness mechanism.
+
+\begin{itemize}
+  \item \textbf{It did not produce the headline speed result.}  The guard recorded zero repairs before the registered practical targets, including the Final-13682 comparison.  A mechanism that never fired cannot explain those timings.
+  \item \textbf{The check itself is standard CG mathematics.}  Positive $p^TAp$ is required by ordinary CG.  The distinctive research result is the captured BA-specific mixed-storage failure, its thin-track diagnosis, and the persistent coupled-damping response---not the invention of the dot product.
+  \item \textbf{The main named speed-oriented change is the inexact solve policy.}  Eta2 deliberately permits earlier PCG termination through its doubled adaptive forcing tolerance, then validates the resulting full nonlinear candidate.  The six-scene selection study measured a $1.1633\times$ geometric-mean improvement for the combined global $\lambda_0=0.1$/Eta2 configuration over its incumbent; because the initialization and forcing choice changed together, that number is not a clean one-factor attribution to Eta2 alone.
+  \item \textbf{The overall winner is an integration.}  Matrix-free Schur products, the Eta2 forcing rule, camera-radius control, prediction on the actually modified step, point safeguards, and the numerical guard work at different stages.  The evidence does not isolate the curvature recovery as the dominant novelty or speed contribution.
+\end{itemize}
+
+The guard can still matter late in a difficult trajectory: without it, one bad denominator can invalidate the PCG recurrence or start a retry loop.  Its supported claim is safer continuation through an observed numerical pathology, rather than faster ordinary iterations.
 
 \section{\texorpdfstring{Curvature $q$ versus gain ratio $\rho$}{Curvature q versus gain ratio rho}}
 

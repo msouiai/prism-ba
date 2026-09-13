@@ -4,7 +4,7 @@ This directory contains the exact frozen source of the measured Prism champion a
 
 For the mathematical algorithm, read [Theory and novelty](docs/theory_and_novelty.md): the classical trust-region reference problem, Eta2's exact classification, the Schur/PCG equations, forcing and radius policies, nonlinear point safeguard, numerical recovery guarantees, evidence, and contribution boundaries. It also distinguishes the frozen solver from the separately reported Eta2/MFREE scheduler cascade.
 
-Two compiled reports are available: [the technical formulation, novelty, and results report](docs/eta2_formulation_novelty_results.pdf), and a [plain-language companion](docs/eta2_plain_language.pdf) that explains the trust-region formulation, curvature measurement, gain ratio, safeguards, and headline results step by step. Their LaTeX sources are stored beside the PDFs.
+Two compiled reports are available: [the technical formulation, novelty, and results report](docs/eta2_formulation_novelty_results.pdf), and a [plain-language companion](docs/eta2_plain_language.pdf) that explains the trust-region formulation, the exact location of the curvature check inside PCG, the gain ratio, safeguards, and headline results step by step. Their LaTeX sources are stored beside the PDFs.
 
 ## Build and run
 
