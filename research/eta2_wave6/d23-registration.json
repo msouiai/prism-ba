@@ -1,0 +1,172 @@
+{
+  "protocol_sha256": "b14aba5b783283f95b77aee361f8cf977c73fe345919cb234eccd7c95cc96e4a",
+  "build_manifest": {
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave6",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+      "/tmp/prism-wave6-d23/prism_d23.cu",
+      "-o",
+      "/tmp/prism-wave6-d23/prism-d23",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    "parent_source_sha256": "46ad1d3f68e7dfb14b82d6cbf27affc7a5c961d2c50edec7929647b7d9c3744c",
+    "derived_source_sha256": "4b8a9c05c7136a84eb3e49464bde96a5b4c0f96420d286e6ec3694cb070dfbbe",
+    "binary_sha256": "df3cbfca92a017fa87dffefbe2da658976ca5526e2fad00cfb8e03696c0b4e25",
+    "inherited_patch_count": 33,
+    "d23_patch_count": 2,
+    "sources": {
+      "/tmp/prism-ba-coarse/research/eta2_wave6/d23_terminal_block_gs/build.py": "ae1696c887733aad013a6eab63ac8bf4d53b7846548a7d6e9a1fa14cf02ab969",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/build_deterministic.py": "2a80ca57e9fd8a7595e5f74edfa7dbd7e1b481df9f35fa237863545f02d1e4ac"
+    },
+    "protocol_sha256": "b14aba5b783283f95b77aee361f8cf977c73fe345919cb234eccd7c95cc96e4a"
+  },
+  "runner_sha256": "d326a933896f3f98d95deed34c118f5910558653a6653786510d909d15b11b96",
+  "parent_binary": "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-deterministic",
+  "parent_sha256": "47e0cc61a6d8e19de832c5b1aed5555fd89dcfd7a6a75d9c9deab67fa7d10a17",
+  "derived_binary": "/tmp/prism-wave6-d23/prism-d23",
+  "derived_sha256": "df3cbfca92a017fa87dffefbe2da658976ca5526e2fad00cfb8e03696c0b4e25",
+  "flags": {
+    "OCA_W5_CG_DOTS": "1",
+    "OCA_W5_PREP_FUSE": "1",
+    "OCA_W5_PREP_CAMERA": "1",
+    "OCA_W5_PREP_MIN_CAMS": "128",
+    "OCA_W6_DETERMINISTIC": "1"
+  },
+  "epsilon": 1e-12,
+  "source": "/workspace/bal/final-3068.txt",
+  "source_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+  "target": 1744796.9841897595,
+  "cap": 60,
+  "screen_seeds": [
+    660068,
+    660069,
+    660070,
+    660071,
+    660072
+  ],
+  "extension_seeds": [
+    660073,
+    660074,
+    660075,
+    660076,
+    660077
+  ],
+  "compatibility": {
+    "scene": "ladybug-539",
+    "multiplier": 1.01,
+    "target": 165617.73918321263,
+    "cap": 5,
+    "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+    "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+    "cell": "ladybug-539-1.01"
+  },
+  "arm_order": "control,d23 on even pair; d23,control on odd pair",
+  "screen_gate": "advance iff >=1 D23-only target hit or median terminal relative decrease >0.0015",
+  "full_gate": {
+    "minimum_d23_only_hits": 2,
+    "maximum_control_only_hits": 0,
+    "maximum_median_invoked_native_wall_ratio": 1.2
+  },
+  "conditional": {
+    "venice52": {
+      "scene": "venice-52",
+      "path": "/workspace/bal/venice-52.txt",
+      "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "target": 243740.27,
+      "cap": 60,
+      "repetitions": 5
+    },
+    "practical": [
+      {
+        "scene": "ladybug-539",
+        "multiplier": 1.005,
+        "target": 164797.8493852759,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+        "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+        "cell": "ladybug-539-1.005"
+      },
+      {
+        "scene": "ladybug-539",
+        "multiplier": 1.01,
+        "target": 165617.73918321263,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+        "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+        "cell": "ladybug-539-1.01"
+      },
+      {
+        "scene": "ladybug-539",
+        "multiplier": 1.02,
+        "target": 167257.518779086,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+        "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+        "cell": "ladybug-539-1.02"
+      },
+      {
+        "scene": "trafalgar-138",
+        "multiplier": 1.005,
+        "target": 103088.39569543337,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+        "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+        "cell": "trafalgar-138-1.005"
+      },
+      {
+        "scene": "trafalgar-138",
+        "multiplier": 1.01,
+        "target": 103601.27328595793,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+        "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+        "cell": "trafalgar-138-1.01"
+      },
+      {
+        "scene": "trafalgar-138",
+        "multiplier": 1.02,
+        "target": 104627.02846700703,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+        "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+        "cell": "trafalgar-138-1.02"
+      },
+      {
+        "scene": "final-394",
+        "multiplier": 1.005,
+        "target": 306349.5931045434,
+        "cap": 8,
+        "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+        "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+        "cell": "final-394-1.005"
+      },
+      {
+        "scene": "final-394",
+        "multiplier": 1.01,
+        "target": 307873.7204334218,
+        "cap": 8,
+        "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+        "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+        "cell": "final-394-1.01"
+      },
+      {
+        "scene": "final-394",
+        "multiplier": 1.02,
+        "target": 310921.97509117844,
+        "cap": 8,
+        "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+        "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+        "cell": "final-394-1.02"
+      }
+    ],
+    "repetitions": 3
+  }
+}
