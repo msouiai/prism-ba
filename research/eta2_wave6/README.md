@@ -122,6 +122,13 @@ Current high-level results:
   Eta2-to-MFREE composition.  Its median is 4.263 s, above the registered
   3.923 s ceiling and 11% slower than that historical cascade, so it is a
   Pareto alternative rather than the new operational winner.
+- terminal exact two-view triangulation is a sound but immaterial stationarity
+  audit. Five deterministic Final3068 pairs remain 2/5 hits in both arms; on
+  the three misses it replaces 32,561 tracks but lowers terminal cost by only
+  0.001304% at the median, about 115x below the registered advancement bar.
+  Every preterminal path is exact and the kernel costs about 5 ms, so the
+  negative isolates the mechanism: the stopped gap is not fixed-camera
+  two-view point nonstationarity. D22 closes before its extension and controls.
 
 See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
 `D14_CA_PCG_RESULTS.md`, `D15_COUNT_PRIOR_RESULTS.md`, and
@@ -130,4 +137,5 @@ follow-up is in `D17_COUNT_IMPULSE_RESULTS.md`, and the geometric-prior screen
 is in `D18_GEOMETRIC_PRIOR_RESULTS.md`.  D20's fixed and native conclusions are
 in `D20_SLOPPY_QUOTIENT_RESULTS.md` and `D20_NATIVE_RESULTS.md`.  The scientific
 champion remains unchanged.  The portfolio result is in
-`D21_RESTART_PORTFOLIO_RESULTS.md`.
+`D21_RESTART_PORTFOLIO_RESULTS.md`. The terminal algebra audit is in
+`D22_TERMINAL_TRACK_POLISH_RESULTS.md`.
