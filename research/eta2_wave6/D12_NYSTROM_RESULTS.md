@@ -3,19 +3,20 @@
 ## Verdict
 
 The randomized Nyström correction is rejected.  On Muell outer 12, every
-delayed rank reaches the forcing gate after the same 13 PCG iterations and 14
+delayed rank reaches the forcing gate after the same 13 PCG iterations and 15
 solve products as a rank-zero restart at iteration 8.  Ranks 4, 8 and 16 add
-respectively 4, 8 and 16 sketch products and raise median wall from 43.46 ms
-to 56.90, 70.56 and 101.50 ms.  The low-rank factors change the final residual
+respectively 4, 8 and 16 sketch products and raise median wall from 46.51 ms
+to 59.88, 73.62 and 104.56 ms.  The low-rank factors change the final residual
 slightly but save no Krylov work.  Starting with Nyström is worse: rank 4 needs
 47 iterations versus frozen Hcc's 41, and higher ranks need 42--47.
 
 The attribution control is a positive result deserving its own native gate.
 A plain, mathematically valid PCG restart from the exact current residual at
 iteration 8 reduces the identical fixed solve from 41 iterations / 42 products
-/ 130.68 ms to 13 / 14 / 43.46 ms.  It leaves the shallow Ladybug and Final
-controls untouched because they finish before the trigger.  This is a 66.7%
-wall reduction and 66.7% product reduction without changing the matrix,
+/ 130.35 ms to 13 / 15 / 46.51 ms.  The extra product explicitly recomputes
+the current residual before the restart.  It leaves the shallow Ladybug and Final
+controls untouched because they finish before the trigger.  This is a 64.3%
+wall reduction and 64.3% product reduction without changing the matrix,
 preconditioner, RHS, forcing threshold, or accepted linear-residual criterion.
 It is not yet a BA speed claim: the native nonlinear trajectory and the set of
 triggered solves remain unmeasured.
@@ -27,12 +28,12 @@ are recomputed with the unchanged matrix-free operator.
 
 | Muell arm | Iterations | Solve products | Sketch products | Total products | Wall |
 |---|---:|---:|---:|---:|---:|
-| Frozen-equivalent Hcc | 41 | 42 | 0 | 42 | 130.68 ms |
-| Restart Hcc at 8 | **13** | **14** | 0 | **14** | **43.46 ms** |
+| Frozen-equivalent Hcc | 41 | 42 | 0 | 42 | 130.35 ms |
+| Restart Hcc at 8 | **13** | **15** | 0 | **15** | **46.51 ms** |
 | Nyström rank 4 from start | 47 | 48 | 4 | 52 | 163.67 ms |
-| Nyström rank 4 after 8 | 13 | 14 | 4 | 18 | 56.90 ms |
-| Nyström rank 8 after 8 | 13 | 14 | 8 | 22 | 70.56 ms |
-| Nyström rank 16 after 8 | 13 | 14 | 16 | 30 | 101.50 ms |
+| Nyström rank 4 after 8 | 13 | 15 | 4 | 19 | 59.88 ms |
+| Nyström rank 8 after 8 | 13 | 15 | 8 | 23 | 73.62 ms |
+| Nyström rank 16 after 8 | 13 | 15 | 16 | 31 | 104.56 ms |
 
 All rows hit the same `eta=0.5` true-residual gate.  The uninterrupted median
 is `0.49729670082728`; restart-only is `0.47888588637639`.  Nyström factor

@@ -59,8 +59,9 @@ Current high-level results:
   hard Muell system: ranks 4/8/16 save no post-switch Krylov work and only add
   4/8/16 sketch products.  Its mandatory attribution control uncovers a much
   stronger result: restarting the unchanged Hcc-PCG recurrence at iteration 8
-  cuts that fixed solve from 42 to 14 total products and from 130.68 to 43.46
-  ms, while shallow controls never trigger.  Nyström is closed; the restart
+  cuts that fixed solve from 42 to 15 total products and from 130.35 to 46.51
+  ms, including explicit residual replacement, while shallow controls never
+  trigger.  Nyström is closed; the restart
   signal advances to a native and residual-minimizing-Krylov follow-up.
 
 See `D12_NYSTROM_RESULTS.md` for the current decision.  The scientific

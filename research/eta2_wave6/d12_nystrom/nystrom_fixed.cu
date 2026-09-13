@@ -175,6 +175,13 @@ static SolveResult solve(DeviceSystem&s,int rank,uint64_t seed,bool dispatch){
       CK(cudaMemcpy(s.r,s.ap,(size_t)s.n*sizeof(double),cudaMemcpyDeviceToDevice));restart();continue;
     }
     if(dispatch&&!out.triggered&&out.iterations==8){
+      // A changed recurrence begins from the explicit residual.  Besides
+      // making the restart mathematically self-contained, this charges the
+      // same residual-replacement product required by a native integration.
+      apply_A(s,s.x,s.ap);++out.solve_products;CK(cudaMemcpy(s.r,s.b,(size_t)s.n*sizeof(double),cudaMemcpyDeviceToDevice));
+      double minus_one=-1;BK(cublasDaxpy(s.h,s.n,&minus_one,s.ap,1,s.r,1));
+      out.residual=std::sqrt(s.dot(s.r,s.r))/nb;
+      if(out.residual<=0.5){out.hit=true;break;}
       if(rank>0){nys=build_nystrom(s,rank,seed);out.sketch_ms=nys.setup_ms;out.sketch_products=nys.products;out.rank=nys.rank;
         out.theta_min=nys.theta_min;out.theta_max=nys.theta_max;out.factor_residual=nys.factor_residual;active=&nys;}
       out.triggered=true;restart();continue;
