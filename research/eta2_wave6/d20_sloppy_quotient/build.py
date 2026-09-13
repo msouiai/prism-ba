@@ -33,7 +33,7 @@ patch('''      if(attr_radius){
             else p20=d20->BuildAndProject<Fragment>(Gc?Gc:Gp,p.mf_cspt,p.mf_coff,Rf,Hcc,E,nobs,xs[0],q.top,fragment_slots);
             if(p20.trigger){PrismW6Dnrm2(blas,n_c,xs[0],1,&post);attr_raw_norm=post;}
           }
-          std::printf("D20_TEST o=%d retry=%d ratio=%.17g top=%d top_fraction=%.17g preliminary=%d weakest=%d trigger=%d removed_fraction=%.17g post_raw=%.17g post_ratio=%.17g\n",k,retries,q.ratio,q.top,q.top_fraction,(int)preliminary,p20.weakest,(int)p20.trigger,p20.removed_fraction,post,post/attr_R);
+          std::printf("D20_TEST o=%d retry=%d ratio=%.17g top=%d top_fraction=%.17g preliminary=%d weakest=%d trigger=%d removed_fraction=%.17g post_raw=%.17g post_ratio=%.17g\\n",k,retries,q.ratio,q.top,q.top_fraction,(int)preliminary,p20.weakest,(int)p20.trigger,p20.removed_fraction,post,post/attr_R);
         }
         attr_old_R=attr_R;
         if(attr_raw_norm>attr_R){double scale=attr_R/attr_raw_norm;cublasDscal(blas,n_c,&scale,xs[0],1);}
@@ -47,4 +47,3 @@ cmd=['nvcc','-O3','-DNDEBUG','-std=c++17','-arch=sm_89','-I/usr/include/eigen3',
 with (OUT/'build.log').open('w') as log:subprocess.run(cmd,stdout=log,stderr=subprocess.STDOUT,check=True,env={**os.environ,'TMPDIR':'/dev/shm'})
 record={'command':cmd,'parent_source_sha256':hashlib.sha256(source.encode()).hexdigest(),'derived_source_sha256':sha(src),'binary_sha256':sha(binary),'inherited_patch_count':inherited,'d20_patch_count':len(patches),'sources':{str(p):sha(p) for p in [HERE/'build.py',HERE/'d20_sloppy_quotient.cuh',W6/'build_deterministic.py']},'protocol_sha256':sha(W6/'D20_NATIVE_PROTOCOL.md')}
 (HERE/'build-manifest.json').write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record,indent=2))
-

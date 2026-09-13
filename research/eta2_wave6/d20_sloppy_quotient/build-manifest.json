@@ -1,0 +1,30 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave6/d20_sloppy_quotient",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave6",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+    "/tmp/prism-wave6-d20/prism_d20.cu",
+    "-o",
+    "/tmp/prism-wave6-d20/prism-d20",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "parent_source_sha256": "46ad1d3f68e7dfb14b82d6cbf27affc7a5c961d2c50edec7929647b7d9c3744c",
+  "derived_source_sha256": "3bb98355e2cafb9d6d9a3153dd3acee74a1759e1ca6cb6bfea4059c929b0d2f9",
+  "binary_sha256": "08a4f9c6492b65a8bf1d968a05d0552d9f9cb020b683058fa67a00504756c089",
+  "inherited_patch_count": 33,
+  "d20_patch_count": 4,
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave6/d20_sloppy_quotient/build.py": "279f562c0e66ae7fbe907ba94cb3eb3dd43df743caeddc6ccb6116053eeed263",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/d20_sloppy_quotient/d20_sloppy_quotient.cuh": "6674ca5165de0ce6d214c5693c1a03f4e396e87f479fe11a162caa69d834d925",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/build_deterministic.py": "2a80ca57e9fd8a7595e5f74edfa7dbd7e1b481df9f35fa237863545f02d1e4ac"
+  },
+  "protocol_sha256": "a6cbb3761bca71602424ba667dccece6a4b6b913411286407a404f5e0886586f"
+}

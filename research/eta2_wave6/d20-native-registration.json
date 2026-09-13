@@ -1,0 +1,173 @@
+{
+  "protocol_sha256": "a6cbb3761bca71602424ba667dccece6a4b6b913411286407a404f5e0886586f",
+  "build_manifest": {
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave6/d20_sloppy_quotient",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave6",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+      "/tmp/prism-wave6-d20/prism_d20.cu",
+      "-o",
+      "/tmp/prism-wave6-d20/prism-d20",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    "parent_source_sha256": "46ad1d3f68e7dfb14b82d6cbf27affc7a5c961d2c50edec7929647b7d9c3744c",
+    "derived_source_sha256": "3bb98355e2cafb9d6d9a3153dd3acee74a1759e1ca6cb6bfea4059c929b0d2f9",
+    "binary_sha256": "08a4f9c6492b65a8bf1d968a05d0552d9f9cb020b683058fa67a00504756c089",
+    "inherited_patch_count": 33,
+    "d20_patch_count": 4,
+    "sources": {
+      "/tmp/prism-ba-coarse/research/eta2_wave6/d20_sloppy_quotient/build.py": "279f562c0e66ae7fbe907ba94cb3eb3dd43df743caeddc6ccb6116053eeed263",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/d20_sloppy_quotient/d20_sloppy_quotient.cuh": "6674ca5165de0ce6d214c5693c1a03f4e396e87f479fe11a162caa69d834d925",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/build_deterministic.py": "2a80ca57e9fd8a7595e5f74edfa7dbd7e1b481df9f35fa237863545f02d1e4ac"
+    },
+    "protocol_sha256": "a6cbb3761bca71602424ba667dccece6a4b6b913411286407a404f5e0886586f"
+  },
+  "runner_sha256": "37696a111d4561c3b6ede1b56db8b862fe1be55bdcc636348d0957e499f1a790",
+  "parent_binary": "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-deterministic",
+  "parent_sha256": "47e0cc61a6d8e19de832c5b1aed5555fd89dcfd7a6a75d9c9deab67fa7d10a17",
+  "derived_binary": "/tmp/prism-wave6-d20/prism-d20",
+  "derived_sha256": "08a4f9c6492b65a8bf1d968a05d0552d9f9cb020b683058fa67a00504756c089",
+  "flags": {
+    "OCA_W5_CG_DOTS": "1",
+    "OCA_W5_PREP_FUSE": "1",
+    "OCA_W5_PREP_CAMERA": "1",
+    "OCA_W5_PREP_MIN_CAMS": "128",
+    "OCA_W6_DETERMINISTIC": "1"
+  },
+  "epsilon": 1e-12,
+  "compatibility": {
+    "scene": "ladybug-539",
+    "multiplier": 1.01,
+    "target": 165617.73918321263,
+    "cap": 5,
+    "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+    "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+    "cell": "ladybug-539-1.01"
+  },
+  "venice": {
+    "scene": "venice-52",
+    "path": "/workspace/bal/venice-52.txt",
+    "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+    "target": 243740.27,
+    "cap": 60,
+    "seeds": [
+      660048,
+      660049,
+      660050,
+      660051,
+      660052
+    ]
+  },
+  "final": {
+    "scene": "final-3068",
+    "path": "/workspace/bal/final-3068.txt",
+    "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+    "target": 1744796.9841897595,
+    "cap": 60,
+    "seeds": [
+      660053,
+      660054,
+      660055,
+      660056,
+      660057
+    ]
+  },
+  "practical": [
+    {
+      "scene": "ladybug-539",
+      "multiplier": 1.005,
+      "target": 164797.8493852759,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cell": "ladybug-539-1.005"
+    },
+    {
+      "scene": "ladybug-539",
+      "multiplier": 1.01,
+      "target": 165617.73918321263,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cell": "ladybug-539-1.01"
+    },
+    {
+      "scene": "ladybug-539",
+      "multiplier": 1.02,
+      "target": 167257.518779086,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+      "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+      "cell": "ladybug-539-1.02"
+    },
+    {
+      "scene": "trafalgar-138",
+      "multiplier": 1.005,
+      "target": 103088.39569543337,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+      "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+      "cell": "trafalgar-138-1.005"
+    },
+    {
+      "scene": "trafalgar-138",
+      "multiplier": 1.01,
+      "target": 103601.27328595793,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+      "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+      "cell": "trafalgar-138-1.01"
+    },
+    {
+      "scene": "trafalgar-138",
+      "multiplier": 1.02,
+      "target": 104627.02846700703,
+      "cap": 5,
+      "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+      "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+      "cell": "trafalgar-138-1.02"
+    },
+    {
+      "scene": "final-394",
+      "multiplier": 1.005,
+      "target": 306349.5931045434,
+      "cap": 8,
+      "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+      "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+      "cell": "final-394-1.005"
+    },
+    {
+      "scene": "final-394",
+      "multiplier": 1.01,
+      "target": 307873.7204334218,
+      "cap": 8,
+      "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+      "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+      "cell": "final-394-1.01"
+    },
+    {
+      "scene": "final-394",
+      "multiplier": 1.02,
+      "target": 310921.97509117844,
+      "cap": 8,
+      "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+      "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+      "cell": "final-394-1.02"
+    }
+  ],
+  "panel_repetitions": 3,
+  "arm_order": "control,d20 on even pair/repetition; d20,control on odd",
+  "gates": {
+    "venice": "D20 hit >= 3/5",
+    "final": "D20 hit count >= control hit count",
+    "panel": "no endpoint regression >0.15%; disjoint target-time loss on <5/9 cells"
+  }
+}
