@@ -1,0 +1,31 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave6/d22_terminal_track_polish",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave6",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+    "/tmp/prism-wave6-d22/prism_d22.cu",
+    "-o",
+    "/tmp/prism-wave6-d22/prism-d22",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "parent_source_sha256": "46ad1d3f68e7dfb14b82d6cbf27affc7a5c961d2c50edec7929647b7d9c3744c",
+  "derived_source_sha256": "df3cc4e03d2daba1c98122f195217c022bb662774961dbd56c869f35a9b97155",
+  "binary_sha256": "18391fed1c99e8733798591240ba6a3a76f8289e27b2595665eac200e6a9ad51",
+  "inherited_patch_count": 33,
+  "d22_patch_count": 4,
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave6/d22_terminal_track_polish/build.py": "e1b6a2f8bef35ec658895460653776840e44b4356b3e39667c99d1cfb4d480cb",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/d22_terminal_track_polish/d22_terminal_track_polish.cuh": "70b9362919f53cccde13596972cde8424a9d3df2b70cf5e6108376fadca63191",
+    "/tmp/prism-ba-coarse/research/eta2_wave5/targeted_triangulation.cuh": "e3caf81735f73475a0b2ef485dc76770071cd8a165e2f9cdf62b935306854dfe",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/build_deterministic.py": "2a80ca57e9fd8a7595e5f74edfa7dbd7e1b481df9f35fa237863545f02d1e4ac"
+  },
+  "protocol_sha256": "e5bf978296f9bf786d08ca1b766762509e871a115473fdb048adf4a3466166ab"
+}

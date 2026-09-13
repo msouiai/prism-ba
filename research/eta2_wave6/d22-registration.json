@@ -1,0 +1,175 @@
+{
+  "protocol_sha256": "e5bf978296f9bf786d08ca1b766762509e871a115473fdb048adf4a3466166ab",
+  "build_manifest": {
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave6/d22_terminal_track_polish",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave6",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+      "/tmp/prism-wave6-d22/prism_d22.cu",
+      "-o",
+      "/tmp/prism-wave6-d22/prism-d22",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    "parent_source_sha256": "46ad1d3f68e7dfb14b82d6cbf27affc7a5c961d2c50edec7929647b7d9c3744c",
+    "derived_source_sha256": "df3cc4e03d2daba1c98122f195217c022bb662774961dbd56c869f35a9b97155",
+    "binary_sha256": "18391fed1c99e8733798591240ba6a3a76f8289e27b2595665eac200e6a9ad51",
+    "inherited_patch_count": 33,
+    "d22_patch_count": 4,
+    "sources": {
+      "/tmp/prism-ba-coarse/research/eta2_wave6/d22_terminal_track_polish/build.py": "e1b6a2f8bef35ec658895460653776840e44b4356b3e39667c99d1cfb4d480cb",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/d22_terminal_track_polish/d22_terminal_track_polish.cuh": "70b9362919f53cccde13596972cde8424a9d3df2b70cf5e6108376fadca63191",
+      "/tmp/prism-ba-coarse/research/eta2_wave5/targeted_triangulation.cuh": "e3caf81735f73475a0b2ef485dc76770071cd8a165e2f9cdf62b935306854dfe",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/build_deterministic.py": "2a80ca57e9fd8a7595e5f74edfa7dbd7e1b481df9f35fa237863545f02d1e4ac"
+    },
+    "protocol_sha256": "e5bf978296f9bf786d08ca1b766762509e871a115473fdb048adf4a3466166ab"
+  },
+  "runner_sha256": "9e1e1e1cbb661f389ac6757285ef8291a86cc36aff5e743c313e3b3e9372173e",
+  "parent_binary": "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-deterministic",
+  "parent_sha256": "47e0cc61a6d8e19de832c5b1aed5555fd89dcfd7a6a75d9c9deab67fa7d10a17",
+  "derived_binary": "/tmp/prism-wave6-d22/prism-d22",
+  "derived_sha256": "18391fed1c99e8733798591240ba6a3a76f8289e27b2595665eac200e6a9ad51",
+  "flags": {
+    "OCA_W5_CG_DOTS": "1",
+    "OCA_W5_PREP_FUSE": "1",
+    "OCA_W5_PREP_CAMERA": "1",
+    "OCA_W5_PREP_MIN_CAMS": "128",
+    "OCA_W6_DETERMINISTIC": "1"
+  },
+  "epsilon": 1e-12,
+  "source": "/workspace/bal/final-3068.txt",
+  "source_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+  "target": 1744796.9841897595,
+  "cap": 60,
+  "screen_seeds": [
+    660058,
+    660059,
+    660060,
+    660061,
+    660062
+  ],
+  "extension_seeds": [
+    660063,
+    660064,
+    660065,
+    660066,
+    660067
+  ],
+  "compatibility": {
+    "scene": "ladybug-539",
+    "multiplier": 1.01,
+    "target": 165617.73918321263,
+    "cap": 5,
+    "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+    "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+    "cell": "ladybug-539-1.01"
+  },
+  "arm_order": "control,d22 on even pair; d22,control on odd pair",
+  "screen_gate": "advance iff >=1 D22-only target hit or median committed terminal relative decrease >0.0015",
+  "full_gate": {
+    "minimum_d22_only_hits": 2,
+    "maximum_control_only_hits": 0,
+    "maximum_median_invoked_native_wall_ratio": 1.2
+  },
+  "conditional": {
+    "venice52": {
+      "scene": "venice-52",
+      "path": "/workspace/bal/venice-52.txt",
+      "input_sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b",
+      "target": 243740.27,
+      "cap": 60,
+      "repetitions": 5
+    },
+    "practical": [
+      {
+        "scene": "ladybug-539",
+        "multiplier": 1.005,
+        "target": 164797.8493852759,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+        "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+        "cell": "ladybug-539-1.005"
+      },
+      {
+        "scene": "ladybug-539",
+        "multiplier": 1.01,
+        "target": 165617.73918321263,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+        "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+        "cell": "ladybug-539-1.01"
+      },
+      {
+        "scene": "ladybug-539",
+        "multiplier": 1.02,
+        "target": 167257.518779086,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+        "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+        "cell": "ladybug-539-1.02"
+      },
+      {
+        "scene": "trafalgar-138",
+        "multiplier": 1.005,
+        "target": 103088.39569543337,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+        "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+        "cell": "trafalgar-138-1.005"
+      },
+      {
+        "scene": "trafalgar-138",
+        "multiplier": 1.01,
+        "target": 103601.27328595793,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+        "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+        "cell": "trafalgar-138-1.01"
+      },
+      {
+        "scene": "trafalgar-138",
+        "multiplier": 1.02,
+        "target": 104627.02846700703,
+        "cap": 5,
+        "path": "/tmp/prism-speed-novelty/inputs/trafalgar-138.txt",
+        "input_sha256": "ac9435076cb5117f5317a7184494905adcbe32f426e6b36485d80790c47cb894",
+        "cell": "trafalgar-138-1.02"
+      },
+      {
+        "scene": "final-394",
+        "multiplier": 1.005,
+        "target": 306349.5931045434,
+        "cap": 8,
+        "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+        "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+        "cell": "final-394-1.005"
+      },
+      {
+        "scene": "final-394",
+        "multiplier": 1.01,
+        "target": 307873.7204334218,
+        "cap": 8,
+        "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+        "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+        "cell": "final-394-1.01"
+      },
+      {
+        "scene": "final-394",
+        "multiplier": 1.02,
+        "target": 310921.97509117844,
+        "cap": 8,
+        "path": "/tmp/prism-speed-novelty/inputs/final-394.txt",
+        "input_sha256": "bb0623bcc14fed2eecd7b4f3487d6b7b621981a36e88d9c2a5be3c520e46ea47",
+        "cell": "final-394-1.02"
+      }
+    ],
+    "repetitions": 3
+  }
+}
