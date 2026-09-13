@@ -69,7 +69,10 @@ Current high-level results:
   114.79 ms for periodic restart-8 and 170 / 530.08 ms for uninterrupted PCG,
   while storing only nine camera vectors and passing explicit residual and
   Arnoldi-orthogonality checks.  This fixed-system winner now advances to the
-  native nonlinear gate.
+  native nonlinear gate.  The native gate rejects it: it is 1.330x slower on
+  the nine-cell panel, loses one tight Trafalgar hit, and turns Muell from 3/3
+  hits at 4.22 s into 0/3 at the 12 s cap.  Its different early directions
+  prevent the solver from reaching the states on which the isolated solve won.
 
-See `D13_KRYLOV_RESTART_RESULTS.md` for the current decision.  The scientific
+See `D13_NATIVE_RESULTS.md` for the current decision.  The scientific
 champion remains unchanged.
