@@ -90,7 +90,14 @@ Current high-level results:
   13 double hits and 10 double misses, so the directional SPRT is inconclusive
   at cap.  No-activation pairs are bit-identical; the gate is sound, while the
   finite prior is usually too weak to overcome the subsequent global clip.
+- replacing that finite prior by hard projection is a much stronger causal
+  perturbation, but it has no net reliability advantage: 24 deterministic
+  pairs give 9/24 hits in both arms, with two D16-only rescues and two
+  control-only hits.  Endpoint swings from -9.06% to +2.18% show that the
+  starved camera controls a basin branch, while persistent freezing selects
+  either side unpredictably.  D16 is not promoted.
 
 See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
-`D14_CA_PCG_RESULTS.md`, and `D15_COUNT_PRIOR_RESULTS.md` for the current
-decisions.  The scientific champion remains unchanged.
+`D14_CA_PCG_RESULTS.md`, `D15_COUNT_PRIOR_RESULTS.md`, and
+`D16_COUNT_PROJECT_RESULTS.md` for the current decisions.  The scientific
+champion remains unchanged.
