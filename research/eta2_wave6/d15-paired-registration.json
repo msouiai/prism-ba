@@ -1,0 +1,93 @@
+{
+  "protocol_sha256": "b09fb0b533201a85d00794e02bcc44df6be8c12f8d5d32f4c20e1e52759524c2",
+  "build_manifest": {
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave6",
+      "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+      "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+      "/tmp/prism-wave6-d15-deterministic/prism_d15_deterministic.cu",
+      "-o",
+      "/tmp/prism-wave6-d15-deterministic/prism-d15-deterministic",
+      "-lcublas",
+      "-lcusolver"
+    ],
+    "deterministic_parent_source_sha256": "46ad1d3f68e7dfb14b82d6cbf27affc7a5c961d2c50edec7929647b7d9c3744c",
+    "derived_source_sha256": "405a1b2b72b207240bedcb7cc70e71e0be4d4336802ac7409c6442fcbc4c6934",
+    "binary_sha256": "1cf15c14768b37929cb768ad7c5565995472ccabc2ca6a6a3cc3892d0425eb9c",
+    "inherited_reversible_patch_count": 33,
+    "d15_reversible_patch_count": 7,
+    "sources": {
+      "/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior/build_deterministic.py": "834d3dba9d3d5660c38c505284adef4f7e71ce7ea49ecb36dc49cc00d84db06d",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior/d15_count_prior.cuh": "b6bc552d37e2662a97a85edea5e06062bbb3825a8c4fbbdd6b353eaba93b9b17",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior/d15_pcg_camera.cuh": "3a4302b6ed35fed5c30c2e44b3e3f123b600900a1d3d2fb874687977490ecfb1",
+      "/tmp/prism-ba-coarse/research/eta2_wave6/build_deterministic.py": "2a80ca57e9fd8a7595e5f74edfa7dbd7e1b481df9f35fa237863545f02d1e4ac"
+    }
+  },
+  "runner_sha256": "cd73d00e70ab3accf4d98596aee0bb0b9f42a3bc93988c12fa4f67c16ffd4eef",
+  "parent_binary": "/tmp/prism-ba-coarse/research/eta2_wave6/build/prism-deterministic",
+  "parent_sha256": "47e0cc61a6d8e19de832c5b1aed5555fd89dcfd7a6a75d9c9deab67fa7d10a17",
+  "derived_binary": "/tmp/prism-wave6-d15-deterministic/prism-d15-deterministic",
+  "derived_sha256": "1cf15c14768b37929cb768ad7c5565995472ccabc2ca6a6a3cc3892d0425eb9c",
+  "source": "/workspace/bal/final-3068.txt",
+  "source_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+  "target": 1744796.9841897595,
+  "cap": 60,
+  "epsilon": 1e-12,
+  "seeds": [
+    660000,
+    660001,
+    660002,
+    660003,
+    660004,
+    660005,
+    660006,
+    660007,
+    660008,
+    660009,
+    660010,
+    660011,
+    660012,
+    660013,
+    660014,
+    660015,
+    660016,
+    660017,
+    660018,
+    660019,
+    660020,
+    660021,
+    660022,
+    660023
+  ],
+  "flags": {
+    "OCA_W5_CG_DOTS": "1",
+    "OCA_W5_PREP_FUSE": "1",
+    "OCA_W5_PREP_CAMERA": "1",
+    "OCA_W5_PREP_MIN_CAMS": "128",
+    "OCA_W6_DETERMINISTIC": "1"
+  },
+  "compatibility": {
+    "scene": "ladybug-539",
+    "multiplier": 1.01,
+    "target": 165617.73918321263,
+    "cap": 5,
+    "path": "/tmp/prism-speed-novelty/inputs/ladybug-539.txt",
+    "input_sha256": "93b5c7ac806b73dc93bdd936809d22f90b94eb2a52cee9cb02286a7729ed144c",
+    "cell": "ladybug-539-1.01"
+  },
+  "sprt": {
+    "q0": 0.5,
+    "q1": 0.7,
+    "alpha": 0.05,
+    "beta": 0.05,
+    "max_pairs": 24
+  },
+  "arm_order": "control,d15 on even pair index; d15,control on odd pair index"
+}
