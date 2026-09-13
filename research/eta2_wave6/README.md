@@ -96,8 +96,13 @@ Current high-level results:
   control-only hits.  Endpoint swings from -9.06% to +2.18% show that the
   starved camera controls a basin branch, while persistent freezing selects
   either side unpredictably.  D16 is not promoted.
+- a one-shot version with infinite dwell removes D16's repeated-work pathology
+  but not its ambiguity.  On the same 24-pair development cohort it gives
+  10/24 hits versus 9/24 control, with two rescues and one harm; the net-one
+  result misses its preregistered advance threshold, so no fresh cohort runs.
 
 See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
 `D14_CA_PCG_RESULTS.md`, `D15_COUNT_PRIOR_RESULTS.md`, and
-`D16_COUNT_PROJECT_RESULTS.md` for the current decisions.  The scientific
-champion remains unchanged.
+`D16_COUNT_PROJECT_RESULTS.md` for the principal decisions; D17's dwell-time
+follow-up is in `D17_COUNT_IMPULSE_RESULTS.md`.  The scientific champion
+remains unchanged.

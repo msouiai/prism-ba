@@ -19,6 +19,7 @@ second time under a different label.
 | Dense Schur Cholesky | Wave-5 B4 is 1.49--2.77x slower on Trafalgar; Venice spends 56.7 s in formation and 0.84 s in factor/solve. | Closed. |
 | Square-root/nullspace products | Wave-5 B5 passes action and curvature audits, then loses both tails and is slower. | Retained only as an audit operator. |
 | Soft/filter acceptance | D4's 60-pair result is unresolved and 1.077x slower; D10 finds no discriminating track-damage signal. | No production candidate. |
+| Hysteresis / dwell time | D17 applies the sparse hard projection once, then returns permanently to Eta2. It removes repeated cap-hit work but gives only a net one hit on its 24-pair development replay (two rescues, one harm). | Development gate failed; no fresh cohort. |
 
 ## Remaining speed cell selected next
 
