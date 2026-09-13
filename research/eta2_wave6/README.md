@@ -63,6 +63,13 @@ Current high-level results:
   ms, including explicit residual replacement, while shallow controls never
   trigger.  Nyström is closed; the restart
   signal advances to a native and residual-minimizing-Krylov follow-up.
+- right-preconditioned GMRES(8), aligned with Eta2's Euclidean residual forcing
+  rule, dominates both uninterrupted and restarted Hcc-PCG on the two hard
+  Muell captures.  It uses 6 products / 18.88 ms across the pair versus 37 /
+  114.79 ms for periodic restart-8 and 170 / 530.08 ms for uninterrupted PCG,
+  while storing only nine camera vectors and passing explicit residual and
+  Arnoldi-orthogonality checks.  This fixed-system winner now advances to the
+  native nonlinear gate.
 
-See `D12_NYSTROM_RESULTS.md` for the current decision.  The scientific
+See `D13_KRYLOV_RESTART_RESULTS.md` for the current decision.  The scientific
 champion remains unchanged.
