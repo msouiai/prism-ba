@@ -109,11 +109,17 @@ Current high-level results:
   fixed steps further but retains only 87.667% of healthy motion after the
   global re-solve.  The eigenvector itself contains 99.9973% of raw-step
   energy, motivating a direct quotient projection that preserves all other
-  coordinates; that D20 test is registered separately.
+  coordinates.  D20's fixed projection raises true decrease from about 1.60
+  to 481, but its native gate is inactive: fresh Venice trajectories give 0/5
+  target hits in both arms and zero projections.  Four runs remain below the
+  fixed ratio threshold; in the fifth, camera 34 owns the oversized step but
+  camera 32 owns the weakest local block.  The archived mechanism is real but
+  conditional on the trajectory that created it, so D20 is not promoted.
 
 See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
 `D14_CA_PCG_RESULTS.md`, `D15_COUNT_PRIOR_RESULTS.md`, and
 `D16_COUNT_PROJECT_RESULTS.md` for the principal decisions; D17's dwell-time
 follow-up is in `D17_COUNT_IMPULSE_RESULTS.md`, and the geometric-prior screen
-is in `D18_GEOMETRIC_PRIOR_RESULTS.md`.  The scientific champion remains
-unchanged.
+is in `D18_GEOMETRIC_PRIOR_RESULTS.md`.  D20's fixed and native conclusions are
+in `D20_SLOPPY_QUOTIENT_RESULTS.md` and `D20_NATIVE_RESULTS.md`.  The scientific
+champion remains unchanged.
