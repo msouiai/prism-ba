@@ -135,6 +135,11 @@ Current high-level results:
   decreases true cost, so zero sweeps commit and the endpoint remains 1.941M.
   The audit costs 0.0285 s on that run. This closes the registered terminal
   block policy without claiming stationarity for every possible block solve.
+- no simple outer-15 signal supports early restart racing. Across a frozen
+  80/50 chronological development split, lambda, maximum lambda, reject count,
+  raw/radius and cost/target all stay below 0.62 balanced accuracy; cost catches
+  every validation miss only by falsely aborting 25/32 eventual hits. The
+  sealed 38-run D21 cohort is not opened, and no online predictor is built.
 
 See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
 `D14_CA_PCG_RESULTS.md`, `D15_COUNT_PRIOR_RESULTS.md`, and
@@ -145,4 +150,5 @@ in `D20_SLOPPY_QUOTIENT_RESULTS.md` and `D20_NATIVE_RESULTS.md`.  The scientific
 champion remains unchanged.  The portfolio result is in
 `D21_RESTART_PORTFOLIO_RESULTS.md`. The terminal algebra audit is in
 `D22_TERMINAL_TRACK_POLISH_RESULTS.md`, and the alternating-block audit is in
-`D23_TERMINAL_BLOCK_GS_RESULTS.md`.
+`D23_TERMINAL_BLOCK_GS_RESULTS.md`. The restart-predictor negative is in
+`D24_EARLY_RESTART_PREDICTOR_RESULTS.md`.

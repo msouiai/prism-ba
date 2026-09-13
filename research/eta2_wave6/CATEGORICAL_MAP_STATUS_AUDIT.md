@@ -24,6 +24,7 @@ second time under a different label.
 | MBAM / sloppy-mode removal | D19's rank-one prior raises fixed decrease to about 627, but global re-solving retains only 87.667% of healthy motion. D20 removes the 99.9973%-energy weak component after solving and raises fixed decrease from about 1.60 to 481 without changing another camera, but the registered fresh Venice cohort gives zero activations and 0/5 hits in both arms. | Strong trajectory-conditional diagnostic; native policy closed. |
 | Arithmetic trajectory portfolio | D21 restarts unchanged B6v7 up to three times and reaches 37/38 Final3068 targets, rescuing 13/14 first misses. Mean/p90 wall beat the historical Eta2-to-MFREE row, but median 4.263 s misses the registered 3.923 s gate. | High-reliability Pareto option; not the balanced promotion winner. |
 | Terminal separable stationarity | D22 exact two-view point polish gives only 0.001304% median decrease on misses. D23's alternating camera/point block audit commits zero sweeps on its one fresh miss; hits remain 4/5 in both arms. | Cheap terminal repair path closed; losing basins are not repaired by the registered separable moves. |
+| Early restart predictor | D24 fits five fixed outer-15 scalar rules on 80 B6v7 runs and validates on the next 50. Every train/validation balanced accuracy is below 0.62; the high-sensitivity cost rule falsely aborts 25/32 validation hits. | Fixed interpretable predictor closed without opening the sealed D21 test set. |
 
 ## Remaining speed cell selected next
 
