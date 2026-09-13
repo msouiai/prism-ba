@@ -129,6 +129,12 @@ Current high-level results:
   Every preterminal path is exact and the kernel costs about 5 ms, so the
   negative isolates the mechanism: the stopped gap is not fixed-camera
   two-view point nonstationarity. D22 closes before its extension and controls.
+- a terminal nonlinear block Gauss--Seidel audit likewise fails its first
+  screen. Four of five fresh Final3068 pairs are exact double hits; on the sole
+  miss neither the damped camera-resection half nor the point-intersection half
+  decreases true cost, so zero sweeps commit and the endpoint remains 1.941M.
+  The audit costs 0.0285 s on that run. This closes the registered terminal
+  block policy without claiming stationarity for every possible block solve.
 
 See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
 `D14_CA_PCG_RESULTS.md`, `D15_COUNT_PRIOR_RESULTS.md`, and
@@ -138,4 +144,5 @@ is in `D18_GEOMETRIC_PRIOR_RESULTS.md`.  D20's fixed and native conclusions are
 in `D20_SLOPPY_QUOTIENT_RESULTS.md` and `D20_NATIVE_RESULTS.md`.  The scientific
 champion remains unchanged.  The portfolio result is in
 `D21_RESTART_PORTFOLIO_RESULTS.md`. The terminal algebra audit is in
-`D22_TERMINAL_TRACK_POLISH_RESULTS.md`.
+`D22_TERMINAL_TRACK_POLISH_RESULTS.md`, and the alternating-block audit is in
+`D23_TERMINAL_BLOCK_GS_RESULTS.md`.
