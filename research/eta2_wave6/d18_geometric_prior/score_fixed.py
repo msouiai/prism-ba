@@ -205,6 +205,7 @@ def main() -> None:
     summary = summarize(cases)
     provenance = {
         "protocol_sha256": sha(ROOT / "research/eta2_wave6/D18_GEOMETRIC_PRIOR_PROTOCOL.md"),
+        "amendment_sha256": sha(ROOT / "research/eta2_wave6/D18_CAPTURE_RADIUS_AMENDMENT.md"),
         "capture_manifest_sha256": sha(HERE / "capture-manifest.json"),
         "build_manifest_sha256": sha(HERE / "build-manifest.json"),
         "fixed_run_manifest_sha256": sha(HERE / "fixed-run-manifest.json"),

@@ -51,6 +51,7 @@ record = {
     "source_sha256": sha(HERE / "geometric_prior_fixed.cu"),
     "binary_sha256": sha(binary),
     "protocol_sha256": sha(ROOT / "research/eta2_wave6/D18_GEOMETRIC_PRIOR_PROTOCOL.md"),
+    "amendment_sha256": sha(ROOT / "research/eta2_wave6/D18_CAPTURE_RADIUS_AMENDMENT.md"),
 }
 (HERE / "build-manifest.json").write_text(json.dumps(record, indent=2) + "\n")
 print(json.dumps(record, indent=2))

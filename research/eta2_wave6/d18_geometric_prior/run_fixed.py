@@ -74,6 +74,7 @@ def main() -> None:
             print("D18_FIXED", index, result["system"], flush=True)
     record = {
         "protocol_sha256": sha(ROOT / "research/eta2_wave6/D18_GEOMETRIC_PRIOR_PROTOCOL.md"),
+        "amendment_sha256": sha(ROOT / "research/eta2_wave6/D18_CAPTURE_RADIUS_AMENDMENT.md"),
         "build_manifest_sha256": sha(HERE / "build-manifest.json"),
         "capture_manifest_sha256": sha(HERE / "capture-manifest.json"),
         "binary_sha256": sha(BUILD), "cases": results,

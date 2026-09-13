@@ -121,6 +121,7 @@ def main() -> None:
                 if cost_error > 1e-8:
                     raise RuntimeError(("state score mismatch", index, captured_cost, meta["cost"]))
                 shutil.copyfile(source / "eta2_raw_scaled.f64", dest / "eta2_raw_scaled.f64")
+                (dest / "registered_radius.txt").write_text(format(meta["radius"], ".17g") + "\n")
                 files = {path.name: {"bytes": path.stat().st_size, "sha256": sha(path)}
                          for path in sorted(dest.iterdir()) if path.is_file()}
                 run = {
@@ -143,6 +144,7 @@ def main() -> None:
                       flush=True)
     manifest = {
         "protocol_sha256": sha(WAVE6 / "D18_GEOMETRIC_PRIOR_PROTOCOL.md"),
+        "amendment_sha256": sha(WAVE6 / "D18_CAPTURE_RADIUS_AMENDMENT.md"),
         "capture_binary": str(CAPTURE), "capture_binary_sha256": sha(CAPTURE),
         "frozen_champion_sha256": sha(champ_path),
         "input": str(BAL), "input_sha256": sha(BAL), "runs": runs,
