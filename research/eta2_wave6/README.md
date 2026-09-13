@@ -105,6 +105,11 @@ Current high-level results:
   0.85 while raising fixed-state decrease from 1.60 to about 583.  It still
   stops before native rollout: its best-balanced dose retains 94.475% of the
   healthy-camera norm, below the preregistered 95% locality threshold.
+- restricting the prior to camera 34's single weakest eigenvector improves the
+  fixed steps further but retains only 87.667% of healthy motion after the
+  global re-solve.  The eigenvector itself contains 99.9973% of raw-step
+  energy, motivating a direct quotient projection that preserves all other
+  coordinates; that D20 test is registered separately.
 
 See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
 `D14_CA_PCG_RESULTS.md`, `D15_COUNT_PRIOR_RESULTS.md`, and

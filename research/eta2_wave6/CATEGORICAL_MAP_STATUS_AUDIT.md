@@ -21,6 +21,7 @@ second time under a different label.
 | Soft/filter acceptance | D4's 60-pair result is unresolved and 1.077x slower; D10 finds no discriminating track-damage signal. | No production candidate. |
 | Hysteresis / dwell time | D17 applies the sparse hard projection once, then returns permanently to Eta2. It removes repeated cap-hit work but gives only a net one hit on its 24-pair development replay (two rescues, one harm). | Development gate failed; no fresh cohort. |
 | Empirical-Bayes geometric prior | D18's top-one local-spectrum gate selects Venice camera 34 in 5/5 terminal states. A one-camera prior changes fixed-state decrease from about 1.60 to 583 and raw/R from 428 to 0.85, but retains 94.475% of healthy motion against a registered 95% gate. | Strong fixed-state mechanism; native gate not opened. |
+| MBAM / sloppy-mode removal | D19's rank-one prior raises fixed decrease to about 627, but global re-solving retains only 87.667% of healthy motion. Direct decomposition shows the same weak mode contains 99.9973% of the original raw-step energy; D20 tests post-solve quotient projection separately. | Operator prior closed; direct quotient projection pending. |
 
 ## Remaining speed cell selected next
 
