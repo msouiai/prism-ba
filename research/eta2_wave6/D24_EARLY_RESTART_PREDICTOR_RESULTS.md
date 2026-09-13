@@ -66,4 +66,3 @@ fresh independent attempts without early prediction.
 - `d24-heldout-inventory.json`
 - `d24_early_restart/analyze.py`
 - `d24-development-results.json`
-
