@@ -55,6 +55,13 @@ Current high-level results:
   and both available GPU sparse-direct backends take over 60 seconds in
   symbolic analysis.  It is retained as a strong algebraic diagnostic and not
   promoted into Eta2.
+- a BA-sign-correct randomized Nyström correction is strictly dominated on the
+  hard Muell system: ranks 4/8/16 save no post-switch Krylov work and only add
+  4/8/16 sketch products.  Its mandatory attribution control uncovers a much
+  stronger result: restarting the unchanged Hcc-PCG recurrence at iteration 8
+  cuts that fixed solve from 42 to 14 total products and from 130.68 to 43.46
+  ms, while shallow controls never trigger.  Nyström is closed; the restart
+  signal advances to a native and residual-minimizing-Krylov follow-up.
 
-See `D11_VISIBILITY_SUBGRAPH_RESULTS.md` for the current decision.  The scientific
+See `D12_NYSTROM_RESULTS.md` for the current decision.  The scientific
 champion remains unchanged.
