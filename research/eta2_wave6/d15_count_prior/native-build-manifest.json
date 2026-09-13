@@ -1,0 +1,27 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "/tmp/prism-wave6-d15-native/prism_d15.cu",
+    "-o",
+    "/tmp/prism-wave6-d15-native/prism-d15",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "frozen_source_sha256": "22c18359a526526ae0a5b5109187878ab1cef33b453f6bbddc2aa92597a607d8",
+  "derived_source_sha256": "ce4c2026eabe3be6978a49221b1e30826c4c90177bb0be5b7243966857af0d69",
+  "binary_sha256": "4a2e100d7cb86d2e230eb83208b74c6ffcf7ce53c4a641fda9a431cf22069b54",
+  "reversible_patch_count": 7,
+  "protocol_sha256": "9041b067d35490b1d892d5630fc8beac1ebc3f9e73b74a094acf249d34dbd14b",
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior/build_native.py": "015257d0b61566304a8fcef896965b44526ef3d2aac297ae566fdb41a5cef27f",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior/d15_count_prior.cuh": "b6bc552d37e2662a97a85edea5e06062bbb3825a8c4fbbdd6b353eaba93b9b17",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior/d15_pcg_camera.cuh": "3a4302b6ed35fed5c30c2e44b3e3f123b600900a1d3d2fb874687977490ecfb1"
+  }
+}

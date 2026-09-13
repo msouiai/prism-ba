@@ -1,0 +1,30 @@
+{
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave6",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+    "/tmp/prism-wave6-d15-deterministic/prism_d15_deterministic.cu",
+    "-o",
+    "/tmp/prism-wave6-d15-deterministic/prism-d15-deterministic",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "deterministic_parent_source_sha256": "46ad1d3f68e7dfb14b82d6cbf27affc7a5c961d2c50edec7929647b7d9c3744c",
+  "derived_source_sha256": "405a1b2b72b207240bedcb7cc70e71e0be4d4336802ac7409c6442fcbc4c6934",
+  "binary_sha256": "1cf15c14768b37929cb768ad7c5565995472ccabc2ca6a6a3cc3892d0425eb9c",
+  "inherited_reversible_patch_count": 33,
+  "d15_reversible_patch_count": 7,
+  "sources": {
+    "/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior/build_deterministic.py": "834d3dba9d3d5660c38c505284adef4f7e71ce7ea49ecb36dc49cc00d84db06d",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior/d15_count_prior.cuh": "b6bc552d37e2662a97a85edea5e06062bbb3825a8c4fbbdd6b353eaba93b9b17",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/d15_count_prior/d15_pcg_camera.cuh": "3a4302b6ed35fed5c30c2e44b3e3f123b600900a1d3d2fb874687977490ecfb1",
+    "/tmp/prism-ba-coarse/research/eta2_wave6/build_deterministic.py": "2a80ca57e9fd8a7595e5f74edfa7dbd7e1b481df9f35fa237863545f02d1e4ac"
+  }
+}
