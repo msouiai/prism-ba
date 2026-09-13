@@ -10,7 +10,7 @@ second time under a different label.
 |---|---|---|
 | Deterministic reductions and paired comparisons | D0/D1 built the deterministic instrument, paired inputs, and SPRT tooling. | Completed as measurement infrastructure. |
 | Opening FTLE | D2/D2b/D2c/D2d show a finite FP32-fragment jump; FP64 restores perturbation-scale behavior. | Completed; no scale-consistent positive FTLE established. |
-| Effective resistance and k-core | C1 finds Final3068 camera 550, but observation count gives the same decision and the CPU graph pass costs about 6 s. | Diagnostic only; no prior arm earned. |
+| Effective resistance and k-core | C1 finds Final3068 camera 550, but observation count gives the same decision and the CPU graph pass costs about 6 s. D15 therefore feeds the cheaper count gate into a sparse Schur prior: it gives one rescue and zero harms in 24 paired perturbations, but only one discordance. | Gate validated; finite prior unresolved and not promoted. |
 | Exact per-track algebra | Wave-5 A1 repairs the E4 witness almost exactly, but native Final3068 is unchanged and Venice worsens 4.15%. | Closed as an always-on policy. |
 | Schur-Jacobi | Wave-5 B3 is 1.6% slower on the panel, 21.3% slower on Muell, and drops Final3068 from 4/5 to 1/5. | Closed. |
 | Banded preconditioning | D5 finds a strong fixed-system spectrum change, but the structural gate requires camera half-bands 138--215 rather than the registered 16. | Closed for the sequence dispatch tested. |

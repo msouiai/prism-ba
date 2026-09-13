@@ -83,7 +83,14 @@ Current high-level results:
   unchanged at 399.7 ms, the converged Muell capture is 2.3% slower from its
   extra drain product, and shallow systems are 30--49% slower.  Numerical
   audits pass; the native gate is not opened.
+- a sparse unique-track-count gate plus a local Schur-space Gaussian prior
+  improves the two archived Final3068 witness decreases by 6.48--7.10% while
+  preserving healthy-camera motion.  It is causal but not promotable: a
+  24-pair deterministic cohort gives one D15-only hit, zero control-only hits,
+  13 double hits and 10 double misses, so the directional SPRT is inconclusive
+  at cap.  No-activation pairs are bit-identical; the gate is sound, while the
+  finite prior is usually too weak to overcome the subsequent global clip.
 
-See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`, and
-`D14_CA_PCG_RESULTS.md` for the current decisions.  The scientific
-champion remains unchanged.
+See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
+`D14_CA_PCG_RESULTS.md`, and `D15_COUNT_PRIOR_RESULTS.md` for the current
+decisions.  The scientific champion remains unchanged.
