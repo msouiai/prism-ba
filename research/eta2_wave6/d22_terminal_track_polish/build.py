@@ -10,7 +10,7 @@ s=source;patches=[]
 def patch(a,b):
  global s
  assert s.count(a)==1,(a[:140],s.count(a));s=s.replace(a,b);patches.append((a,b))
-patch('#include "pcg_camera.cuh"','#include "pcg_camera.cuh"\n#include "d22_terminal_track_polish.cuh"')
+patch('#include "point_safeguard.cuh"','#include "point_safeguard.cuh"\n#include "d22_terminal_track_polish.cuh"')
 patch('''  DeviceState s_new; AllocState(s_new,ncam,npt,CD==9);
   const bool batch_cost=getenv("OCA_BATCH_COST")!=nullptr;''','''  DeviceState s_new; AllocState(s_new,ncam,npt,CD==9);
   std::unique_ptr<D22TerminalTrackPolish> d22;
@@ -39,4 +39,3 @@ cmd=['nvcc','-O3','-DNDEBUG','-std=c++17','-arch=sm_89','-I/usr/include/eigen3',
 with (OUT/'build.log').open('w') as log:subprocess.run(cmd,stdout=log,stderr=subprocess.STDOUT,check=True,env={**os.environ,'TMPDIR':'/dev/shm'})
 record={'command':cmd,'parent_source_sha256':hashlib.sha256(source.encode()).hexdigest(),'derived_source_sha256':sha(src),'binary_sha256':sha(binary),'inherited_patch_count':inherited,'d22_patch_count':len(patches),'sources':{str(p):sha(p) for p in [HERE/'build.py',HERE/'d22_terminal_track_polish.cuh',W6.parent/'eta2_wave5/targeted_triangulation.cuh',W6/'build_deterministic.py']},'protocol_sha256':sha(W6/'D22_TERMINAL_TRACK_POLISH_PROTOCOL.md')}
 (HERE/'build-manifest.json').write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record,indent=2))
-
