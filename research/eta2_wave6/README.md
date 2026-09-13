@@ -100,9 +100,15 @@ Current high-level results:
   but not its ambiguity.  On the same 24-pair development cohort it gives
   10/24 hits versus 9/24 control, with two rescues and one harm; the net-one
   result misses its preregistered advance threshold, so no fresh cohort runs.
+- a top-one geometric-starvation gate identifies Venice camera 34 in all five
+  terminal states and a one-camera prior collapses raw/R from 428 to about
+  0.85 while raising fixed-state decrease from 1.60 to about 583.  It still
+  stops before native rollout: its best-balanced dose retains 94.475% of the
+  healthy-camera norm, below the preregistered 95% locality threshold.
 
 See `D13_NATIVE_RESULTS.md`, `D13B_PERIODIC_PCG_RESULTS.md`,
 `D14_CA_PCG_RESULTS.md`, `D15_COUNT_PRIOR_RESULTS.md`, and
 `D16_COUNT_PROJECT_RESULTS.md` for the principal decisions; D17's dwell-time
-follow-up is in `D17_COUNT_IMPULSE_RESULTS.md`.  The scientific champion
-remains unchanged.
+follow-up is in `D17_COUNT_IMPULSE_RESULTS.md`, and the geometric-prior screen
+is in `D18_GEOMETRIC_PRIOR_RESULTS.md`.  The scientific champion remains
+unchanged.

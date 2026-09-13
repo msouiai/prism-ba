@@ -20,6 +20,7 @@ second time under a different label.
 | Square-root/nullspace products | Wave-5 B5 passes action and curvature audits, then loses both tails and is slower. | Retained only as an audit operator. |
 | Soft/filter acceptance | D4's 60-pair result is unresolved and 1.077x slower; D10 finds no discriminating track-damage signal. | No production candidate. |
 | Hysteresis / dwell time | D17 applies the sparse hard projection once, then returns permanently to Eta2. It removes repeated cap-hit work but gives only a net one hit on its 24-pair development replay (two rescues, one harm). | Development gate failed; no fresh cohort. |
+| Empirical-Bayes geometric prior | D18's top-one local-spectrum gate selects Venice camera 34 in 5/5 terminal states. A one-camera prior changes fixed-state decrease from about 1.60 to 583 and raw/R from 428 to 0.85, but retains 94.475% of healthy motion against a registered 95% gate. | Strong fixed-state mechanism; native gate not opened. |
 
 ## Remaining speed cell selected next
 
