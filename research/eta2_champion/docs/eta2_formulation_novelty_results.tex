@@ -114,6 +114,39 @@ The PCG preconditioner is a freshly factored camera-block Jacobi matrix
 \end{equation}
 It is the block diagonal of the unreduced camera normal matrix, not the block diagonal of the full Schur complement.  The implementation factors guarded $9\times9$ blocks and masks the fixed intrinsic coordinate.
 
+\subsection{Reference trust-region problem and Eta2's implemented globalisation}
+
+For classification, it is useful to write the classical scaled Gauss--Newton trust-region problem explicitly.  At state $x_k$, with the undamped model
+\begin{equation}
+  m_k(d)=F(x_k)+g_k^Td+\frac12\lVert J_kd\rVert^2, \label{eq:gn-model}
+\end{equation}
+the reference subproblem is
+\begin{equation}
+  \min_d\;g_k^Td+\frac12d^TJ_k^TJ_kd
+  \quad\text{subject to}\quad
+  \lVert D_k^{1/2}d\rVert\le\Delta_k. \label{eq:classical-tr}
+\end{equation}
+An exact solution admits a multiplier $\mu\ge0$ such that
+\begin{align}
+  (J_k^TJ_k+\mu D_k)d&=-g_k,\label{eq:tr-stationarity}\\
+  \mu\bigl(\lVert D_k^{1/2}d\rVert-\Delta_k\bigr)&=0.\label{eq:tr-complementarity}
+\end{align}
+Thus the LM multiplier and trust-region boundary are two representations of the same exact subproblem under the usual regularity assumptions.
+
+Eta2 does not solve Eq.~\eqref{eq:classical-tr}.  It obtains an inexact reduced iterate $z_\lambda$ satisfying
+\begin{equation}
+  \lVert b_\lambda-A_\lambda z_\lambda\rVert
+  \le\eta_k\lVert b_\lambda\rVert, \label{eq:implemented-inexact}
+\end{equation}
+then applies the camera-space projection
+\begin{equation}
+  \widehat z=P_{R_k}(z_\lambda)
+  =z_\lambda\min\left(1,\frac{R_k}{\lVert z_\lambda\rVert}\right), \label{eq:implemented-projection}
+\end{equation}
+sets $\widehat d_c=E\widehat z$, recomputes $\widehat d_p$ through Eq.~\eqref{eq:backsub}, and may further modify the point proposal through the safeguarded candidate policy.  Actual and predicted reduction are evaluated on the resulting candidate, not on $z_\lambda$.  The radius and damping are then updated from the gain ratio, principally through Eq.~\eqref{eq:lambda-radius} below.  The radius constrains scaled cameras only, while point motion follows conditional back-substitution; moreover, the persistent $\lambda$ is not chosen to satisfy Eqs.~\eqref{eq:tr-stationarity}--\eqref{eq:tr-complementarity}.
+
+Accordingly, Eta2 is a \emph{radius-controlled inexact LM method with trust-region acceptance}, or informally a trust-region-flavoured LM method.  It is not an exact Mor\'e--Sorensen, Steihaug--Toint, or other classical trust-region subproblem solver.  This formulation is why the novelty discussion below claims an integrated BA solver and measured policies rather than a new trust-region method or convergence theorem.
+
 \section{The Eta2 algorithm}
 
 \subsection{Inexact camera solve}

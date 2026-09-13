@@ -132,6 +132,81 @@ After finding the camera update $d_c=Ez$, the point update is recovered by
   d_p=-(V+\lambda D_p)^{-1}(g_p+W^Td_c). \label{eq:plain-backsub}
 \end{equation}
 
+\section{Is Eta2 a trust-region method?}\label{sec:plain-trust-region}
+
+\plainbox{deepblue}{\textbf{Yes, at the level of globalisation; no, if ``trust-region method'' means an exact classical subproblem solve.}
+Eta2 owns an explicit camera radius $R$, restricts the proposed camera motion to that radius, measures actual versus predicted improvement with $\rho$, and changes the radius after good or bad agreement.  Those are trust-region ideas.  Its step generator is nevertheless an inexact damped LM solve followed by camera-only clipping and point recomputation.  The most precise name is therefore \emph{radius-controlled inexact LM with trust-region acceptance}.}
+
+\subsection{The textbook reference problem}
+
+At the current state $x_k$, the undamped Gauss--Newton model is
+\begin{equation}
+  m_k(d)=F(x_k)+g_k^Td+\frac12\lVert J_kd\rVert^2. \label{eq:plain-gn-model}
+\end{equation}
+A classical scaled trust-region step is defined by one constrained optimization problem:
+\begin{equation}
+  \min_d\; g_k^Td+\frac12d^T(J_k^TJ_k)d
+  \quad\text{subject to}\quad
+  \lVert D_k^{1/2}d\rVert\le\Delta_k. \label{eq:plain-classical-tr}
+\end{equation}
+For an exact solution of this problem, there is a multiplier $\mu\ge0$ satisfying
+\begin{align}
+  (J_k^TJ_k+\mu D_k)d&=-g_k,\\
+  \mu\bigl(\lVert D_k^{1/2}d\rVert-\Delta_k\bigr)&=0. \label{eq:plain-tr-kkt}
+\end{align}
+In simple terms, the damping $\mu$ is chosen as part of the subproblem so that the resulting step already fits the region.  If the boundary is active, the step lands on it.  It is not first computed somewhere else and then shortened radially.
+
+\subsection{The step Eta2 actually computes}
+
+Eta2 first approximately solves the damped, reduced camera equation
+\begin{equation}
+  A_\lambda z_\lambda=b_\lambda,
+  \qquad
+  \lVert b_\lambda-A_\lambda z_\lambda\rVert
+  \le \eta\lVert b_\lambda\rVert, \label{eq:plain-inexact-system}
+\end{equation}
+where the tolerance $\eta$ is often deliberately loose.  It then projects only the scaled camera vector into a ball:
+\begin{equation}
+  \widehat z
+  =z_\lambda\min\!\left(1,\frac{R_k}{\lVert z_\lambda\rVert}\right),
+  \qquad \widehat d_c=E\widehat z. \label{eq:plain-implemented-clip}
+\end{equation}
+The point step is recomputed from $\widehat d_c$ using Eq.~\eqref{eq:plain-backsub}; it is not obtained by uniformly shrinking a previously completed joint step.  The point safeguard may modify that point proposal again.  Call the final camera--point candidate $\widetilde d$.
+
+Eta2 evaluates the original pixel objective and the undamped model on that \emph{actual} candidate:
+\begin{align}
+  \operatorname{ared}(\widetilde d)
+    &=F(x_k)-F(x_k\oplus\widetilde d),\\
+  \operatorname{pred}(\widetilde d)
+    &=-g_k^T\widetilde d-\frac12\lVert J_k\widetilde d\rVert^2,\\
+  \rho_k&=\frac{\operatorname{ared}(\widetilde d)}
+                  {\operatorname{pred}(\widetilde d)}. \label{eq:plain-implemented-rho}
+\end{align}
+It accepts only a finite, decreasing candidate with positive prediction and $\rho_k>0.1$.  Poor agreement contracts $R$; very good boundary agreement may expand it.  The main coupling update is
+\begin{equation}
+  \lambda_{k+1}=\lambda_k\left(\frac{R_k}{R_{k+1}}\right)^2, \label{eq:plain-lambda-radius}
+\end{equation}
+although an accepted, well-modelled interior step can reduce $\lambda$ by an additional factor of ten.  Consequently, $\lambda$ is controller state rather than the exact multiplier $\mu$ of Eq.~\eqref{eq:plain-classical-tr}.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{The classical reference problem and the implemented Eta2 method.}
+\begin{tabularx}{\linewidth}{@{}p{0.19\linewidth}YY@{}}
+\toprule
+ & Classical trust-region reference & Prism--Eta2 implementation\\
+\midrule
+Step definition & Minimize one joint quadratic inside a scaled ball & Approximately solve a damped Schur system, then clip the scaled camera vector\\
+Radius & Bounds the chosen norm of the joint step & Bounds $\lVert z\rVert$ for cameras; points are recomputed afterward\\
+Damping & Multiplier selected to satisfy the constrained problem & Persistent controller variable, coupled heuristically to $R$\\
+Model changes & The returned step solves the stated subproblem & Backtracking and per-track safeguards may change the candidate\\
+Acceptance & Usually based on actual/predicted reduction & Based on $\rho$ evaluated on the final, modified candidate\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+This distinction matters for both theory and novelty.  Standard trust-region convergence theorems do not automatically describe every Eta2 transition, and the project does not claim a new general trust-region theorem.  The research contribution is the measured BA-specific combination and its safeguards, together with evidence about how the inexact linear solve, nonlinear candidate modifications, and numerical curvature recovery interact.
+
 \section{What ``Eta2'' means}
 
 PCG could solve Eq.~\eqref{eq:plain-schur} to very high accuracy.  Eta2 usually chooses not to.  The reason is practical: a very accurate answer to an imperfect local quadratic model can cost more and can move into nonlinear directions that the model does not describe well.

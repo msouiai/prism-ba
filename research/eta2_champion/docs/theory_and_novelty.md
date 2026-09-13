@@ -39,6 +39,41 @@ The champion couples point damping to camera damping: \(\tau=\lambda\). On posit
 
 These equations describe the ideal arithmetic. Stored camera blocks, cross blocks, and point factors do not necessarily form one exactly consistent Gram matrix after mixed-precision rounding; that distinction matters in section 5.
 
+### Trust-region formulation and exact classification
+
+The classical scaled Gauss--Newton trust-region problem at state \(x_k\) is
+
+\[
+\min_d\;g_k^Td+\tfrac12 d^TJ_k^TJ_kd
+\quad\text{subject to}\quad
+\|D_k^{1/2}d\|\le\Delta_k.
+\]
+
+For an exact solution, a multiplier \(\mu\ge0\) satisfies
+
+\[
+(J_k^TJ_k+\mu D_k)d=-g_k,
+\qquad
+\mu\bigl(\|D_k^{1/2}d\|-\Delta_k\bigr)=0.
+\]
+
+In that reference problem, damping is the dual multiplier selected so that the solution itself obeys the radius. Eta2 instead approximately solves its damped reduced system,
+
+\[
+\|b_\lambda-A_\lambda z_\lambda\|\le\eta_k\|b_\lambda\|,
+\]
+
+then applies a camera-space projection
+
+\[
+\widehat z=z_\lambda\min(1,R_k/\|z_\lambda\|),
+\qquad \widehat d_c=E\widehat z,
+\]
+
+recomputes the point step from \(\widehat d_c\), and may further modify the point proposal through its safeguarded candidate policy. The radius therefore bounds scaled camera motion rather than a single norm of the joint camera--point step. The persistent \(\lambda\) is controller state and is not chosen to satisfy the classical complementarity equation above.
+
+Eta2 is consequently a **radius-controlled inexact LM method with trust-region acceptance**. Calling it “trust-region-flavoured LM” is also accurate. Calling it an exact classical trust-region solver is not: it does not solve the constrained joint quadratic, Moré--Sorensen system, or Steihaug--Toint subproblem. The gain ratio is evaluated on the actual modified candidate, which supplies the trust-region globalisation described in section 3.
+
 ## 2. Eliminate points and solve cameras only as accurately as needed
 
 Let \(V_\lambda=V+\lambda D_p\) and \(E=D_c^{-1/2}\), with the implementation's fallback on zero coordinates. Substitution gives
