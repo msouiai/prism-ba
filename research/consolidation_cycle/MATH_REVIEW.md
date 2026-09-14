@@ -17,8 +17,14 @@ correctness/compatibility gates. The historical-evidence claim in extraction
 commit `114c2b92` was incorrect; it has now been replaced by actual current
 measurements and the reporting blocker is resolved. Compatibility is shown
 on the tested Ladybug49 configuration, not universally across inputs.
-No new fixed-system fusion, workspace concurrency or profiling result has
-yet been reviewed. Findings and corrections are preserved below.
+The later workspace serial comparison and fixed-chain/profile records have
+also been reviewed. The measured fusion package is slower on both tested
+captures; it earns no promotion. Its complete Schur-product timing remains
+unmeasured and its capture-selection deviation is disclosed. The short native
+profiles support three-outer phase attribution, not time-to-target claims.
+Workspace claims are limited to the selected BAL scratch/two-thread smoke,
+not rig or whole-solver exception cleanup. Findings and corrections are
+preserved below.
 
 Initial protocol hashes:
 
@@ -401,3 +407,162 @@ completing provenance links from result to input/command/effective flags and
 build-manifest hash, and from build to current helper/builder and archived
 instrumentation/header hashes. Those metadata additions do not require a
 new GPU run; they must identify any hashes collected retrospectively.
+
+## Fixed-chain fusion: final independent validation
+
+The reviewer verified the retained raw log hashes:
+
+* Muell: `9e634ebae5ee95ce6eaf51d3d41d4590f5320e040d53ffdbb6360d4742702804`.
+* Final1936: `ad456b91035a2307c13378ec74b1db7c90b8108fc900dbeb2ba04b696d80043c`.
+
+Each capture has 12 normal seeded probes, three sampled symmetry checks and
+three alternating timing pairs, with three warmup chains and 20 timed chains
+per arm/repetition. Every reported point and bare-Schur action difference is
+numerically zero. Maximum symmetry defect is `7.6026329842067478e-17` on
+Muell and `6.813169679129217e-17` on Final1936. The tiny point-output norms are
+`8.0612011203145507e-197` and `1.0680059204629037e-196`, respectively, with
+zero reported absolute/relative point error. Invalid-diagonal zeroing is
+asserted by the harness; it is not printed as a separate numeric log row.
+
+The source uses sequential host `hypot` for norms, so the tiny difference
+check does not square tiny entries into false zero. Finite metrics are
+explicitly required. Zero numerical difference does not distinguish signed
+zero bit patterns; the corrected report appropriately avoids claiming a
+bitwise comparison. The tiny probe checks point output only, not a tiny
+full Schur action. The single invalid-factor fixture sets the first packed
+diagonal negative; it does not exhaust every malformed factor.
+
+| Capture | Baseline median chain ms | Fused median chain ms | Ratio of medians | Median paired ratio |
+|---|---:|---:|---:|---:|
+| Muell outer 12 | 11.9126987 | 16.0335121 | 1.3459177054 | 1.3461182037 |
+| Final1936 outer 0 | 20.6940403 | 31.3395691 | 1.5144248608 | 1.5144474733 |
+
+All six pairwise ratios exceed one. The reported approximately 34.6% and
+51.4% chain regressions are supported under either summary convention; the
+table's published ratio is the ratio of arm medians. The recorded timings
+are CUDA-event duration of `memset + Pass1 + Vinv` versus its fused replacement.
+They exclude camera Pass2/Schur assembly and are not complete operator or
+native solve times.
+
+The reviewer rehashed the source as
+`99425dad111b8aa79744f3e00ab6b51b3e1ee4374b36fb6326630f36285a376e`
+and verified that its baseline launches one warp per block
+(`PointPass1<<<np,32>>>`), while its fused kernel packs four warps per block.
+The initial report and initial implementer reply incorrectly described both
+arms as four-warps-per-block. The corrected report now identifies the measured
+package as block packing plus fusion. The data do not isolate fusion alone.
+
+Two protocol departures are now disclosed. First, the BAL test used an
+available Final1936 archive because no compatible larger archived capture was
+available, not because Final13682/Final4585 failed a memory test. It must not
+be called the largest feasible fixed capture. Second, the printed denominator
+`2*||Sv||` is a placeholder, not the registered separate-term expression and
+not a conservative upper bound under cancellation. Zero observed action
+differences make this denominator irrelevant to these sampled comparisons,
+but do not validate the placeholder formula in general.
+
+These data justify rejecting this measured package before broader native
+testing. They do not complete the registered full-product performance gate;
+full Schur-product timing and bytes/atomic-transaction profiling remain
+unmeasured. The reviewer asked that the result say the chain screen failed,
+rather than retroactively calling the protocol's fixed-product requirement a
+chain-only requirement. No new GPU work is needed to preserve this bounded
+negative result.
+
+## B6v7 three-outer profile: final independent validation
+
+All eight profile/timing rows were checked against their current input/binary
+hashes and saved logs. Each log reports exactly three accepted outer steps,
+zero rejects and zero negative-curvature events. Muell uses seven Schur
+products and Final13682 uses sixteen in every profiled/unprofiled row. The
+effective flags exactly equal the frozen champion plus the archived B6v7
+overlay, with only `OCA_PROFILE=1` added for each profiled row, and every
+command overrides maximum iterations to three.
+
+The reviewer checked the archived B6v7 generated source, binary and every
+recipe/dependency hash listed in `eta2_wave5/b6v7-build-manifest.json` against
+the files actually used. Source SHA256 is
+`c04bb4ed1a7fcbb6dcae5c9d016189612f854d91e92c34155a66114be62e23bb`;
+binary SHA256 is
+`b6462682592916fa5cd9ee506bf2b24cb1bfbc10ed8dcb5fb3f0db05bcef198a`.
+The overlay SHA256 matches the registered
+`53ba1cae00a42d3e84f40250a9a2362e5f8e58000157637c4d8050af2689961a`.
+This is the intended B6v7 configuration, not a champion-only substitute.
+
+Maximum independently recomputed native/audit relative disagreement over all
+four rows is `2.439510467851243e-15` on Muell and
+`1.7756766428848397e-14` on Final13682. Audited endpoint costs are finite.
+The reviewer checked the audit harness and recorded values; endpoint states
+had already been deleted and were not independently rescored a second time.
+
+| Scene | N=3 unprofiled process median s | N=3 returned-solve median s | Outside-solve fraction from medians |
+|---|---:|---:|---:|
+| Muell | 1.7727404581 | 0.228035 | 87.1366% |
+| Final13682 | 20.1855451511 | 2.251651 | 88.8452% |
+
+Phase percentages use the single profiled returned-solve clock, not those
+unprofiled medians. The denominators are 0.227090 s and 2.289404 s:
+
+| Scene | Assembly | Point factor/RHS | Krylov | Candidates | Unclassified |
+|---|---:|---:|---:|---:|---:|
+| Muell | 62.9706% | 6.1650% | 6.1650% | 3.5228% | 21.1766% |
+| Final13682 | 38.7437% | 10.2647% | 29.1779% | 6.2462% | 15.5675% |
+
+The phase durations are printed to one millisecond, limiting useful precision;
+the one-decimal report should round the Muell residual to 21.2%, Final
+candidates to 6.2% and Final residual to 15.6%. Separate rounding can cause
+displayed shares not to sum to exactly 100%; computing a residual from already
+rounded percentages is not the same as using logged durations.
+
+The protocol contains an explicit pre-run amendment replacing the originally
+referenced target/cap scheme with fixed three-outer runs. Therefore these are
+short-workload timings and phase measurements, not time-to-target results.
+Final13682 actually ran successfully, so the largest-scene profile did not
+require fallback. This fact does not establish feasibility of a larger
+duplicated fixed-system capture benchmark.
+
+Process minus returned-solve wall includes parsing, process/CUDA startup,
+state output and teardown; no separate clocks allocate that difference among
+them. The amended report correctly treats outside-solve work as a target for
+further measurement rather than attributing all of it to parsing/setup.
+Assembly is the largest measured internal phase in these first three outers.
+Neither that ordering nor the 29.2% Final Krylov share characterizes later
+hard outers or a full run to target. No per-kernel bytes, occupancy or launch
+attribution is established by these four coarse phase timers.
+
+## Workspace scope in the final report
+
+The reviewer verified current owned source/binary/test-binary/builder/header
+hashes against `WORKSPACE_BUILD.json`, and independently recomputed
+`workspace_exact=true` from every registered field in the retained serial
+comparison. That is valid serial compatibility evidence for the measured
+configuration.
+
+The concurrent harness uses distinct CD9 BAL fixtures with two cameras/nine
+points and three cameras/seventeen points, one outer iteration each, and
+separate serial references. It compares complete states and numerical result
+fields bitwise and checks seven corresponding non-null pointer pairs are
+different between the two workspace observations. It restores the caller
+device and checks the injected allocation failure returns failure. The math
+reviewer inspected this test's scope but did not rerun it on a GPU.
+
+Call this a two-thread scratch-ownership smoke. It does not contain a start
+barrier/overlap assertion, test every diagnostic path merely by allocating its
+buffer, or prove simultaneous GPU kernel execution. The constructor-failure
+assertions check the failed result and device restoration; cleanup assessment
+also depends on the ownership source review. Rig and whole-solver exception
+cleanup remain outside the proven scope. The revised implementation report
+retains those material exclusions.
+
+## Final mathematical assessment
+
+The clean mathematical option has positive CPU, injected CUDA control-flow
+and current-source compatibility evidence. The owned scratch change has
+serial compatibility and a narrowly scoped two-thread smoke. The measured
+fusion package is a clear negative chain result with disclosed protocol
+deviations. The profile is useful short-workload attribution, with valid
+audited endpoints and correctly separated process/solve/phase clocks.
+No new speed candidate is justified for promotion, no universal precision or
+trajectory claim follows, and no complete concurrency/exception-safety claim
+follows beyond the tested scope. The remaining full-product profiler and
+broader workspace gates should stay explicitly unmeasured.
