@@ -347,3 +347,79 @@ after the acknowledged cohort deviation. They do not establish exact
 flags-off compatibility, internal projection/write/normal costs, an
 assembly-candidate gain, reusable-context gain, full-solver ownership,
 concurrency, or time to target. Those later gates remain open work.
+
+## Split-replay registration refinement
+
+The proposed one-million-observation chunk limit is a conservative
+implementation choice. For Final13682's 28,987,644 observations, the two
+twelve-entry FP64 gradient arrays alone require 5,565,627,648 bytes
+(5.183395 GiB); compact `Gp` needs 3,130,665,552 bytes (2.915660 GiB),
+and `Bo` needs 695,703,456 bytes (0.647924 GiB). These partial counts
+do not prove that an unchunked implementation exceeds available memory.
+Such a claim needs a complete peak-live allocation inventory or an
+observed failed allocation. The status document was amended accordingly.
+
+The split check now specifies Euclidean norms and separate branches:
+relative error at most 1e-12 when the reference norm is positive, and
+absolute error at most 1e-12 when it is zero, with explicit finite-output
+checks. This corrects the initial conjunction that divided by DBL_MIN at
+zero while also applying an absolute tolerance. Norm calculations must
+themselves avoid overflow/underflow; exact per-observation fragment checks
+still apply when their evaluation graphs are preserved. No split source
+or result has yet been validated.
+
+## Stage 5 clean linear-edge extraction
+
+Read-only validation of `/workspace/prism-ba-linear-clean` at `6a714156`
+found the linear builder, mathematical helper and CPU test source
+byte-identical to the previously validated consolidation versions. Calling
+the builder's pure `derive()` function, without compiling or running CUDA,
+reproduced generated-source SHA256
+`3f6133941892f2a992c4ca1b1fead15bae1b0ef8d585f1416dafaa5d8fa36c5e`,
+matching the archived measured source. The extracted parity result differs
+only by removing the unrelated owned-workspace row and equality claim;
+the mathematical three-arm parity evidence is unchanged.
+
+This supports carrying forward the prior narrow zero-RHS/forcing and
+fixed-order ordinary-run validation for the identical extraction. It
+does not constitute new native timings or broader convergence testing.
+The synthetic zero-RHS switch remains compile-time fixture-only, and
+enabled robust norms still incur a host copy per attempt.
+
+One inherited report phrase was flagged: the previous workspace
+consolidation did not make all solver allocations exception-safe.
+Pre-existing manual allocations and error cleanup remain outside the
+validated ownership scope. The clean extraction must retain that
+limitation rather than imply Stage 4 has already been completed.
+
+## Review at the current implementation stop
+
+At assembly/context branch `e47a47d6`, the retained native V2 attribution
+and the unchanged clean linear-edge extraction are the only validated
+results. The native report now uses the retained audit maximum and the
+correct camera-correction/equilibration boundaries, and excludes the
+unretained initial cohort. The updated code review agrees with V2 and
+treats projection sharing as a proposal pending split replay.
+
+The overall registered cycle is **incomplete**. No split replay or exact
+current native-instrumentation flag-off gate has been delivered. No
+assembly candidate was selected, implemented, or tested against its
+microtime/native target gates. No uploaded reusable context has been
+measured at K=5, and no new full-BAL ownership, failure-path or overlapping
+two-thread evidence has been delivered. Stage 3 and Stage 4 are independent
+authorized work; failure to reach Stage 2 does not satisfy or waive them.
+
+The need to write chunked CUDA code is remaining implementation work,
+not a demonstrated external or memory blocker. The implementer was
+restarted and given a concrete hook-based split design, but the current
+artifact set still ends at native attribution. There is no mathematical
+basis for reporting the full cycle completed or a performance candidate
+rejected by measurements that were never run.
+
+Neither production-speed gate has passed, so leaving the conditional
+Caspar stage closed is correct. This is not a Caspar win, loss, target
+miss, availability finding or time-to-target result. Fixed-three-outer
+native timing and coarse setup observations cannot support those claims.
+The existing B6v7 performance selection remains unchanged; the default-off
+linear-edge correctness path has its previously stated narrow validation
+and cleanup limitations.
