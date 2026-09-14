@@ -1,0 +1,9 @@
+# Owned BAL workspace results
+
+Generated source SHA `d3a1d04d682eebb06b13c09ef18b925218ac4d4c5e84843b3b8576080b924de6` moves active BAL cost, deterministic cost, deterministic BLAS, bounded-cost, stride-cost, cheirality-count, and block-factor diagnostic scratch into a device-tagged per-solve owner. Host CSV, dump, policy-load and diagnostic-once state reachable by concurrent library callers is thread-local. Existing full-model reductions remain per object. The public wrapper records/restores the caller device; workspace construction follows device selection, and its destructor switches to the owner device before freeing.
+
+The fixed-order Ladybug49 serial comparison matches the current non-owned binary exactly across accepted costs, decisions, endpoint SHA, iterations, final cost, accepts, rejects, Schur products and negative-curvature events (`workspace_exact=true` in `FIXED_PARITY_RESULTS.json`).
+
+The same-process CUDA harness passed on GPU 0. It used distinct 2-camera/9-point and 3-camera/17-point problems and capacities, compared both concurrent results and complete states bit-for-bit with separate serial references, observed seven non-null and pairwise-distinct scratch pointers, and restored each thread's caller device. Failure after the third successful workspace allocation returned a failed result and restored the caller device. Test binary SHA is `26039acc207abe72430fef1605b959ad98c94e5fe2e17419cd91a6d9971dcf91`.
+
+Scope remains active BAL only; rig is excluded. Ordinary solver buffers and handles are independent per call, but retain production's manual cleanup, so exceptions after workspace construction can still leak those unrelated allocations. This passes scratch concurrency and workspace-construction failure cleanup; it does not establish whole-solver exception RAII.

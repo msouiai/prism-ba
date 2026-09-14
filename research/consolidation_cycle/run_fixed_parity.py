@@ -15,6 +15,8 @@ def run(binary,label,edge):
   m=re.search(r"MFCG: accepts=(\d+) rejects=(\d+) total_matvecs=(\d+).*?negcurv=(\d+)",p.stdout);rr=re.search(r"RESULT .*?iters=(\d+) final_cost=(\S+)",p.stdout);assert m and rr
   ac=float(audit(state,*obs));row={"costs":costs,"decisions":dec,"endpoint_sha256":hashlib.sha256(state.read_bytes()).hexdigest(),"iters":int(rr[1]),"final_cost":float(rr[2]),"audit_cost":ac,"accepts":int(m[1]),"rejects":int(m[2]),"matvecs":int(m[3]),"negcurv":int(m[4])};state.unlink();return row
 rows={"baseline":run(P/"build/fixed-baseline","baseline",False),"current_off":run(P/"build/fixed-linear-edges","current-off",False),"current_on":run(P/"build/fixed-linear-edges","current-on",True)}
+if (P/"build/prism-owned-workspace").exists(): rows["owned_workspace"]=run(P/"build/prism-owned-workspace","owned-workspace",False)
 fields=("costs","decisions","endpoint_sha256","iters","final_cost","accepts","rejects","matvecs","negcurv")
-result={"rows":rows,"off_exact":all(rows["baseline"][x]==rows["current_off"][x] for x in fields),"ordinary_on_exact":all(rows["baseline"][x]==rows["current_on"][x] for x in fields),"fields":list(fields)};result["passed"]=result["off_exact"] and result["ordinary_on_exact"]
+result={"rows":rows,"off_exact":all(rows["baseline"][x]==rows["current_off"][x] for x in fields),"ordinary_on_exact":all(rows["baseline"][x]==rows["current_on"][x] for x in fields),"fields":list(fields)}
+result["workspace_exact"]= "owned_workspace" not in rows or all(rows["current_off"][x]==rows["owned_workspace"][x] for x in fields);result["passed"]=result["off_exact"] and result["ordinary_on_exact"] and result["workspace_exact"]
 (P/"FIXED_PARITY_RESULTS.json").write_text(json.dumps(result,indent=2)+"\n");print(json.dumps({k:v for k,v in result.items() if k!="rows"},indent=2));raise SystemExit(0 if result["passed"] else 2)
