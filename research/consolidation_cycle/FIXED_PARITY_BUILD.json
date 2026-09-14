@@ -1,0 +1,44 @@
+{
+  "fixed-baseline": {
+    "source_sha256": "46ad1d3f68e7dfb14b82d6cbf27affc7a5c961d2c50edec7929647b7d9c3744c",
+    "binary_sha256": "c3060718b9b80a2cc1491fbccf84aa0d4a5d675aacbe9a66bbc7842798c8a1d2",
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/workspace/prism-ba-agent-consolidation/research/consolidation_cycle",
+      "-I/tmp/prism-ba-agent-integration/research/eta2_wave6",
+      "-I/tmp/prism-ba-agent-integration/research/eta2_wave5",
+      "-I/workspace/prism-ba-agent-consolidation/research/eta2_champion/source/headers",
+      "/workspace/prism-ba-agent-consolidation/research/consolidation_cycle/build/fixed-baseline.cu",
+      "-o",
+      "/workspace/prism-ba-agent-consolidation/research/consolidation_cycle/build/fixed-baseline",
+      "-lcublas",
+      "-lcusolver"
+    ]
+  },
+  "fixed-linear-edges": {
+    "source_sha256": "7803add49953e7fc1efe12bd5356347defc37b49b0dcddcfb48123efe8b26ed0",
+    "binary_sha256": "68c07c5da56008193aae9cca73c63a57b00097364fcf330d7eb604ed5a7b833d",
+    "command": [
+      "nvcc",
+      "-O3",
+      "-DNDEBUG",
+      "-std=c++17",
+      "-arch=sm_89",
+      "-I/usr/include/eigen3",
+      "-I/workspace/prism-ba-agent-consolidation/research/consolidation_cycle",
+      "-I/tmp/prism-ba-agent-integration/research/eta2_wave6",
+      "-I/tmp/prism-ba-agent-integration/research/eta2_wave5",
+      "-I/workspace/prism-ba-agent-consolidation/research/eta2_champion/source/headers",
+      "/workspace/prism-ba-agent-consolidation/research/consolidation_cycle/build/fixed-linear-edges.cu",
+      "-o",
+      "/workspace/prism-ba-agent-consolidation/research/consolidation_cycle/build/fixed-linear-edges",
+      "-lcublas",
+      "-lcusolver"
+    ]
+  }
+}
