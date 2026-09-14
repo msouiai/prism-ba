@@ -1,0 +1,20 @@
+{
+  "base_sha256": "c04bb4ed1a7fcbb6dcae5c9d016189612f854d91e92c34155a66114be62e23bb",
+  "source_sha256": "9382e91f4f4afb104b8f4bcd6a09d1992aafb9884360a5c196ec9c98c23c7000",
+  "binary_sha256": "88d375a7a4f72c9fb02460fc466023144779ad156e509763ba46d69b4cb0002a",
+  "command": [
+    "nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/usr/include/eigen3",
+    "-I/tmp/prism-ba-coarse/research/eta2_champion/source/headers",
+    "-I/tmp/prism-ba-coarse/research/eta2_wave5",
+    "/workspace/prism-ba-assembly-context/research/assembly_context_cycle/build/native-timing.cu",
+    "-o",
+    "/workspace/prism-ba-assembly-context/research/assembly_context_cycle/build/native-timing",
+    "-lcublas",
+    "-lcusolver"
+  ]
+}

@@ -1,0 +1,28 @@
+  [menu-backtrack] active=1 max_evals=8 warmup_accepts=3 confirm_stop=original armijo=1e-4
+MIXED_STORAGE fragments=fp32 arithmetic=fp64 state=fp64 acceptance=fp64
+  [compact-fragments] active=2 saved_bytes=220341784 storage=fp32 camera_reads=contiguous
+W5_CG_DOTS active n=4437
+W5_PREP_FUSE active ncam=493 npt=313987 nobs=2118671 camera_rhs=1 min_cams=128
+  MFCG score_init=2442177.0302083218 precision=fp64
+PCG_PREP o=0 rebuild=1 drift=0 previous_depth=0
+ATTR_RADIUS o=0 raw_norm=893.15778578065363 norm=893.15778578065351 radius=893.15778578065363 next_radius=1786.3155715613073 lambda=0.10000000000000001 next_lambda=0.025000000000000001 rho=0.99668274946007918 accept=1
+CLASSICAL_LM o=0 lambda=0.10000000000000001 tau=0.10000000000000001 prediction=148064.31619814161 rho=0.99668274946007918 accept=1
+  MFCG it   1 cost=2.294604e+06 lam=2.500e-02 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=2
+PCG_PREP o=1 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=1 raw_norm=1573.2352685414605 norm=1573.2352685414605 radius=1786.3155715613073 next_radius=3572.6311431226145 lambda=0.025000000000000001 next_lambda=0.0062500000000000003 rho=0.99852449558916223 accept=1
+CLASSICAL_LM o=1 lambda=0.025000000000000001 tau=0.025000000000000001 prediction=114763.66645720681 rho=0.99852449558916223 accept=1
+  MFCG it   2 cost=2.180010e+06 lam=6.250e-03 tau=0.00e+00 cg_it=0 shift=0 ckpt=1 alpha=0 acc mv=4
+PCG_PREP o=2 rebuild=1 drift=0 previous_depth=1
+ATTR_RADIUS o=2 raw_norm=2221.7294493540189 norm=2221.7294493540189 radius=3572.6311431226145 next_radius=3572.6311431226145 lambda=0.0062500000000000003 next_lambda=0.00062500000000000012 rho=1.002541045148464 accept=1
+CLASSICAL_LM o=2 lambda=0.0062500000000000003 tau=0.0062500000000000003 prediction=80092.080743259809 rho=1.002541045148464 accept=1
+  MFCG it   3 cost=2.099714e+06 lam=6.250e-04 tau=0.00e+00 cg_it=1 shift=0 ckpt=2 alpha=0 acc mv=7
+  MFCG: accepts=3 rejects=0 total_matvecs=7 negcurv=0 cand_evals=3 mean_cg_per_outer=2.3
+NUMERIC_REPAIR summary rebuilds=0 floor=9.9999999999999998e-17
+W5_CG_DOTS summary dot_pairs=8
+W5_PREP_FUSE summary calls=3 camera_rhs=1
+  [retry-cache] builds=3 reuses=0
+  [menu-backtrack] trials=0 rescues=0 evals=0 total_scored=3
+POINT_SAFE summary calls=0 evals=0 wins=0 frozen=0 seconds=0
+  [scoring] menu_evals=3 alpha_evals=0 backtrack_evals=0 total_scored=3
+RESULT algo=mfree_shifted_cg iters=3 final_cost=2099713.9499454233 solve_seconds=0.222964
+DIAGNOSTICS median_reproj_err_px 1.064960 -> 0.984385 | cheirality_violations(obs) 0 -> 0 | cheirality_violations(pts, of 313987) 0 -> 0
