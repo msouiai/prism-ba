@@ -1,0 +1,118 @@
+{
+  "command": [
+    "/tmp/prism-ba-agent-integration/research/eta2_wave6/build/prism-deterministic-fp64-fragments",
+    "--problem",
+    "/dev/shm/agent-fp32-1-1.txt",
+    "--algo",
+    "mfree_shifted_cg",
+    "--dof9",
+    "--zero_k2",
+    "--lam0",
+    "0.1",
+    "--max_iter",
+    "600",
+    "--csv",
+    "/tmp/prism-ba-agent-integration/research/agent_audits/evidence/fp32-confirmation/final-3068-1-fp64/curve.csv",
+    "--state_out",
+    "/dev/shm/eta2-wave5-b7r7nvmc.state"
+  ],
+  "flags": {
+    "OCA_ATTR_RADIUS": "1",
+    "OCA_ATTR_RESCUE": "1",
+    "OCA_ATTR_STRICT": "1",
+    "OCA_BACKTRACK_REARM": "1",
+    "OCA_CAMERA_TR": "0",
+    "OCA_CG_STOP": "0",
+    "OCA_CLASSICAL_LM": "1",
+    "OCA_COMPACT_FRAGMENTS": "2",
+    "OCA_DEMAND_MENU": "0",
+    "OCA_DIAG_NORM": "1",
+    "OCA_FORCE_UNSHARED": "1",
+    "OCA_FTOL": "1e-5",
+    "OCA_FTOL_K": "8",
+    "OCA_GRID_DOWN": "2",
+    "OCA_MENU_BACKTRACK": "8",
+    "OCA_MENU_GATE": "1e-2",
+    "OCA_MULTI_RHS": "1",
+    "OCA_NSHIFTS": "1",
+    "OCA_PCG": "1",
+    "OCA_POINT_SAFEGUARD": "1",
+    "OCA_RETRY_CACHE": "1",
+    "OCA_RHO_LAMBDA": "1",
+    "OCA_RHO_SHIFT": "1",
+    "OCA_SCHUR_NUMERIC_GUARD": "1",
+    "OCA_SWITCH_RESTART": "0",
+    "OCA_TR_RECURRENCE": "0",
+    "OCA_RLA_FIXED_ETA": "2",
+    "OCA_W5_CG_DOTS": "1",
+    "OCA_W5_PREP_FUSE": "1",
+    "OCA_W5_PREP_CAMERA": "1",
+    "OCA_W5_PREP_MIN_CAMS": "128",
+    "OCA_W6_DETERMINISTIC": "1",
+    "OCA_MAX_SECONDS": "45.0",
+    "OCA_TARGET_COST": "1744796.9841897595",
+    "OCA_WAVE_TRACE": "/tmp/prism-ba-agent-integration/research/agent_audits/evidence/fp32-confirmation/final-3068-1-fp64/wave.json",
+    "OCA_STCG_ATTEMPTS": "/tmp/prism-ba-agent-integration/research/agent_audits/evidence/fp32-confirmation/final-3068-1-fp64/attempts.json"
+  },
+  "binary_sha256": "2b3fca01b7c8e63a1e4b8396da8a478f21e8a11c9a7a7a38465726ee44885d93",
+  "input_sha256": "6f5dfa4dfd2e3f305195cca8f493d7c50809b44f2ed3081b21a00ea006f96089",
+  "champion_sha256": "6d37583e5ee802233f034cb3b034d9ef91fdfaabcb27c16a259bdd18d265d251",
+  "protocol_sha256": "815f5e660e7b517f6f0d10315f7bd55bc82174be5638615e0d8ebbc8ca4a0e74",
+  "host": "2237c6528e79",
+  "scene": "final-3068",
+  "arm": "fp64",
+  "rep": 1,
+  "target": 1744796.9841897595,
+  "cap": 45.0,
+  "build_manifest": {
+    "protocol_sha256": "815f5e660e7b517f6f0d10315f7bd55bc82174be5638615e0d8ebbc8ca4a0e74",
+    "epsilon": 1e-10,
+    "pairs_per_scene": 3,
+    "arm_order": "fp32 first on even repetition, fp64 first on odd repetition",
+    "rig_excluded": true,
+    "scenes": [
+      {
+        "scene": "ladybug-49",
+        "path": "/workspace/bal/ladybug-49.txt",
+        "target": 13591.568354279514,
+        "cap": 5.0,
+        "input_sha256": "96ca2845519d89d0727953d983427ab38a42c54991cd4d73e46a4221da3c61b4",
+        "seed_base": 910000
+      },
+      {
+        "scene": "final-3068",
+        "path": "/workspace/bal/final-3068.txt",
+        "target": 1744796.9841897595,
+        "cap": 45.0,
+        "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+        "seed_base": 910100
+      },
+      {
+        "scene": "final-4585",
+        "path": "/workspace/bal/final-4585.txt",
+        "target": 7075838.613048037,
+        "cap": 60.0,
+        "input_sha256": "d5e0ea06a364d7a7b5b087ab3c9d53c97dbbcd6c7d3984b62428185e66b9dd54",
+        "seed_base": 910200
+      }
+    ],
+    "arms": {
+      "fp32": {
+        "binary": "/tmp/prism-ba-agent-integration/research/agent_audits/build/prism-code",
+        "sha256": "c4d67e7aa233533a3b3294307d07bc0b032974897e9936bce5fe5cfae67fdb64"
+      },
+      "fp64": {
+        "binary": "/tmp/prism-ba-agent-integration/research/eta2_wave6/build/prism-deterministic-fp64-fragments",
+        "sha256": "2b3fca01b7c8e63a1e4b8396da8a478f21e8a11c9a7a7a38465726ee44885d93"
+      }
+    },
+    "flags": {
+      "OCA_W5_CG_DOTS": "1",
+      "OCA_W5_PREP_FUSE": "1",
+      "OCA_W5_PREP_CAMERA": "1",
+      "OCA_W5_PREP_MIN_CAMS": "128",
+      "OCA_W6_DETERMINISTIC": "1"
+    }
+  },
+  "endpoint_policy": "Independent FP64 audit in /dev/shm; retain exact SHA256 and byte count, then remove temporary state"
+}

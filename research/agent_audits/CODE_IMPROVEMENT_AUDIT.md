@@ -8,7 +8,7 @@ Scope: frozen Eta2 source under `research/eta2_champion/source`, Wave-5/Wave-6 e
 | Rank | Change | Expected value | Risk |
 |---:|---|---|---|
 | 1 | Port Wave-6's complete fixed-order reduction path into the production solver/workspace | High scientific/debug value; negligible steady-state cost for cost scoring | Low-medium |
-| 2 | Make FP32 fragments the BAL default and a measured/explicit rig choice | 21--33% BAL wall reduction in the independent N=3 panel; 12--28% on two rig sizes, neutral at 20.8M observations | Low-medium |
+| 2 | Preserve the champion's compile-time FP32 compact fragments; separately re-gate the public API's legacy FP32 option | 21--33% FP32-vs-FP64 BAL signal in matched derivatives; public API impact is configuration-specific | Medium |
 | 3 | Replace process-global CUDA scratch with per-solve/per-device workspace ownership | Removes a real concurrency and multi-GPU correctness defect; enables safe embedding | Medium |
 | 4 | Fuse point-owned Pass1 with the 3x3 point solve, using the existing point CSR | Up to part of the 53.19% Krylov share and removes a full `tacc` round trip plus atomics/launch per product | Medium-high |
 | 5 | Convert the active champion configuration from environment-variable control to an immutable typed plan | Prevents configuration bleed and makes manifests/API behavior trustworthy | Medium |
@@ -32,19 +32,21 @@ Claude independently measured the cost-only two-pass form below 0.01 ms at panel
 
 **Kill criterion.** Kill production promotion if repeated flag-on runs differ in any numerical trace field, if the independent cost audit exceeds the existing tolerance, or if stable-panel target time regresses by more than 1% after subtracting normal run-to-run timing spread.
 
-## 2. Default BAL to FP32 fragments; keep the rig choice explicit until broader coverage
+## 2. Preserve champion FP32 fragments; separately re-gate the public API path
 
-**Evidence and mechanism.** Both public option structs default `use_fp32_fragments` to false (`headers/oca_core.h:87` and `:215`). The implementation then allocates two 27-value fragment copies plus six point values per observation in either float or double (`prism_eta2.cu:9152-9156`; rig at `headers/oca_rigfisheye.cuh:533-542`). Every Schur product streams the fragments in `MFPass1` and `MFPass2` (`prism_eta2.cu:1391-1398`, `:1522-1539`, and calls at `:10095-10110`). This is the measured memory-roofline path.
+**Correction (2026-09-14).** The frozen Eta2 champion already declares `using Fragment = float` at `prism_eta2.cu:9090` and uses compact camera-major storage. The public `use_fp32_fragments` boolean selects the separate legacy `Gp32/Gc32/Bo32` branch, is rejected by the champion's mixed-storage guard at `:9083`, and is incompatible with compact storage at `:9144-9146`. Wave-6 D3 compared matched derived binaries by changing the compile-time `Fragment` alias; it did not validate flipping the public boolean in the frozen champion. Therefore do **not** implement this recommendation as an Eta2 option-default change.
+
+**Evidence and mechanism.** Both public option structs default `use_fp32_fragments` to false (`headers/oca_core.h:87` and `:215`), and the legacy implementation allocates two 27-value fragment copies plus six point values per observation in either float or double (`prism_eta2.cu:9152-9156`; rig at `headers/oca_rigfisheye.cuh:533-542`). Every Schur product streams fragments in `MFPass1` and `MFPass2` (`prism_eta2.cu:1391-1398`, `:1522-1539`, and calls at `:10095-10110`). This is the measured memory-roofline mechanism, but its exact storage branch must be named in every comparison.
 
 Wave-6 D3 is decisive against FP64 as a reliability mechanism: FP64 won only 8 of 18 discordant Final3068 pairs, was slower on all 15 double hits, and had a 1.634x median target-time ratio (`research/eta2_wave6/D3_RESULTS.md`). Claude's independent post-cost-kernel N=3 panel gives FP32 wall changes of -21% to -33% on six non-tiny BAL scenes with endpoints inside each scene's spread; Ladybug49 is effectively neutral (-2%, endpoint +0.007%). Corrected rig N=3 results are -12% at 1.5M observations, -28% at 4.5M, and -0.1% at 20.8M, with matching quality.
 
 **Predicted ceiling.** 21--33% total BAL wall on the measured panel, consistent with the 1.2165--2.2189 FP64/FP32 target ratios in D3. Rig ceiling is 0--28% in current evidence. Memory drops by about `30 * nobs * 4` bytes for the two 27-value and one six-value stores: roughly 3.5 GiB at 29M observations. Exact allocation savings should be reported from `OCA_MEMREPORT` rather than inferred in release notes.
 
-**Minimal ablation.** No broad discovery sweep is needed. Re-run N=3 paired, alternating-order medians on one tiny BAL, Dubrovnik135/356, Final3068 with deterministic perturbation pairing, and one largest BAL; use common targets and independent FP64 endpoint rescoring. For rig, retain explicit selection and test one small, one medium, and `gba_230` before changing its default.
+**Minimal ablation.** For Eta2, retain the existing compile-time FP32 compact champion and its FP64 diagnostic derivative. For the public API legacy branch, first identify a supported matched configuration and run N=3 paired, alternating-order medians on one tiny BAL, Dubrovnik135/356, and one large problem with independent FP64 endpoint rescoring. Treat rig as a separate path.
 
 **Compatibility requirement.** State, accumulation, point factors, Krylov scalars, actual-cost acceptance, and endpoint audit remain FP64. The typed option must be recorded in result/build metadata. Preserve FP64 fragments as a diagnostic mode for precision forensics.
 
-**Kill criterion.** Reject the BAL default only if it loses more than 2% target wall on any stable scene, changes a stable endpoint beyond that scene's measured numerical spread, or reduces paired Final3068 hit rate beyond the existing 15-point non-inferiority margin. Keep rig FP64 by default if any N=3 cell regresses more than 2%; otherwise a size-independent FP32 default is supported by current evidence.
+**Kill criterion.** Reject any simple `Options::use_fp32_fragments = true` change for frozen Eta2 because it selects the wrong and currently incompatible path. A future public-API change needs its own supported configuration and must be killed if it loses more than 2% target wall on a stable scene or moves quality beyond measured spread.
 
 ## 3. Give every solve its own CUDA workspace and device affinity
 

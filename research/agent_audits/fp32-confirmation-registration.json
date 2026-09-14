@@ -1,0 +1,50 @@
+{
+  "arm_order": "fp32 first on even repetition, fp64 first on odd repetition",
+  "arms": {
+    "fp32": {
+      "binary": "/tmp/prism-ba-agent-integration/research/agent_audits/build/prism-code",
+      "sha256": "c4d67e7aa233533a3b3294307d07bc0b032974897e9936bce5fe5cfae67fdb64"
+    },
+    "fp64": {
+      "binary": "/tmp/prism-ba-agent-integration/research/eta2_wave6/build/prism-deterministic-fp64-fragments",
+      "sha256": "2b3fca01b7c8e63a1e4b8396da8a478f21e8a11c9a7a7a38465726ee44885d93"
+    }
+  },
+  "epsilon": 1e-10,
+  "flags": {
+    "OCA_W5_CG_DOTS": "1",
+    "OCA_W5_PREP_CAMERA": "1",
+    "OCA_W5_PREP_FUSE": "1",
+    "OCA_W5_PREP_MIN_CAMS": "128",
+    "OCA_W6_DETERMINISTIC": "1"
+  },
+  "pairs_per_scene": 3,
+  "protocol_sha256": "815f5e660e7b517f6f0d10315f7bd55bc82174be5638615e0d8ebbc8ca4a0e74",
+  "rig_excluded": true,
+  "scenes": [
+    {
+      "cap": 5.0,
+      "input_sha256": "96ca2845519d89d0727953d983427ab38a42c54991cd4d73e46a4221da3c61b4",
+      "path": "/workspace/bal/ladybug-49.txt",
+      "scene": "ladybug-49",
+      "seed_base": 910000,
+      "target": 13591.568354279514
+    },
+    {
+      "cap": 45.0,
+      "input_sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481",
+      "path": "/workspace/bal/final-3068.txt",
+      "scene": "final-3068",
+      "seed_base": 910100,
+      "target": 1744796.9841897595
+    },
+    {
+      "cap": 60.0,
+      "input_sha256": "d5e0ea06a364d7a7b5b087ab3c9d53c97dbbcd6c7d3984b62428185e66b9dd54",
+      "path": "/workspace/bal/final-4585.txt",
+      "scene": "final-4585",
+      "seed_base": 910200,
+      "target": 7075838.613048037
+    }
+  ]
+}

@@ -1,9 +1,20 @@
 #pragma once
 
 #include <cmath>
+#include <cstddef>
 #include <stdexcept>
 
 namespace prism_agent_audit {
+
+inline double StableFiniteNorm(const double* values, std::size_t count) {
+  double norm = 0.0;
+  for (std::size_t i = 0; i < count; ++i) {
+    if (!std::isfinite(values[i]))
+      throw std::runtime_error("nonfinite reduced-RHS entry");
+    norm = std::hypot(norm, values[i]);
+  }
+  return norm;
+}
 
 inline double ForcingRatioSquared(double norm, double previous_norm) {
   if (!std::isfinite(norm) || !std::isfinite(previous_norm))
@@ -14,7 +25,8 @@ inline double ForcingRatioSquared(double norm, double previous_norm) {
   // only at exceptional scales where direct squaring yields Inf/Inf or 0/0.
   const double n2 = norm * norm;
   const double p2 = previous_norm * previous_norm;
-  if (std::isfinite(n2) && std::isfinite(p2) && p2 > 0.0) return n2 / p2;
+  if (std::fpclassify(n2) == FP_NORMAL && std::fpclassify(p2) == FP_NORMAL)
+    return n2 / p2;
   const double ratio = norm / previous_norm;
   return ratio * ratio;
 }
