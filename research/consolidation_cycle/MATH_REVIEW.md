@@ -11,13 +11,14 @@ solver code or run GPU workloads.
 
 ## Current verdict
 
-The new CPU suite and independently audited injected-zero-RHS GPU fixture
-support their narrow correctness claims. The required deterministic parity
-gate on the current sources remains unmet. Extraction commit `114c2b92`
-incorrectly claims that historical parity validates this same patch; that
-claim is a reporting blocker and was sent immediately to the implementer and
-root. No new fixed-system fusion, workspace concurrency or profiling result
-has yet been reviewed. Findings and subsequent corrections are preserved below.
+The new CPU suite, independently audited injected-zero-RHS GPU fixture and
+fresh deterministic comparison on the current sources pass their narrow
+correctness/compatibility gates. The historical-evidence claim in extraction
+commit `114c2b92` was incorrect; it has now been replaced by actual current
+measurements and the reporting blocker is resolved. Compatibility is shown
+on the tested Ladybug49 configuration, not universally across inputs.
+No new fixed-system fusion, workspace concurrency or profiling result has
+yet been reviewed. Findings and corrections are preserved below.
 
 Initial protocol hashes:
 
@@ -347,3 +348,56 @@ protocol says a gate failure blocks extraction; substituting old evidence
 after the unordered comparison cannot satisfy it. This blocker was sent to
 the implementer, root and code reviewer immediately. The valid CPU and
 synthetic zero-RHS evidence remain valid independently of this reporting defect.
+
+## Current-source deterministic parity: blocker resolved
+
+The integrator subsequently built two fresh binaries using the same archived
+B6v7/W6 fixed-order instrumentation, then applied the current math transform
+to one source. This is the required fresh comparison, not reused historical
+evidence. The reviewer verified:
+
+* The archived deterministic builder reproduces the saved baseline CUDA
+  source exactly in a read-only regeneration.
+* `build_linear_edges.derive(baseline)` reproduces the saved current CUDA
+  source exactly; `derive()` also reproduces the clean ordinary source.
+* Both saved CUDA source and binary hashes match `FIXED_PARITY_BUILD.json`.
+* All three saved CSV cost arrays match the rows in
+  `FIXED_PARITY_RESULTS.json`; all nine registered fields are exactly equal.
+* All retained audit costs are finite, with native/audit relative difference
+  `6.698301282731748e-16` in each row.
+
+| Arm | Source SHA256 | Binary SHA256 |
+|---|---|---|
+| Fixed baseline | `46ad1d3f68e7dfb14b82d6cbf27affc7a5c961d2c50edec7929647b7d9c3744c` | `c3060718b9b80a2cc1491fbccf84aa0d4a5d675aacbe9a66bbc7842798c8a1d2` |
+| Fixed current math | `7803add49953e7fc1efe12bd5356347defc37b49b0dcddcfb48123efe8b26ed0` | `68c07c5da56008193aae9cca73c63a57b00097364fcf330d7eb604ed5a7b833d` |
+
+The current helper SHA256 is
+`32761954fcc56ac3324b80340df37e75e30425149301123a85cce39a2a4f0fd2`;
+the source-transform builder SHA256 is
+`139e2f70ed0dcc46bff9aff659a85bbf9ed79810a3d12fedadb9e67be58951d3`.
+The builder was generalized to accept either ordinary or already-instrumented
+source text; the read-only regeneration shows that this generalization does
+not change the existing clean-source output.
+
+Baseline, current flag-off and current flag-on each have 41 CSV costs
+(initial plus 40 accepted outers), 129 recorded decision lines, 40 iterations,
+40 accepts, one reject, 765 Schur products and zero negative-curvature events.
+All reach native cost `13577.990349846`, audited cost `13577.99034984601`,
+and endpoint SHA256
+`2d9fe14cd02cab1b30d515c78cb8b36d60d9d8c476430aeb82c5d75224b62733`.
+The raw decision arrays are retained in the result; the harness does not retain
+complete stdout or endpoint files for reviewer-side replay of every field.
+
+This closes the registered current-source compatibility gate on this input.
+It does not imply that sequential scaled norms are bit-identical to the old
+norm for arbitrary inputs, that ordinary trajectories are universally equal,
+or that the enabled host transfer is free. The earlier source-level caution
+about these possible effects remains valid; the new measured cell simply
+shows no effect on its registered fields.
+
+`LINEAR_EDGES_RESULTS.md` now describes this current-source comparison instead
+of claiming historical validation of the same patch. The reviewer requested
+completing provenance links from result to input/command/effective flags and
+build-manifest hash, and from build to current helper/builder and archived
+instrumentation/header hashes. Those metadata additions do not require a
+new GPU run; they must identify any hashes collected retrospectively.
