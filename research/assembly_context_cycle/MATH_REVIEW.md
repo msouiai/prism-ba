@@ -281,3 +281,69 @@ These hashes matched their current manifest and summary at that check;
 they do not remedy overwritten run artifacts. Source inspection also
 shows that setup profiling is controlled by `OCA_NATIVE_PHASE_PROFILE`;
 `OCA_SETUP_PHASE_PROFILE` itself is not read by the generated source.
+
+## Independent retained-V2 native validation
+
+The integrator acknowledged the overwrite and retained the complete second
+cohort under `evidence/native-timing-v2`, with summary
+`NATIVE_TIMING_RESULTS_V2.json` SHA256
+`aac671d9942bb115cd60512aa25a95e85238aa5fb92b470b2c52fd7b00ba3c4c`.
+Only this cohort supports retained-evidence numerical/timing claims. Both
+scenes' original raw paths were reused; the first cohort is preliminary
+and cannot be pooled into N=6 with the retained cohort.
+
+Independent CPU validation checked all eight summary rows against their
+individual result JSON and stdout; rehashed both input files, both
+binaries and every retained endpoint; matched the generated source and
+binary to the build manifest; checked finiteness and work counts; and
+recomputed each reported audit relative error exactly. All checks passed.
+Both profiles have three event chains; all rows have three accepts, zero
+rejects and zero negative-curvature events. Product counts are seven on
+Muell and sixteen on Final13682. These observations make the first-factor
+event chains complete for these registered three-outer runs, not for
+arbitrary retrying solves.
+
+| Retained V2 quantity | Muell-gba146 | Final13682 |
+|---|---:|---:|
+| Uninstrumented native solve seconds, N=3 | 0.222964, 0.232467, 0.234334 | 2.266889, 2.256169, 2.286389 |
+| Median native solve seconds | 0.232467 | 2.266889 |
+| Median complete process wall seconds | 1.9194080308 | 20.3912066910 |
+| Single profile native solve seconds | 0.245302 | 2.293363 |
+| Single profile complete process wall seconds | 2.0260854196 | 20.6045909277 |
+| Assembly milliseconds, three calls | 151.368195 | 884.486115 |
+| Covered assembly/prep chain milliseconds | 166.966435 | 1121.844097 |
+| Assembly / own profiled native solve | 61.7069% | 38.5672% |
+| Largest native-versus-FP64 audit relative error | 1.7741894312e-15 | 8.9356631061e-15 |
+
+The assembly fractions use the profile's own native denominator, not
+the control median or process wall. The ideal fixed-work speedup from
+removing the entire measured assembly interval is approximately 2.6114x
+and 1.6278x. A real partial transformation has a smaller ceiling; even a
+five-percent assembly latency reduction predicts only about 3.09% and
+1.93% native-solve latency reduction under unchanged work and other times.
+These calculations are planning bounds, not measured candidate gains.
+
+Event-boundary attribution needs one report correction. Events 5--6
+contain the camera Schur correction `MFRhsDiagCamera` (5.922496 ms and
+96.689789 ms), not final equilibration. `W5MakeEquilHcc` and
+`W5ReducedRhsEquil` occur between events 6--7 (0.028544 ms and
+0.106880 ms). Point factor plus point RHS is 9.446496 ms and
+137.401985 ms. Assembly is the largest of these recorded assembly/prep
+intervals; the current event set does not separately measure all Krylov
+or candidate launches.
+
+Coarse setup boundaries are correctly qualified as mixtures: parse,
+problem allocation/H2D plus unclassified work, and index
+construction/allocation/H2D plus unclassified work. For the two single
+profiles, process wall minus native solve minus those measured setup
+intervals leaves 0.434980 seconds and 2.505409 seconds unclassified.
+Do not assign that remainder exclusively to transfers, synchronization,
+serialization or teardown without additional boundaries. Setup
+attribution has one profile per scene; the three controls estimate total
+clocks, not each setup subphase.
+
+The retained V2 data are valid descriptive fixed-three-outer attribution
+after the acknowledged cohort deviation. They do not establish exact
+flags-off compatibility, internal projection/write/normal costs, an
+assembly-candidate gain, reusable-context gain, full-solver ownership,
+concurrency, or time to target. Those later gates remain open work.
