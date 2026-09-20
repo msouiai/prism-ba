@@ -1,0 +1,261 @@
+diff --git a/src/colmap/controllers/option_manager.cc b/src/colmap/controllers/option_manager.cc
+index 9c5e38ae..bf5032e3 100644
+--- a/src/colmap/controllers/option_manager.cc
++++ b/src/colmap/controllers/option_manager.cc
+@@ -661,6 +661,19 @@ void OptionManager::AddBundleAdjustmentOptions() {
+                    &bundle_adjustment->mfree->gpu_index);
+   AddDefaultOption("BundleAdjustmentMFree.print_progress",
+                    &bundle_adjustment->mfree->print_progress);
++  // Native robust kernel: 0 = L2 (default), 1 Huber, 2 Cauchy, 3 Student's t.
++  // robust_scale_px is delta/c in pixels; for the t kernel it is sigma0 and
++  // 0 means "estimate the scale from the data".
++  AddDefaultOption("BundleAdjustmentMFree.robust_kernel",
++                   &bundle_adjustment->mfree->robust_kernel);
++  AddDefaultOption("BundleAdjustmentMFree.robust_scale_px",
++                   &bundle_adjustment->mfree->robust_scale_px);
++  AddDefaultOption("BundleAdjustmentMFree.robust_nu",
++                   &bundle_adjustment->mfree->robust_nu);
++  AddDefaultOption("BundleAdjustmentMFree.fast_opening",
++                   &bundle_adjustment->mfree->fast_opening);
++  AddDefaultOption("BundleAdjustmentMFree.fast_opening_depth",
++                   &bundle_adjustment->mfree->fast_opening_depth);
+ #endif  // MFREE_ENABLED
+ }
+ 
+diff --git a/src/colmap/estimators/bundle_adjustment_mfree.cc b/src/colmap/estimators/bundle_adjustment_mfree.cc
+index 1c5a9a5c..0a7819dc 100644
+--- a/src/colmap/estimators/bundle_adjustment_mfree.cc
++++ b/src/colmap/estimators/bundle_adjustment_mfree.cc
+@@ -29,6 +29,9 @@
+ 
+ #include "colmap/estimators/bundle_adjustment_mfree.h"
+ 
++#include <cstring>
++#include <cstdlib>
++
+ #include "colmap/scene/projection.h"
+ #include "colmap/util/logging.h"
+ #include "colmap/util/misc.h"
+@@ -46,6 +49,37 @@
+ namespace colmap {
+ namespace {
+ 
++// COLMAP_MFREE_KERNEL=huber:<px> | cauchy:<px> | studentt:<nu>[:<sigma0_px>]
++// Env route for the native robust kernel. The mapper does not register the
++// BundleAdjustmentMFree.* CLI options (only --Mapper.ba_global_backend), so
++// without this there is no way to select the kernel for an end-to-end mapping
++// run. Applies to both the pinhole/radial and the rig/fisheye solve paths.
++// Returns false (L2) when unset, which is the default everywhere.
++bool RobustKernelFromEnv(int* kernel, double* scale_px, double* nu) {
++  const char* e = std::getenv("COLMAP_MFREE_KERNEL");
++  if (e == nullptr) return false;
++  const std::string k = e;
++  if (k.rfind("huber:", 0) == 0) {
++    *kernel = 1; *scale_px = std::atof(k.c_str() + 6); return true;
++  }
++  if (k.rfind("cauchy:", 0) == 0) {
++    *kernel = 2; *scale_px = std::atof(k.c_str() + 7); return true;
++  }
++  if (k.rfind("studentt:", 0) == 0) {
++    *kernel = 3;
++    *nu = std::atof(k.c_str() + 9);
++    const char* colon = std::strchr(k.c_str() + 9, ':');
++    *scale_px = colon ? std::atof(colon + 1) : 0.0;
++    return true;
++  }
++  LOG(WARNING) << "Ignoring unrecognised COLMAP_MFREE_KERNEL=" << k;
++  return false;
++}
++
++}  // namespace
++
++namespace {
++
+ // COLMAP projects along +z; the solver inherits BAL's -z convention. The two
+ // are related by D = diag(1, -1, -1), which is its own inverse:
+ //     P_soj = D * P_col  =>  x_solver = x_colmap,  y_solver = -y_colmap
+@@ -196,6 +230,16 @@ class MFreeBundleAdjuster : public BundleAdjuster {
+     o.max_consecutive_failures = opts_.max_consecutive_failures;
+     o.gpu_index = opts_.gpu_index;
+     o.verbose = opts_.print_progress;
++    int rk = opts_.robust_kernel;
++    double rk_px = opts_.robust_scale_px, rk_nu = opts_.robust_nu;
++    RobustKernelFromEnv(&rk, &rk_px, &rk_nu);
++    o.robust_kernel = rk;
++    o.robust_nu = rk_nu;
++    // Huber/Cauchy take a fixed squared scale; the t kernel takes nu*sigma0^2
++    // and treats 0 as "auto-init from the residual median".
++    o.robust_scale2 = (rk == 3) ? rk_nu * rk_px * rk_px : rk_px * rk_px;
++    o.fast_opening = opts_.fast_opening || std::getenv("COLMAP_MFREE_FAST_OPENING");
++    o.fast_opening_depth = opts_.fast_opening_depth;
+ 
+     const oca::Result r = oca::Solve(problem, o, &state);
+     if (!r.success) {
+@@ -403,6 +447,12 @@ class MFreeBundleAdjuster : public BundleAdjuster {
+     }
+     o.use_fp32_fragments = opts_.use_fp32_fragments ||
+                            problem.num_observations > 15'000'000;
++    int rk = opts_.robust_kernel;
++    double rk_px = opts_.robust_scale_px, rk_nu = opts_.robust_nu;
++    RobustKernelFromEnv(&rk, &rk_px, &rk_nu);
++    o.robust_kernel = rk;
++    o.robust_nu = rk_nu;
++    o.robust_scale2 = (rk == 3) ? rk_nu * rk_px * rk_px : rk_px * rk_px;
+     o.max_inner_retries = opts_.max_inner_retries;
+     const bool refine = opts_.refine_intrinsics && !intr_constant;
+     o.refine_focal = refine && options_.refine_focal_length;
+diff --git a/src/colmap/estimators/bundle_adjustment_mfree.h b/src/colmap/estimators/bundle_adjustment_mfree.h
+index 7ba183f4..28b0d725 100644
+--- a/src/colmap/estimators/bundle_adjustment_mfree.h
++++ b/src/colmap/estimators/bundle_adjustment_mfree.h
+@@ -103,6 +103,30 @@ struct MFreeBundleAdjustmentOptions {
+   int max_consecutive_failures = 3;
+ 
+   // CUDA device to use. -1 selects the current/default device.
++  // ---- Native robust kernel (IRLS), applied inside the solver ------------
++  // 0 = L2 (default). 1 = Huber, 2 = Cauchy, 3 = Student's t. The weight
++  // sqrt(rho'(|r|^2)) scales each observation's residual and Jacobian rows at
++  // assembly, so the solver minimizes the robust objective directly rather
++  // than relying on outlier culling between solves.
++  //
++  // robust_scale_px is delta (Huber) or c (Cauchy) in pixels. For Student's t
++  // it is sigma0, and 0 means "estimate the scale from the data" -- the t
++  // kernel re-estimates sigma by EM once per outer iteration, which is the
++  // reason to prefer it: there is no scale to tune per scene.
++  int robust_kernel = 0;
++  double robust_scale_px = 0.0;
++  double robust_nu = 4.0;   // Student's t degrees of freedom
++
++  // ---- Fast-opening mode (off by default) --------------------------------
++  // Trades a small amount of final accuracy for a faster opening: prunes the
++  // candidate menu at intermediate CG checkpoints and caps CG depth until the
++  // first rejected step. Measured over repeated runs: 20-31% less time before
++  // the solver overtakes a single-damping baseline, at +0.08% to +0.44% final
++  // cost. Enable for latency-sensitive callers; leave off when the last half
++  // percent matters.
++  bool fast_opening = false;
++  int fast_opening_depth = 32;
++
+   int gpu_index = -1;
+ 
+   bool print_progress = false;
+diff --git a/src/colmap/tools/colmap_ba_compare.cc b/src/colmap/tools/colmap_ba_compare.cc
+index e5403e1e..09cd77fc 100644
+--- a/src/colmap/tools/colmap_ba_compare.cc
++++ b/src/colmap/tools/colmap_ba_compare.cc
+@@ -443,6 +443,26 @@ void RunBackend(const std::string& name, BundleAdjustmentBackend backend,
+     options.mfree->initial_lambda = std::atof(e);
+   if (std::getenv("COLMAP_MFREE_FP32"))
+     options.mfree->use_fp32_fragments = true;
++  if (std::getenv("COLMAP_MFREE_FAST_OPENING"))
++    options.mfree->fast_opening = true;
++  if (const char* e = std::getenv("COLMAP_MFREE_FAST_OPENING_DEPTH"))
++    options.mfree->fast_opening_depth = std::atoi(e);
++  // COLMAP_MFREE_KERNEL=huber:<px> | cauchy:<px> | studentt:<nu>[:<sigma0_px>]
++  if (const char* e = std::getenv("COLMAP_MFREE_KERNEL")) {
++    const std::string k = e;
++    if (k.rfind("huber:", 0) == 0) {
++      options.mfree->robust_kernel = 1;
++      options.mfree->robust_scale_px = std::atof(k.c_str() + 6);
++    } else if (k.rfind("cauchy:", 0) == 0) {
++      options.mfree->robust_kernel = 2;
++      options.mfree->robust_scale_px = std::atof(k.c_str() + 7);
++    } else if (k.rfind("studentt:", 0) == 0) {
++      options.mfree->robust_kernel = 3;
++      options.mfree->robust_nu = std::atof(k.c_str() + 9);
++      const char* colon = std::strchr(k.c_str() + 9, ':');
++      options.mfree->robust_scale_px = colon ? std::atof(colon + 1) : 0.0;
++    }
++  }
+   if (prefer_gpu) {
+     // Force GPU SPARSE Schur (cuDSS) explicitly, rather than letting
+     // auto_select_solver_type pick for us. The prior version of this comment
+diff --git a/src/colmap/tools/mfree_cpu_test.cc b/src/colmap/tools/mfree_cpu_test.cc
+index 094622a8..ba57efbc 100644
+--- a/src/colmap/tools/mfree_cpu_test.cc
++++ b/src/colmap/tools/mfree_cpu_test.cc
+@@ -65,6 +65,37 @@ void Check(bool ok, const char* what, double got, double tol) {
+ 
+ }  // namespace
+ 
++// Write a solver endpoint back out in BAL format, so GPU and CPU results can
++// be scored by the same external tooling (inlier-L2 on a known clean subset,
++// which is the only fair way to compare robust kernels against each other).
++void WriteBal(const std::string& path, const Bal& b,
++              const std::vector<double>& R, const std::vector<double>& t,
++              const std::vector<double>& X, const std::vector<double>& f,
++              const std::vector<double>& k1, const std::vector<double>& k2) {
++  FILE* fh = fopen(path.c_str(), "w");
++  if (!fh) return;
++  fprintf(fh, "%d %d %d\n", b.ncam, b.npt, b.nobs);
++  for (int i = 0; i < b.nobs; ++i)
++    fprintf(fh, "%d %d %.17g %.17g\n", b.cam[i], b.pt[i], b.uv[2*i], b.uv[2*i+1]);
++  for (int c = 0; c < b.ncam; ++c) {
++    const double* Rc = &R[9*c];
++    const double tr = Rc[0] + Rc[4] + Rc[8];
++    const double ct = std::max(-1.0, std::min(1.0, (tr - 1.0)*0.5));
++    const double th = std::acos(ct);
++    double w[3] = {0, 0, 0};
++    if (th >= 1e-10) {
++      const double s2 = 2.0*std::sin(th);
++      w[0] = th*(Rc[7]-Rc[5])/s2; w[1] = th*(Rc[2]-Rc[6])/s2; w[2] = th*(Rc[3]-Rc[1])/s2;
++    }
++    fprintf(fh, "%.17g\n%.17g\n%.17g\n%.17g\n%.17g\n%.17g\n%.17g\n%.17g\n%.17g\n",
++            w[0], w[1], w[2], t[3*c], t[3*c+1], t[3*c+2], f[c], k1[c], k2[c]);
++  }
++  for (int q = 0; q < b.npt; ++q)
++    fprintf(fh, "%.17g\n%.17g\n%.17g\n", X[3*q], X[3*q+1], X[3*q+2]);
++  fclose(fh);
++  std::printf("dumped state to %s\n", path.c_str());
++}
++
+ int main(int argc, char** argv) {
+   // libgomp's default active (spinning) wait policy costs 46x at 64 threads
+   // on this solver's many small regions (measured on venice-52: 210s active vs
+@@ -241,6 +272,24 @@ int main(int argc, char** argv) {
+   go.func_tolerance = co.func_tolerance = 0.0;          // fixed-length runs:
+   go.max_consecutive_failures = co.max_consecutive_failures = 0;  // trajectory
+   go.verbose = co.verbose = getenv("MF_VERBOSE") != nullptr;      // comparison
++  // MF_KERNEL applies to BOTH legs in the parity path, so the GPU robust
++  // kernel is gated against the validated CPU one on the same problem.
++  if (const char* e = getenv("MF_KERNEL")) {
++    std::string s2 = e;
++    auto set = [&](int k, double a2, double nu) {
++      go.robust_kernel = co.robust_kernel = k;
++      go.robust_scale2 = co.robust_scale2 = a2;
++      go.robust_nu = co.robust_nu = nu;
++    };
++    if (s2.rfind("huber:", 0) == 0) { double d = atof(s2.c_str()+6); set(1, d*d, 4.0); }
++    else if (s2.rfind("cauchy:", 0) == 0) { double c = atof(s2.c_str()+7); set(2, c*c, 4.0); }
++    else if (s2.rfind("studentt:", 0) == 0) {
++      const double nu = atof(s2.c_str()+9);
++      const char* colon = strchr(s2.c_str()+9, ':');
++      const double sg = colon ? atof(colon+1) : 0.0;
++      set(3, sg > 0 ? nu*sg*sg : 0.0, nu);
++    }
++  }
+ 
+   // MF_CPU_ONLY=1: skip the GPU reference and parity gates entirely -- pure
+   // CPU benchmark mode for the algorithm-vs-algorithm comparison with CPU
+@@ -272,6 +321,12 @@ int main(int argc, char** argv) {
+       std::string s2 = e;
+       if (s2.rfind("huber:", 0) == 0) { co2.robust_kernel = 1; double dd = atof(s2.c_str()+6); co2.robust_scale2 = dd*dd; }
+       else if (s2.rfind("cauchy:", 0) == 0) { co2.robust_kernel = 2; double cc = atof(s2.c_str()+7); co2.robust_scale2 = cc*cc; }
++      else if (s2.rfind("studentt:", 0) == 0) {  // studentt:<nu>[:<sigma0>], sigma0 px (0/absent = auto)
++        co2.robust_kernel = 3; co2.robust_nu = atof(s2.c_str()+9);
++        const char* colon = strchr(s2.c_str()+9, ':');
++        double sg = colon ? atof(colon+1) : 0.0;
++        co2.robust_scale2 = sg > 0 ? co2.robust_nu*sg*sg : 0.0;
++      }
+     }
+     if (const char* e = getenv("MF_CKPT_MAX")) {   // {8,16,...,N} doubling ladder
+       co2.cg_checkpoints.clear();
+@@ -327,6 +382,8 @@ int main(int argc, char** argv) {
+   const oca::Result gr = oca::Solve(gp, go, &gs);
+   const double gpu_s = std::chrono::duration<double>(std::chrono::steady_clock::now()-tg0).count();
+   if (!gr.success) { std::printf("GPU solve failed: %s\n", gr.message.c_str()); return 1; }
++  if (const char* dump = getenv("MF_DUMP_BAL_GPU"))
++    WriteBal(dump, b, Rg, tg, Xg, fg, k1g, k2g);
+ 
+   // ---------------- CPU port ------------------------------------------------
+   std::vector<double> Rc = b.R, tc = b.t, Xc = b.X, fc = b.f, k1c = b.k1, k2c = b.k2;

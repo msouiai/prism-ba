@@ -1,0 +1,1227 @@
+diff -ru /workspace/bundle_adjustment/mfree_r10/solver/mfree_cpu.h /workspace/bundle_adjustment/mfree_agent/solver/mfree_cpu.h
+--- /workspace/bundle_adjustment/mfree_r10/solver/mfree_cpu.h	2026-08-28 23:08:19.000000000 +0000
++++ /workspace/bundle_adjustment/mfree_agent/solver/mfree_cpu.h	2026-08-29 23:32:23.000000000 +0000
+@@ -95,8 +95,9 @@
+   // robustness win is the kernel's, not the optimizer's). cost = 0.5*rho(|r|^2)
+   // and each observation's residual+Jacobian is scaled by sqrt(rho'(|r|^2)) at
+   // assembly, which makes the whole two-block machinery the weighted-GN system.
+-  int robust_kernel = 0;      // 0 l2, 1 huber, 2 cauchy
+-  double robust_scale2 = 0.0; // delta^2 (huber) or c^2 (cauchy), px^2
++  int robust_kernel = 0;      // 0 l2, 1 huber, 2 cauchy, 3 student-t (adaptive scale)
++  double robust_scale2 = 0.0; // delta^2 (huber) or c^2 (cauchy) or nu*sigma0^2 (t; 0 = auto-init), px^2
++  double robust_nu = 4.0;     // t kernel: degrees of freedom
+   // ---- inner linear solver on the reduced camera system ----
+   // 0 = multi-shift CG (default, the shipped solver)
+   // 1 = PoBA-style power series: block-Jacobi preconditioned Richardson,
+@@ -123,11 +124,13 @@
+ inline double RobustRho(int k, double a2, double s) {
+   if (k == 1) return s <= a2 ? s : 2.0*std::sqrt(a2*s) - a2;
+   if (k == 2) return a2*std::log1p(s/a2);
++  if (k == 3) return a2*std::log1p(s/a2);   // Student's t: Cauchy form, a2 = nu*sigma^2 (adaptive)
+   return s;
+ }
+ inline double RobustW(int k, double a2, double s) {
+   if (k == 1) return s <= a2 ? 1.0 : std::sqrt(a2/s);
+   if (k == 2) return 1.0/(1.0 + s/a2);
++  if (k == 3) return 1.0/(1.0 + s/a2);
+   return 1.0;
+ }
+ 
+@@ -395,13 +398,14 @@
+         rx = f[c]*dist*xp - p_.observations[2*o2];
+         ry = f[c]*dist*yp - p_.observations[2*o2+1];
+       }
+-      total += 0.5*RobustRho(o_.robust_kernel, o_.robust_scale2, rx*rx + ry*ry);
++      total += 0.5*RobustRho(o_.robust_kernel, rk_a2_, rx*rx + ry*ry);
+     }
+     return total;
+   }
+ 
+   Result Solve(State* st) {
+     Result out;
++    rk_a2_ = o_.robust_scale2;   // t kernel: 0 = auto-init below
+     // working copies of the state (retraction writes into "new", accept swaps)
+     R_.assign(st->rotations, st->rotations + 9*(size_t)ncam_);
+     t_.assign(st->translations, st->translations + 3*(size_t)ncam_);
+@@ -410,6 +414,10 @@
+     k1v_.assign(st->k1, st->k1 + ncam_);
+     k2v_.assign(st->k2, st->k2 + ncam_);
+     Rn_ = R_; tn_ = t_; Xn_ = X_; fn_ = f_; k1n_ = k1v_; k2n_ = k2v_;
++    // The initial ComputeCost below needs a valid t-kernel scale already
++    // (rho(a2=0) is NaN), so the auto-init/EM pass runs here, not only at
++    // assembly time.
++    UpdateTScale();
+ 
+     const Scalar k2mask = o_.refine_k2 ? 1.0 : 0.0;
+     const int L = o_.num_shifts;
+@@ -417,6 +425,47 @@
+       const char* e = getenv("OCA_GRID_DOWN"); return e ? std::atoi(e) : 0; }();
+     const int grid_down = std::min(std::max(grid_down_env, 0), L-1);
+     static const bool lm_classic = getenv("OCA_LM_CLASSIC") != nullptr;
++    // OCA_RHO_SHIFT: under rho mode, anchor the Nielsen update at the WINNING
++    // shift's damping sigma_win = lam*10^(best_sh-grid_down) instead of the
++    // pre-streak lambda. The accepted step solved (S+sigma_win)x=b, so
++    // sigma_win is the damping the trust region actually used; discarding it
++    // pins lambda at the floor and every outer re-pays a reject/escalation
++    // search (326 rejects measured on final-4585 under plain rho).
++    static const int rho_shift_down = [](){
++      const char* e = getenv("OCA_RHO_SHIFT");
++      return e ? std::max(1, std::atoi(e)) : 0; }();
++    static const bool rho_shift = rho_shift_down > 0;
++    // OCA_ALPHA_RHO: re-enable the alpha grid under rho mode with an
++    // alpha-aware prediction pred(s) = s*b'd - s^2*(b'd - pred1) (exact for
++    // the Schur-space quadratic under uniform scaling; one extra dot).
++    static const bool alpha_rho = getenv("OCA_ALPHA_RHO") != nullptr;
++    // OCA_GRIND_ETA=<v>: once the last accepted step's relative progress
++    // drops below 1e-4 (the same boundary the rho gate uses), cap the
++    // Eisenstat-Walker forcing tolerance at v so CG runs deep. In the grind
++    // phase EW's |b|-ratio is ~1, eta pins at eta_max=0.5, and CG stops after
++    // 1-16 iterations -- while the outer's fixed cost (assembly + candidate
++    // scoring) dwarfs a matvec, so shallow sweeps waste the outer.
++    static const Scalar grind_eta = [](){
++      const char* e = getenv("OCA_GRIND_ETA"); return e ? (Scalar)atof(e) : (Scalar)0.0; }();
++    // OCA_TAU_GRIND=<floor_rel>: in the grind phase (last_rel < 1e-4) let
++    // the point damping TRACK lam downward, floored at floor_rel x the CLI
++    // tau: tau_k = min(tau_cli, max(lam, tau_cli*floor_rel)). Outside the
++    // grind phase tau stays at the CLI value, so the opening is untouched.
++    // Mechanism: lam decays to its floor but tau never moves, so the endgame
++    // point relaxation carries a permanent bias -- measured on ladybug-49
++    // (tau 3e-3 -> 3e-5 lowers the 60-iter final by 0.83%, the size of the
++    // entire deficit to Caspar there). The reject ladder still escalates
++    // from the tracked base, so a bad decay self-corrects within the outer.
++    static const Scalar tau_grind = [](){
++      const char* e = getenv("OCA_TAU_GRIND"); return e ? (Scalar)atof(e) : (Scalar)0.0; }();
++    // OCA_LAZY_SCORE: at intermediate CG checkpoints score only shift 0 and
++    // the previous outer's winning shift; the full L-shift scan runs only at
++    // the final stop (EW break / truncation / max depth). 82% of accepted
++    // winners are shift 0 (measured across the 23-set trace archive), so the
++    // 5-shift scan at every checkpoint is mostly fixed-cost waste: on
++    // final-4585 candidate evaluation is ~25 ms each and the early outers
++    // fire up to 5 checkpoints.
++    static const bool lazy_score = getenv("OCA_LAZY_SCORE") != nullptr;
+ 
+     Scalar cost = ComputeCost(R_, t_, X_, f_, k1v_, k2v_);
+     out.initial_cost = cost;
+@@ -425,6 +474,9 @@
+     Scalar lam_pre_streak = lam_cam;
+     Scalar tau_base = o_.point_damping, tau_eff = tau_base;
+     Scalar prev_bnorm = -1.0, prev_cost = cost;
++    Scalar last_rel = 1.0;   // relative progress of the last ACCEPTED outer
++    int last_win_sh = 0;     // OCA_LAZY_SCORE: previous outer's winning shift
++
+     int rej_streak = 0, stuck = 0, retries = 0;
+     bool converged = false, need_assembly = true;
+     std::vector<int> ckpts = o_.cg_checkpoints;
+@@ -446,6 +498,8 @@
+       if (need_assembly) Assemble(k2mask);
+       // tau ladder (tau_persist=false in the core-API config being cloned)
+       Scalar tau_base_k = tau_base;
++      if (tau_grind > 0.0 && last_rel < 1e-4)
++        tau_base_k = std::min(tau_base, std::max(lam_cam, tau_base*tau_grind));
+       if (o_.tau_track_lambda)
+         tau_base_k = std::min(tau_base, std::max(lam_cam, (Scalar)o_.tau_track_floor));
+       tau_eff = tau_base_k;
+@@ -465,6 +519,7 @@
+       std::vector<Scalar> preds(L, 0.0);           // running model reduction per shift
+       std::fill(d_best.begin(), d_best.end(), 0.0);
+       Scalar pred_best = 0.0;
++      Scalar bpd_best = 0.0;                        // b'^T x of the winning candidate (scaled space)
+       auto Score = [&](const std::vector<Scalar>& x_scaled, int sh, int ck){
+         for (int i = 0; i < n_c_; ++i) xc_un[i] = x_scaled[i]*E[i];
+         Pass1(xc_un.data(), tacc.data());
+@@ -505,7 +560,12 @@
+         }
+         if (take) { best_cost = c; best_sh = sh; best_ck = ck; have = true;
+                     d_best = dfull;
+-                    pred_best = (sh >= 0 && sh < L) ? preds[sh] : 0.0; }
++                    pred_best = (sh >= 0 && sh < L) ? preds[sh] : 0.0;
++                    if (alpha_rho) {
++                      Scalar bd = 0;
++                      for (int i = 0; i < n_c_; ++i) bd += bprime[i]*x_scaled[i];
++                      bpd_best = bd;
++                    } }
+       };
+ 
+       // ---- inner linear solver on the reduced camera system ----
+@@ -534,6 +594,7 @@
+       Scalar eta = o_.ew_eta_max;
+       if (prev_bnorm > 0.0) eta = std::min(o_.ew_eta_max, 0.9*(nb*nb)/(prev_bnorm*prev_bnorm));
+       prev_bnorm = nb;
++      if (grind_eta > 0.0 && last_rel < 1e-4) eta = std::min(eta, grind_eta);
+       Scalar al_prev = 1.0, be_prev = 0.0; size_t ci = 0; bool trunc = false;
+       for (cg_it = 0; cg_it < maxck; ++cg_it) {
+         KvS(pv.data(), Ap.data(), E.data());
+@@ -564,7 +625,13 @@
+         for (int i = 0; i < n_c_; ++i) pv[i] = r[i] + be*pv[i];
+         rr = rr_new;
+         while (ci < ckpts.size() && cg_it+1 == ckpts[ci]) {
+-          for (int l = 0; l < L; ++l) Score(xs[l], l, cg_it+1);
++          if (lazy_score) {
++            Score(xs[0], 0, cg_it+1);
++            if (last_win_sh > 0 && last_win_sh < L)
++              Score(xs[last_win_sh], last_win_sh, cg_it+1);
++          } else {
++            for (int l = 0; l < L; ++l) Score(xs[l], l, cg_it+1);
++          }
+           ++ci;
+         }
+         if (std::sqrt(rr_new) <= eta*nb) break;               // Eisenstat-Walker
+@@ -576,15 +643,25 @@
+       // ---- alpha grid: scales the LIVE d_best, so improvements compound
+       // across combos (verbatim GPU behaviour -- a saved-copy variant is a
+       // different algorithm and diverged 40% at venice-52 iteration 1).
+-      if (have && o_.use_alpha && !o_.rho_lambda) {
++      if (have && o_.use_alpha && (!o_.rho_lambda || alpha_rho)) {
+         static const Scalar as[3] = {0.7, 1.0, 1.4};
++        // Under rho mode the winning combo must carry a matching prediction:
++        // for a step whose camera half is scaled by cumulative s, the
++        // Schur-space quadratic gives pred(s) = s*b'd - s^2*(b'd - pred1).
++        // s compounds across winning combos exactly like the step itself.
++        const Scalar bpd0 = bpd_best, pred1 = pred_best;
++        Scalar s_cum = 1.0;
+         for (int a1 = 0; a1 < 3; ++a1) for (int a2 = 0; a2 < 3; ++a2) {
+           if (as[a1] == 1.0 && as[a2] == 1.0) continue;
+           for (int i = 0; i < n_c_; ++i) dfull[i] = d_best[i]*as[a1];
+           for (int i = 0; i < n_p_; ++i) dfull[n_c_+i] = d_best[n_c_+i]*as[a2];
+           Retract(dfull.data());
+           const Scalar c = ComputeCost(Rn_, tn_, Xn_, fn_, k1n_, k2n_);
+-          if (c < best_cost) { best_cost = c; d_best = dfull; }
++          if (c < best_cost) { best_cost = c; d_best = dfull;
++            if (o_.rho_lambda) {
++              s_cum *= as[a1];
++              pred_best = s_cum*bpd0 - s_cum*s_cum*(bpd0 - pred1);
++            } }
+         }
+       }
+ 
+@@ -593,6 +670,9 @@
+       if (have && best_cost < cost) {
+         Retract(d_best.data());
+         R_.swap(Rn_); t_.swap(tn_); X_.swap(Xn_); f_.swap(fn_); k1v_.swap(k1n_); k2v_.swap(k2n_);
++        last_rel = (prev_iter_cost_ - best_cost)
++                   / std::max(prev_iter_cost_, (Scalar)1e-300);
++        if (best_sh >= 0) last_win_sh = best_sh;
+         cost = best_cost;
+         if (o_.rho_lambda) {
+           const Scalar act = /* cost before this accept */ out.cost_per_iteration.size()
+@@ -610,7 +690,22 @@
+           // permanently -- the lam=inf mechanism seen on final-4585.
+           const Scalar rel = act / std::max(prev_iter_cost_, (Scalar)1e-300);
+           if (rel > 1e-4) fac = std::min(fac, (Scalar)0.5);
+-          const Scalar base = (rej_streak > 0 && !lm_classic) ? lam_pre_streak : lam_cam;
++          Scalar base = (rej_streak > 0 && !lm_classic) ? lam_pre_streak : lam_cam;
++          // OCA_RHO_SHIFT: the accepted step was solved at sigma_win; make
++          // that the anchor Nielsen updates from, so the menu's damping
++          // information survives into the next outer.
++          if (rho_shift && best_sh >= 0 && rej_streak == 0) {
++            // Anchor only on CLEAN accepts. A contested accept's lam carries
++            // the reject streak's x10 escalations, which are a joint
++            // (lambda,tau) search device, not damping information -- banking
++            // them froze the final-4585 grind at an elevated lambda (48
++            // outers buying 0.3%, final +1.9% worse). Clean accepts keep the
++            // full downward anchor (the opening win: venice-52 it3 cost
++            // 1.23e6 -> 5.0e5) with the upward move clamped to +1 decade.
++            const int rel_sh = std::max(std::min(best_sh - grid_down, 1),
++                                        -rho_shift_down);
++            base = lam_cam*std::pow((Scalar)10.0, (Scalar)rel_sh);
++          }
+           lam_cam = std::min(std::max(base*fac, lam_floor), (Scalar)1e8);
+         } else if (grid_down > 0 && best_sh >= 0) {
+           lam_cam = std::max(lam_cam*std::pow(10.0, (double)(best_sh-grid_down)), lam_floor);
+@@ -666,7 +761,52 @@
+ 
+  private:
+   // full re-linearization at the current state
++  // Student's t (kernel 3): EM scale update. With current state residuals
++  // s_i = |r_i|^2 and Mahalanobis delta_i = s_i/sigma^2, the EM weights are
++  // u_i = (nu+2)/(nu+delta_i) and the M-step is sigma^2 <- sum u_i s_i/(2N)
++  // (bivariate). rk_a2_ = nu*sigma^2 then feeds the same Cauchy-form IRLS
++  // weight the assembly already applies. One extra residual pass per outer.
++  void UpdateTScale() {
++    if (o_.robust_kernel != 3) return;
++    const Scalar nu = (Scalar)o_.robust_nu;
++    std::vector<Scalar> sv(nobs_);
++#ifdef _OPENMP
++#pragma omp parallel for schedule(static) num_threads(TF(nobs_))
++#endif
++    for (int o2 = 0; o2 < nobs_; ++o2) {
++      const int c = p_.camera_index[o2], q = p_.point_index[o2];
++      Scalar rx, ry;
++      const Scalar* R = &R_[9*c];
++      Scalar Px = R[0]*X_[3*q]+R[1]*X_[3*q+1]+R[2]*X_[3*q+2]+t_[3*c];
++      Scalar Py = R[3]*X_[3*q]+R[4]*X_[3*q+1]+R[5]*X_[3*q+2]+t_[3*c+1];
++      Scalar Pz = R[6]*X_[3*q]+R[7]*X_[3*q+1]+R[8]*X_[3*q+2]+t_[3*c+2];
++      // Same convention as ComputeCost's BAL branch: Snavely -P/Pz.
++      Scalar xp = -Px/Pz, yp = -Py/Pz, r2 = xp*xp+yp*yp;
++      Scalar dist = 1.0 + k1v_[c]*r2 + k2v_[c]*r2*r2;
++      rx = f_[c]*dist*xp - p_.observations[2*o2];
++      ry = f_[c]*dist*yp - p_.observations[2*o2+1];
++      sv[o2] = rx*rx + ry*ry;
++    }
++    if (rk_a2_ <= 0.0) {   // auto-init: median(s) ~ 1.386 sigma^2 for N(0,sigma^2 I2)
++      std::vector<Scalar> tmp = sv;
++      std::nth_element(tmp.begin(), tmp.begin()+tmp.size()/2, tmp.end());
++      Scalar med = tmp[tmp.size()/2];
++      rk_a2_ = nu*std::max(med/(Scalar)1.386, (Scalar)1e-8);
++    }
++    Scalar sig2 = rk_a2_/nu;
++    for (int em = 0; em < 3; ++em) {   // a few EM sweeps per outer
++      Scalar num = 0, cnt = 0;
++      for (int i = 0; i < nobs_; ++i) {
++        const Scalar u = (nu + 2.0)/(nu + sv[i]/sig2);
++        num += u*sv[i]; cnt += 1.0;
++      }
++      sig2 = std::max(num/(2.0*cnt), (Scalar)1e-10);
++    }
++    rk_a2_ = nu*sig2;
++  }
++
+   void Assemble(Scalar k2mask) {
++    UpdateTScale();
+     std::fill(Hcc_.begin(), Hcc_.end(), 0.0);
+     std::fill(bc_.begin(), bc_.end(), 0.0);
+     std::fill(bp_.begin(), bp_.end(), 0.0);
+@@ -691,7 +831,7 @@
+                             gpm);
+       if (o_.robust_kernel) {  // IRLS: sqrt-weight residual AND Jacobian rows
+         const Scalar sw = std::sqrt(
+-            RobustW(o_.robust_kernel, o_.robust_scale2, res[0]*res[0] + res[1]*res[1]));
++            RobustW(o_.robust_kernel, rk_a2_, res[0]*res[0] + res[1]*res[1]));
+         res[0] *= sw; res[1] *= sw;
+         for (int rr2 = 0; rr2 < 2; ++rr2) {
+           for (int j = 0; j < 9; ++j) gcm[rr2][j] *= sw;
+@@ -1311,6 +1451,7 @@
+ 
+   const Problem& p_; const Options& o_;
+   int ncam_, npt_, nobs_, n_c_, n_p_, n_, nthreads_;
++  Scalar rk_a2_ = 0.0;   // effective robust a2 (mutable for the adaptive t kernel)
+   long cam_work_ = 0, pt_work_ = 0;
+   Scalar best_sn_ = 0;
+   Scalar prev_iter_cost_ = 0;
+diff -ru /workspace/bundle_adjustment/mfree_r10/solver/oca_core.h /workspace/bundle_adjustment/mfree_agent/solver/oca_core.h
+--- /workspace/bundle_adjustment/mfree_r10/solver/oca_core.h	2026-08-28 08:11:46.000000000 +0000
++++ /workspace/bundle_adjustment/mfree_agent/solver/oca_core.h	2026-08-30 09:25:10.000000000 +0000
+@@ -111,6 +111,32 @@
+ 
+   int gpu_index = -1;  // -1 selects the current/default device.
+   bool verbose = false;
++
++  // ---- IRLS robust kernel (0 = L2, the default; bit-compat when 0) ----
++  // The weight sqrt(rho'(|r|^2)) scales each observation's residual AND its
++  // Jacobian rows at assembly, which turns the whole two-block machinery into
++  // the weighted Gauss-Newton system; the multi-shift recurrence is untouched.
++  //   1 huber  (robust_scale2 = delta^2, px^2)
++  //   2 cauchy (robust_scale2 = c^2, px^2)
++  //   3 student-t: same weight FORM as cauchy with a2 = nu*sigma^2, but sigma
++  //     is re-estimated by EM from the current residuals once per assembly
++  //     (frozen within an outer iteration so candidate scoring stays one
++  //     consistent objective). robust_scale2 = nu*sigma0^2, or 0 to auto-init
++  //     from the residual median. This is the variant with no scale to tune.
++  int robust_kernel = 0;
++  double robust_scale2 = 0.0;
++  double robust_nu = 4.0;      // student-t degrees of freedom
++
++  // ---- Fast-opening mode (off by default) --------------------------------
++  // Cuts per-outer fixed cost while the solve is still in its opening: score
++  // only the most promising shifts at intermediate CG checkpoints, and cap CG
++  // depth. Disarms permanently at the first rejected step, which protects the
++  // reject-prone scenes. Measured (N=3-4 runs per config): the window where a
++  // single-damping baseline leads shrinks 20-31%, at a reproducible
++  // end-residual cost of +0.08% to +0.44%. Enable when time-to-first-good-
++  // answer matters more than the last half percent.
++  bool fast_opening = false;
++  int fast_opening_depth = 32;
+ };
+ 
+ struct Result {
+@@ -205,6 +231,16 @@
+   int gauge_frame = -1;
+   int gpu_index = -1;
+   bool verbose = false;
++
++  // ---- IRLS robust kernel (0 = L2, the default; bit-compat when 0) --------
++  // Same contract as Options above. Rig-specific note: the far-field /
++  // behind-camera mask still decides which observations exist at all; the
++  // robust weight only reshapes the ACTIVE ones, and inactive observations
++  // are excluded from the student-t scale estimate rather than counted as
++  // zero residuals.
++  int robust_kernel = 0;
++  double robust_scale2 = 0.0;
++  double robust_nu = 4.0;
+ };
+ 
+ Result SolveRigFisheye(const RigFisheyeProblem& problem,
+diff -ru /workspace/bundle_adjustment/mfree_r10/solver/oca_cuda.cu /workspace/bundle_adjustment/mfree_agent/solver/oca_cuda.cu
+--- /workspace/bundle_adjustment/mfree_r10/solver/oca_cuda.cu	2026-08-28 17:14:45.000000000 +0000
++++ /workspace/bundle_adjustment/mfree_agent/solver/oca_cuda.cu	2026-08-30 09:25:10.000000000 +0000
+@@ -176,12 +176,57 @@
+   for (int i = 0; i < 3; ++i) X_new[3 * p + i] = X_old[3 * p + i] + dp[i];
+ }
+ 
++// ============================================================== robust kernels
++// IRLS kernels shared by the cost and the assembly. s = |r|^2, a2 = the
++// kernel's squared scale (delta^2 huber, c^2 cauchy, nu*sigma^2 student-t).
++// Identical formulas to the CPU port's RobustRho/RobustW (mfree_cpu.h), the
++// reference the GPU is gated against. k == 0 is exactly L2, and every call
++// site keeps its pre-robust arithmetic when k == 0 (bit-compat).
++__host__ __device__ __forceinline__ Scalar OcaRho(int k, Scalar a2, Scalar s) {
++  if (k == 1) return s <= a2 ? s : 2.0*sqrt(a2*s) - a2;
++  if (k == 2 || k == 3) return a2*log1p(s/a2);
++  return s;
++}
++__host__ __device__ __forceinline__ Scalar OcaRobustW(int k, Scalar a2, Scalar s) {
++  if (k == 1) return s <= a2 ? 1.0 : sqrt(a2/s);
++  if (k == 2 || k == 3) return 1.0/(1.0 + s/a2);
++  return 1.0;
++}
++
+ // ============================================================== cost + assembly kernels
+ __global__ void KernelCost(const int* __restrict__ cam_idx, const int* __restrict__ pt_idx,
+                             const Scalar* __restrict__ uv, const Scalar* __restrict__ R,
+                             const Scalar* __restrict__ t, const Scalar* __restrict__ X,
+                             const Scalar* __restrict__ f, const Scalar* __restrict__ k1,
+-                            const Scalar* __restrict__ k2, int nobs, Scalar* __restrict__ cost_out) {
++                            const Scalar* __restrict__ k2, int nobs, Scalar* __restrict__ cost_out,
++                            int rk = 0, Scalar rk_a2 = 0.0) {
++  int o = blockIdx.x * blockDim.x + threadIdx.x;
++  if (o >= nobs) return;
++  int c = cam_idx[o], p = pt_idx[o];
++  const Scalar* Rc = R + 9 * c;
++  const Scalar* Xp = X + 3 * p;
++  Scalar Px = Rc[0]*Xp[0]+Rc[1]*Xp[1]+Rc[2]*Xp[2] + t[3*c];
++  Scalar Py = Rc[3]*Xp[0]+Rc[4]*Xp[1]+Rc[5]*Xp[2] + t[3*c+1];
++  Scalar Pz = Rc[6]*Xp[0]+Rc[7]*Xp[1]+Rc[8]*Xp[2] + t[3*c+2];
++  Scalar xp = -Px / Pz, yp = -Py / Pz;
++  Scalar r2 = xp*xp + yp*yp;
++  Scalar dist = 1.0 + k1[c]*r2 + k2[c]*r2*r2;
++  Scalar rx = f[c]*dist*xp - uv[2*o];
++  Scalar ry = f[c]*dist*yp - uv[2*o+1];
++  const Scalar ss = rx*rx + ry*ry;
++  atomicAdd(cost_out, 0.5 * (rk ? OcaRho(rk, rk_a2, ss) : ss));
++}
++
++// Per-observation squared residual, for the student-t EM scale estimate. The
++// body is KernelCost's verbatim (same Snavely -P/Pz convention) so the scale
++// is never estimated from a re-derived projection -- a sign slip there makes
++// sigma explode and the kernel silently degenerates to L2 (measured while
++// prototyping the CPU version).
++__global__ void KernelResidSq(const int* __restrict__ cam_idx, const int* __restrict__ pt_idx,
++                              const Scalar* __restrict__ uv, const Scalar* __restrict__ R,
++                              const Scalar* __restrict__ t, const Scalar* __restrict__ X,
++                              const Scalar* __restrict__ f, const Scalar* __restrict__ k1,
++                              const Scalar* __restrict__ k2, int nobs, Scalar* __restrict__ s_out) {
+   int o = blockIdx.x * blockDim.x + threadIdx.x;
+   if (o >= nobs) return;
+   int c = cam_idx[o], p = pt_idx[o];
+@@ -195,7 +240,16 @@
+   Scalar dist = 1.0 + k1[c]*r2 + k2[c]*r2*r2;
+   Scalar rx = f[c]*dist*xp - uv[2*o];
+   Scalar ry = f[c]*dist*yp - uv[2*o+1];
+-  atomicAdd(cost_out, 0.5 * (rx*rx + ry*ry));
++  s_out[o] = rx*rx + ry*ry;
++}
++
++// One EM M-step accumulation: sum_i u_i s_i, u_i = (nu+2)/(nu+s_i/sigma^2).
++__global__ void KernelTEMSum(const Scalar* __restrict__ sv, int nobs, Scalar nu,
++                             Scalar sig2, Scalar* __restrict__ acc) {
++  int o = blockIdx.x * blockDim.x + threadIdx.x;
++  if (o >= nobs) return;
++  const Scalar u = (nu + 2.0)/(nu + sv[o]/sig2);
++  atomicAdd(acc, u*sv[o]);
+ }
+ 
+ // Watertightness check (see task history): raw sum-of-squared-residuals cost
+@@ -1032,7 +1086,8 @@
+     const int* __restrict__ o2p,const int* __restrict__ o2c,int nobs,
+     Scalar* __restrict__ Hcc,Scalar* __restrict__ Cdiag,HT* __restrict__ Gp,HT* __restrict__ Gc,
+     HT* __restrict__ Bo,Scalar* __restrict__ bc,Scalar* __restrict__ bp,Scalar k2mask=1.0,
+-    Scalar* __restrict__ r2acc=nullptr,Scalar* __restrict__ obscnt=nullptr){
++    Scalar* __restrict__ r2acc=nullptr,Scalar* __restrict__ obscnt=nullptr,
++    int rk=0,Scalar rk_a2=0.0){
+   int o=blockIdx.x*blockDim.x+threadIdx.x; if(o>=nobs)return;
+   int c=ci[o],p=pi[o];
+   const Scalar* Rc=R+9*c; const Scalar* Xp=X+3*p;
+@@ -1054,6 +1109,15 @@
+     gx[8]*=k2mask; gy[8]*=k2mask;
+     if(r2acc){ atomicAdd(&r2acc[c],r2); atomicAdd(&obscnt[c],(Scalar)1.0); }
+   }
++  // IRLS: sqrt-weight the residual AND the Jacobian rows, exactly as the CPU
++  // port does (and after r2acc, which accumulates the geometric radius and is
++  // independent of the weighting). Everything downstream -- Hcc, b, the point
++  // block, the fragments -- is then the weighted GN system.
++  if(rk){
++    const Scalar sw = sqrt(OcaRobustW(rk, rk_a2, rx*rx + ry*ry));
++    rx *= sw; ry *= sw;
++    for(int i=0;i<CD+3;++i){ gx[i] *= sw; gy[i] *= sw; }
++  }
+   for(int i=0;i<CD;++i) atomicAdd(&bc[CD*c+i], rx*gx[i]+ry*gy[i]);
+   for(int i=0;i<3;++i) atomicAdd(&bp[3*p+i], rx*gx[CD+i]+ry*gy[CD+i]);
+   for(int i=0;i<CD;++i) for(int j=0;j<CD;++j) atomicAdd(&Hcc[CD*CD*c+CD*i+j], gx[i]*gx[j]+gy[i]*gy[j]);
+@@ -2045,13 +2109,21 @@
+ static std::vector<int> BuildPointObsCSR(DeviceProblem& p, const int* pt_idx,
+                                          int npt, int nobs,
+                                          std::vector<int>* offsets_out = nullptr) {
+-  std::vector<int> order(nobs);
+-  for (int o = 0; o < nobs; ++o) order[o] = o;
+-  std::stable_sort(order.begin(), order.end(),
+-                   [&](int a, int b) { return pt_idx[a] < pt_idx[b]; });
++  // Stable COUNTING sort by pt_idx (keys are dense in [0,npt)), not a
++  // comparison sort. Identical output to the std::stable_sort it replaces --
++  // placing observations in increasing original index within each bucket is
++  // exactly stability -- so every downstream index, and therefore every
++  // atomicAdd order and every bit of the trajectory, is unchanged. The
++  // comparison sort was the dominant setup cost: random-access comparisons
++  // over 9.1M observations on final-4585.
+   std::vector<int> offsets(npt + 1, 0);
+-  for (int o = 0; o < nobs; ++o) offsets[pt_idx[order[o]] + 1]++;
++  for (int o = 0; o < nobs; ++o) offsets[pt_idx[o] + 1]++;
+   for (int pp = 0; pp < npt; ++pp) offsets[pp + 1] += offsets[pp];
++  std::vector<int> order(nobs);
++  {
++    std::vector<int> cursor(offsets.begin(), offsets.end() - 1);
++    for (int o = 0; o < nobs; ++o) order[cursor[pt_idx[o]]++] = o;
++  }
+   CUDA_CHECK(cudaMalloc(&p.point_obs_offsets, (npt + 1) * sizeof(int)));
+   CUDA_CHECK(cudaMalloc(&p.point_obs_list, nobs * sizeof(int)));
+   CUDA_CHECK(cudaMemcpy(p.point_obs_offsets, offsets.data(),
+@@ -2074,13 +2146,17 @@
+     h_scam[kk] = cam_idx[order[kk]];
+     h_spt[kk] = pt_idx[order[kk]];
+   }
+-  std::vector<int> cord(nobs);
+-  for (int o = 0; o < nobs; ++o) cord[o] = o;
+-  std::stable_sort(cord.begin(), cord.end(),
+-                   [&](int x, int y) { return cam_idx[x] < cam_idx[y]; });
++  // Same stable counting sort, keyed on cam_idx (dense in [0,ncam)). The
++  // histogram doubles as the CSR offset array, so the separate counting pass
++  // over the sorted order disappears too.
+   std::vector<int> coff(ncam + 1, 0);
+-  for (int o = 0; o < nobs; ++o) coff[cam_idx[cord[o]] + 1]++;
++  for (int o = 0; o < nobs; ++o) coff[cam_idx[o] + 1]++;
+   for (int c = 0; c < ncam; ++c) coff[c + 1] += coff[c];
++  std::vector<int> cord(nobs);
++  {
++    std::vector<int> cursor(coff.begin(), coff.end() - 1);
++    for (int o = 0; o < nobs; ++o) cord[cursor[cam_idx[o]]++] = o;
++  }
+   std::vector<int> o2c(nobs), h_cspt(nobs);
+   for (int kk = 0; kk < nobs; ++kk) {
+     o2c[cord[kk]] = kk;
+@@ -2231,12 +2307,14 @@
+   return Diagnostics{median, num_obs_viol, num_pt_viol, (int)valid_err.size()};
+ }
+ 
+-Scalar ComputeCost(const DeviceProblem& p, const DeviceState& s) {
++Scalar ComputeCost(const DeviceProblem& p, const DeviceState& s,
++                   int rk = 0, Scalar rk_a2 = 0.0) {
+   Scalar* d_cost;
+   CUDA_CHECK(cudaMalloc(&d_cost, sizeof(Scalar)));
+   CUDA_CHECK(cudaMemset(d_cost, 0, sizeof(Scalar)));
+   KernelCost<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.R, s.t, s.X,
+-                                        INTR_F(p,s), INTR_K1(p,s), INTR_K2(p,s), p.nobs, d_cost);
++                                        INTR_F(p,s), INTR_K1(p,s), INTR_K2(p,s), p.nobs, d_cost,
++                                        rk, rk_a2);
+   Scalar cost;
+   CUDA_CHECK(cudaMemcpy(&cost, d_cost, sizeof(Scalar), cudaMemcpyDeviceToHost));
+   CUDA_CHECK(cudaFree(d_cost));
+@@ -8008,7 +8086,19 @@
+                            // pays max_iter, which makes it uncompetitive on the small
+                            // problems that incremental mapping is made of.
+                            Scalar func_tolerance = 0.0,
+-                           int max_consecutive_failures = 0) {
++                           int max_consecutive_failures = 0,
++                           // IRLS robust kernel: 0 = L2 (bit-compat default).
++                           // rk_scale2 is delta^2/c^2, or nu*sigma0^2 for the
++                           // student-t (0 = auto-init from the residual median).
++                           int rk = 0, Scalar rk_scale2 = 0.0, Scalar rk_nu = 4.0,
++                           // Fast-opening mode: prune the candidate menu at
++                           // intermediate CG checkpoints and cap CG depth
++                           // while no step has been rejected yet. Shrinks the
++                           // window where a single-damping solver leads, at a
++                           // small but REAL end-residual cost -- see
++                           // OPENING_ACCEL.md. Off by default.
++                           bool fast_opening = false,
++                           int fast_opening_depth = 32) {
+   int ncam=p.ncam, npt=p.npt, n_p=3*npt, nobs=p.nobs;
+   // ROUND 11: with shared intrinsics the CG runs in the REDUCED camera space
+   // [6*ncam poses | 3*ncalib calibrations]; the assembly kernels keep writing
+@@ -8067,14 +8157,52 @@
+   auto DoRetract=[&](const Scalar* d,const DeviceState& out){
+     if constexpr (CD==9) RetractDof9(p,s,d,out); else Retract(p,s,d,out); };
+   cublasHandle_t blas; cublasCreate(&blas);
+-  Scalar cost=ComputeCost(p,s);
++  // ---- robust kernel state -------------------------------------------------
++  // rk_a2 is the effective squared scale. Fixed for huber/cauchy; for the
++  // student-t it is re-estimated by EM once per ASSEMBLY (so it is frozen
++  // across a candidate menu and across inner retries -- one consistent
++  // objective per outer, which is what candidate scoring requires).
++  Scalar rk_a2 = rk_scale2;
++  Scalar* rk_sv = nullptr;            // per-obs |r|^2, student-t only
++  if(rk==3) M((void**)&rk_sv,(size_t)nobs*sizeof(Scalar));
++  auto RobustUpdateScale=[&](){
++    if(rk!=3) return;
++    KernelResidSq<<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
++        INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),nobs,rk_sv);
++    if(!(rk_a2>0.0)){
++      // auto-init: median(|r|^2) ~ 1.386 sigma^2 for an isotropic 2-D normal.
++      std::vector<Scalar> h(nobs);
++      CUDA_CHECK(cudaMemcpy(h.data(),rk_sv,(size_t)nobs*sizeof(Scalar),cudaMemcpyDeviceToHost));
++      std::nth_element(h.begin(),h.begin()+h.size()/2,h.end());
++      const Scalar med=h[h.size()/2];
++      rk_a2 = rk_nu*std::max(med/(Scalar)1.386,(Scalar)1e-8);
++    }
++    Scalar sig2 = rk_a2/rk_nu;
++    Scalar* d_acc; CUDA_CHECK(cudaMalloc(&d_acc,sizeof(Scalar)));
++    for(int em=0; em<3; ++em){
++      CUDA_CHECK(cudaMemset(d_acc,0,sizeof(Scalar)));
++      KernelTEMSum<<<GridSize(nobs),256>>>(rk_sv,nobs,rk_nu,sig2,d_acc);
++      Scalar num; CUDA_CHECK(cudaMemcpy(&num,d_acc,sizeof(Scalar),cudaMemcpyDeviceToHost));
++      sig2 = std::max(num/(2.0*(Scalar)nobs),(Scalar)1e-10);
++    }
++    CUDA_CHECK(cudaFree(d_acc));
++    rk_a2 = rk_nu*sig2;
++  };
++  RobustUpdateScale();   // the initial cost below already needs a valid scale
++  Scalar cost=ComputeCost(p,s,rk,rk_a2);
+   int cheir0=CountCheiralityViolations(p,s);
+   RunLog log; log.iters.push_back(0); log.costs.push_back(cost);
+   Scalar lam_cam=lam0, lam_floor=lam0*1e-8;
+   MFStats st; Scalar prev_bnorm=-1.0;
+   int n_accept=0,n_reject=0,rej_streak=0;
++  int last_win_sh=0;   // OCA_CAND_PRUNE: previous outer's winning shift
++  Scalar last_rel=1.0; // relative progress of the last ACCEPTED outer
+   // Early-stopping state (inert unless the caller enables the tolerances).
+   int stuck=0; bool converged=false; Scalar prev_cost=cost;
++  // OCA_STOP_WINDOW=<n>: outers to look back over before honouring a
++  // consecutive-failure stop. 0 = legacy behaviour (bit-compat default).
++  static const int stop_window = [](){
++    const char* e = getenv("OCA_STOP_WINDOW"); return e ? std::atoi(e) : 0; }();
+   // AUDIT 2026-08-22: lambda at the START of the current reject streak, so an
+   // accept won by the tau ratchet can unwind the lambda escalation it did not
+   // need. See the accept branch below.
+@@ -8122,12 +8250,16 @@
+     CUDA_CHECK(cudaMemset(bp,0,(size_t)n_p*sizeof(Scalar)));
+     if(r2acc){ CUDA_CHECK(cudaMemset(r2acc,0,ncam*sizeof(Scalar)));
+                CUDA_CHECK(cudaMemset(obscnt,0,ncam*sizeof(Scalar))); }
++    // Student-t: refresh the scale from the CURRENT state, then freeze it for
++    // this outer. Matches the CPU port, which drives the update from Assemble
++    // and therefore skips it on assembly-reusing inner retries.
++    RobustUpdateScale();
+     if(mf_fp32) MFAssemble<CD,float><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
+         INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
+-        p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,k2mask,r2acc,obscnt);
++        p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+     else        MFAssemble<CD,Scalar><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
+         INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
+-        p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt);
++        p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+     if(r2acc) KernelDampIntr9<<<GridSize(ncam),256>>>(Hcc,INTR_F(p,s),r2acc,obscnt,ncam,intr_damp,k2mask);
+     if(prof){cudaDeviceSynchronize();t_asm+=std::chrono::duration<double>(now()-t0).count();}
+    }  // end if(need_assembly)
+@@ -8222,8 +8354,72 @@
+     // a strictly better transient (venice-52: 9.6% lower cost at 20 iters,
+     // 0.43% at 60) and converges to the same basin.
+     static const bool rho_mode = getenv("OCA_RHO_LAMBDA")!=nullptr;
++    // OCA_RHO_SHIFT: under rho mode, anchor the Nielsen update at the WINNING
++    // shift's damping sigma_win = lam*10^(best_sh-grid_down) instead of the
++    // pre-streak lambda. The accepted step solved (S+sigma_win)x=b, so
++    // sigma_win is the damping the trust region actually used; discarding it
++    // pins lambda at the floor and every outer re-pays a reject/escalation
++    // search (326 rejects measured on final-4585 under plain rho). Validated
++    // in the CPU port: venice-52 cost at it3 drops 1.23e6 -> 5.11e5.
++    // Value = max decades lambda may drop per accepted outer (1 or 2);
++    // any value enables the flag. The full-menu drop (2) wins openings but
++    // reproduced the tau-storm collapse on final-3068 (23 accepts/157
++    // rejects, final +26%): one accept dropped lambda into the region where
++    // the point relaxation is toxic. See the accept branch.
++    static const int rho_shift_down = [](){
++      const char* e = getenv("OCA_RHO_SHIFT");
++      return e ? std::max(1, std::atoi(e)) : 0; }();
++    static const bool rho_shift = rho_shift_down > 0;
++    // OCA_ALPHA_RHO: re-enable the alpha grid under rho mode with an
++    // alpha-aware prediction pred(s) = s*b'd - s^2*(b'd - pred1) (exact for
++    // the Schur-space quadratic under uniform scaling; one extra dot per
++    // winning candidate). Validated in the CPU port: recovers the alpha-off
++    // regression on ladybug-49/dubrovnik-88 (-0.5% final at 60 iters).
++    static const bool alpha_rho = getenv("OCA_ALPHA_RHO")!=nullptr;
++    // OCA_CAND_PRUNE: the per-outer fixed cost is dominated by candidate
++    // evaluations (measured: outer wall tracks eval count almost linearly;
++    // a 128-deep sweep fires 5 checkpoints x 5 shifts + 8 alpha = 33 evals
++    // and costs 0.26-0.66 s while a shallow outer costs 0.04 s). At an
++    // INTERMEDIATE checkpoint score only shift 0 and the previous outer's
++    // winner, and score the full menu once at the depth CG actually stops at.
++    // Justification from the 23-set archive: 82.5% of accepted winners are
++    // shift 0, 87.5% sit at the deepest fired checkpoint, and only 2.1% of
++    // winners are at an intermediate checkpoint with a shift that is neither
++    // 0 nor the previous winner -- i.e. this prunes 2.1% of decisions.
++    static const bool cand_prune = getenv("OCA_CAND_PRUNE")!=nullptr;
++    // OCA_ALPHA_CROSS: the alpha grid is {0.7,1,1.4}^2 minus (1,1) = 8 extra
++    // cost evaluations on EVERY outer, which dominates the cheap ones (8 of
++    // 13 evals on dubrovnik-135's steady-state outers). Score only the 4
++    // "cross" combos that move one block at a time; because the grid
++    // compounds on the live best step, two cross wins in one outer compose
++    // into a corner, so the reachable set is not as reduced as 4/8 suggests.
++    static const bool alpha_cross = getenv("OCA_ALPHA_CROSS")!=nullptr;
++    // OCA_CKPT_OPEN=<d>: cap the CG depth ladder at d while the solve is still
++    // in its cold phase (last accepted step moved cost by >1e-3 relative).
++    // Rationale (measured, dubrovnik-135): early outers that run CG to depth
++    // 61-128 cost 0.15-0.26 s each and are KRYLOV-dominated (88 ms of a 138 ms
++    // outer), while Caspar completes ~15 cheap iterations in the same time.
++    // Trading one deep sweep for several shallow outers is the opening
++    // trade; the full {8..128} ladder returns for the grind phase, so the
++    // endgame is unchanged.
++    static const int ckpt_open = [](){
++      const char* e = getenv("OCA_CKPT_OPEN"); return e ? std::atoi(e) : 0; }();
++    // How long "the opening" lasts. A first attempt used last_rel > 1e-3,
++    // which on venice-52 stays true for most of the solve -- the cap then
++    // applied to the whole run and moved the endpoint (+0.9%). The opening is
++    // the >10%-per-outer regime: ~3-6 outers, which is exactly the window
++    // Caspar leads. Overridable for experiments.
++    // Default 0 = no relative-progress gate: the accelerators stay on until
++    // the first REJECTED step, which is the configuration that actually
++    // delivers (-20% / -31% of the lead window on dubrovnik-135 /
++    // venice-1672). A 0.1 gate was measured to remove the benefit entirely
++    // (-6% / +4%) while the reject guard alone already protects the
++    // reject-prone scenes. Overridable for experiments.
++    static const Scalar open_rel = [](){
++      const char* e = getenv("OCA_OPEN_REL"); return e ? (Scalar)atof(e) : (Scalar)0.0; }();
+     std::vector<Scalar> preds(L,0.0);
+     Scalar pred_best=0.0;
++    Scalar bpd_best=0.0;   // b'^T x of the winning candidate (scaled space)
+ 
+     CUDA_CHECK(cudaMemset(d_best,0,(size_t)n*sizeof(Scalar)));
+     auto Score=[&](const Scalar* x_scaled,int sh,int ck){
+@@ -8247,7 +8443,7 @@
+       CUDA_CHECK(cudaMemcpy(dfull+n_cf,xpv,(size_t)n_p*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+       KernelNegateInPlace<<<GridSize(n),256>>>(dfull,n);
+       DoRetract(dfull,s_new);
+-      Scalar c=ComputeCost(p,s_new);
++      Scalar c=ComputeCost(p,s_new,rk,rk_a2);
+       if(getenv("MF_DEBUG")){ Scalar nx,np2;
+         cublasDnrm2(blas,n_cf,xc_un,1,&nx); cublasDnrm2(blas,n_p,xpv,1,&np2);
+         std::printf("      [dbg] shift=%d ckpt=%d  |x_c|=%.6e |x_p|=%.6e  cand_cost=%.10e  (cur=%.10e)%s\n",
+@@ -8257,6 +8453,9 @@
+       if(sh>=0 && sh<L && c<cbest_sh[sh]) cbest_sh[sh]=c;
+       if(c<best_cost){ best_cost=c; best_sh=sh; best_ck=ck; have=true;
+         if(rho_mode && sh>=0 && sh<L) pred_best=preds[sh];
++        if(rho_mode && alpha_rho){
++          Scalar bd=0; cublasDdot(blas,n_c,bprime,1,x_scaled,1,&bd);
++          bpd_best=bd; }
+         CUDA_CHECK(cudaMemcpy(d_best,dfull,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice)); }
+     };
+     // ---- multi-shift CG.  seed = SMALLEST shift (required for stability). ----
+@@ -8289,7 +8488,28 @@
+     if(prev_bnorm>0.0){ Scalar q=(nb*nb)/(prev_bnorm*prev_bnorm); eta=std::min(ew_eta_max,(Scalar)0.9*q); }
+     prev_bnorm=nb;
+     int maxck = ckpts.empty()?64:*std::max_element(ckpts.begin(),ckpts.end());
++    // The opening accelerators are a bet that the cheap path ranks candidates
++    // as well as the full menu. A REJECTED step is direct evidence the bet
++    // failed on this scene, so any reject disarms them for the rest of the
++    // solve: final-3068 (37 rejects) and final-4585 (190) both regressed
++    // (+14.9% / +2.0% final) while the accelerators stayed on, and both are
++    // protected by this guard.
++    // The option turns both mechanisms on; the individual env flags remain
++    // for experiment reproduction and override it.
++    const bool prune_en = cand_prune || fast_opening;
++    const int  cap_en   = (ckpt_open>0) ? ckpt_open
++                                        : (fast_opening ? fast_opening_depth : 0);
++    const bool accel = (n_reject==0) && (last_rel > open_rel);
++    const bool prune_now = prune_en && accel;
++    std::vector<int> ckpts_eff = ckpts;
++    if(cap_en>0 && accel){
++      ckpts_eff.clear();
++      for(int c : ckpts) if(c<=cap_en) ckpts_eff.push_back(c);
++      if(ckpts_eff.empty()) ckpts_eff.push_back(cap_en);
++      maxck = std::min(maxck, cap_en);
++    }
+     Scalar al_prev=1.0,be_prev=0.0; size_t ci_=0; int cg_it=0; bool trunc=false;
++    int last_ck_fired=-1; bool cg_broke=false;
+     if(prof){cudaDeviceSynchronize();t0=now();}
+     for(cg_it=0; cg_it<maxck; ++cg_it){
+       KvS(pv_,Ap_);
+@@ -8321,27 +8541,57 @@
+       { const Scalar one=1.0; cublasDaxpy(blas,n_c,&one,r_,1,pv_,1); }
+       rr=rr_new;
+       if(prof){cudaDeviceSynchronize();t_mv+=std::chrono::duration<double>(now()-t0).count();}
+-      while(ci_<ckpts.size() && cg_it+1==ckpts[ci_]){
+-        for(int l=0;l<L;++l) Score(xs[l],l,cg_it+1);
++      while(ci_<ckpts_eff.size() && cg_it+1==ckpts_eff[ci_]){
++        if(prune_now){
++          Score(xs[0],0,cg_it+1);
++          if(last_win_sh>0 && last_win_sh<L) Score(xs[last_win_sh],last_win_sh,cg_it+1);
++        } else {
++          for(int l=0;l<L;++l) Score(xs[l],l,cg_it+1);
++        }
++        last_ck_fired = cg_it+1;
+         ++ci_;
+       }
+       if(prof){cudaDeviceSynchronize();t0=now();}
+-      if(sqrt(rr_new)<=eta*nb) break;    // s2.7
++      if(sqrt(rr_new)<=eta*nb){ cg_broke=true; break; }    // s2.7
+     }
+     if(trunc){ for(int l=0;l<L;++l) Score(xs[l],l,cg_it); }
+     else if(ci_==0){ for(int l=0;l<L;++l) Score(xs[l],l,cg_it); }
++    else if(prune_now){
++      // Guarantee one FULL shift menu at the depth CG actually stopped at:
++      // that is where 87.5% of winners live. If the last checkpoint coincides
++      // with that state, only the shifts held back there still need scoring.
++      const int depth = cg_broke ? (cg_it+1) : maxck;
++      if(last_ck_fired==depth){
++        for(int l=0;l<L;++l)
++          if(l!=0 && l!=last_win_sh) Score(xs[l],l,depth);
++      } else {
++        for(int l=0;l<L;++l) Score(xs[l],l,depth);
++      }
++    }
+ 
+     // ---- existing alpha grid, unchanged ----
+     int alpha_win=0;
+-    if(have && use_alpha && !rho_mode){
++    if(have && use_alpha && (!rho_mode || alpha_rho)){
+       const Scalar as[3]={0.7,1.0,1.4};
+       Scalar base=best_cost;
++      // Under rho mode the winning combo must carry a matching prediction:
++      // for a step whose camera half is scaled by cumulative s, the
++      // Schur-space quadratic gives pred(s) = s*b'd - s^2*(b'd - pred1).
++      // s compounds across winning combos exactly like the step itself.
++      const Scalar bpd0=bpd_best, pred1=pred_best;
++      Scalar s_cum=1.0;
+       for(int a1=0;a1<3;++a1) for(int a2=0;a2<3;++a2){
+         if(as[a1]==1.0&&as[a2]==1.0) continue;
++        // cross = move one block at a time; corners remain reachable by
++        // composition because the grid compounds on the live best step.
++        if(alpha_cross && as[a1]!=1.0 && as[a2]!=1.0) continue;
+         MFAlphaScale<<<GridSize(n),256>>>(dfull,d_best,as[a1],as[a2],n_cf,n);
+         DoRetract(dfull,s_new);
+-        Scalar c=ComputeCost(p,s_new);
++        Scalar c=ComputeCost(p,s_new,rk,rk_a2);
+         if(c<best_cost){ best_cost=c; alpha_win=1;
++          if(rho_mode){
++            s_cum*=as[a1];
++            pred_best=s_cum*bpd0-s_cum*s_cum*(bpd0-pred1); }
+           CUDA_CHECK(cudaMemcpy(d_best,dfull,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice)); }
+       }
+       (void)base;
+@@ -8387,7 +8637,22 @@
+         // storms bank permanently (that was the lam=inf mechanism).
+         const Scalar rel = act / std::max(cost_pre_accept, (Scalar)1e-300);
+         if(rel > (Scalar)1e-4) fac = std::min(fac, (Scalar)0.5);
+-        const Scalar base = (CD==9 && rej_streak>0 && !lm_classic) ? lam_pre_streak : lam_cam;
++        Scalar base = (CD==9 && rej_streak>0 && !lm_classic) ? lam_pre_streak : lam_cam;
++        // OCA_RHO_SHIFT: the accepted step was solved at sigma_win; make
++        // that the anchor Nielsen updates from, so the menu's damping
++        // information survives into the next outer.
++        if(rho_shift && best_sh>=0 && rej_streak==0){
++          // Anchor only on CLEAN accepts. A contested accept's lam carries
++          // the reject streak's x10 escalations, which are a joint
++          // (lambda,tau) search device, not damping information -- banking
++          // them froze the final-4585 grind at an elevated lambda (48
++          // outers buying 0.3%, final +1.9% worse). Clean accepts keep the
++          // full downward anchor (the opening win) with the upward move
++          // clamped to +1 decade.
++          const int rel_sh = std::max(std::min(best_sh-grid_down, 1),
++                                      -rho_shift_down);
++          base = lam_cam*std::pow((Scalar)10.0,(Scalar)rel_sh);
++        }
+         lam_cam = std::min(std::max(base*fac, lam_floor), (Scalar)1e8);
+       }
+       else if(grid_down>0 && best_sh>=0){
+@@ -8415,6 +8680,8 @@
+         if(rej_streak>0) tau_win=tau_used;          // remember what won
+         else             tau_win*=(Scalar)0.5;      // fade when not needed
+       }
++      if(best_sh>=0) last_win_sh=best_sh;
++      last_rel=(cost_pre_accept-best_cost)/std::max(cost_pre_accept,(Scalar)1e-300);
+       accepted=true; ++n_accept; rej_streak=0;
+     } else {
+       if(rej_streak==0) lam_pre_streak=lam_cam;
+@@ -8440,19 +8707,45 @@
+     //  (2) LM exhausted its retries without finding an improving step, repeatedly.
+     //      This is the case that matters on an already-converged input, where every
+     //      step is rejected and (1) never fires because cost never changes.
++    // Both stopping rules ask "has the solve flattened?". Asking it of a
++    // SINGLE outer makes the answer decidable by 1e-7 differences, which GPU
++    // atomics supply for free: six identical final-3068 runs stopped at 8,
++    // 14, 23, 56, 60 and 60 outers, so a user gets a random amount of
++    // optimisation. OCA_STOP_WINDOW=<n> asks it of the last n outers instead.
++    auto FlatOverWindow=[&](){
++      if(stop_window<=0) return true;          // legacy: single-outer test
++      const size_t have=log.costs.size();
++      if(have<2) return false;
++      const size_t back=std::min<size_t>(stop_window, have-1);
++      const Scalar ref=log.costs[have-1-back];
++      return (ref<=0) || ((ref-cost) < func_tolerance*ref);
++    };
+     if(accepted){
+       stuck=0;
+       if(func_tolerance>0 && prev_cost>0 &&
+-         (prev_cost-cost) < func_tolerance*prev_cost){
++         (prev_cost-cost) < func_tolerance*prev_cost && FlatOverWindow()){
+         converged=true;
+         if(verbose) std::printf("  MFCG: converged (relative cost decrease < %.2e)\n",
+                                 (double)func_tolerance);
+       }
+       prev_cost=cost;
+     } else if(max_consecutive_failures>0 && ++stuck>=max_consecutive_failures){
+-      converged=true;
+-      if(verbose) std::printf("  MFCG: converged (%d consecutive outer iterations "
+-                              "with no improving step)\n",stuck);
++      // OCA_STOP_WINDOW: the bare failure counter is decidable by 1e-7
++      // differences. A transient patch of fully-rejected outers is normal on
++      // reject-prone scenes, and GPU atomics make it appear or not run to
++      // run: measured on final-3068, six identical runs stopped at 8, 14, 23,
++      // 56, 60 and 60 outers, i.e. a user gets a random amount of
++      // optimisation. Requiring the streak AND genuinely flat progress over a
++      // longer window keeps the rule's purpose -- terminate on an
++      // already-converged input, where cost never moves at all -- while
++      // refusing to fire on a scene that is still descending between rejects.
++      if(FlatOverWindow()){
++        converged=true;
++        if(verbose) std::printf("  MFCG: converged (%d consecutive outer iterations "
++                                "with no improving step)\n",stuck);
++      } else {
++        stuck=0;   // still descending over the window: keep going
++      }
+     }
+     if(converged){ ++k; break; }
+     if(verbose)
+@@ -8494,7 +8787,7 @@
+   cudaFree(Rf);cudaFree(tacc);cudaFree(uu);cudaFree(w);cudaFree(bprime);cudaFree(corr);
+   cudaFree(E);cudaFree(dk);cudaFree(xc_un);cudaFree(xpv);cudaFree(dcam);cudaFree(dpt);
+   cudaFree(dfull);cudaFree(d_best);cudaFree(r_);cudaFree(pv_);cudaFree(Ap_);cudaFree(okf);
+-  cudaFree(r2acc);cudaFree(obscnt);
++  cudaFree(r2acc);cudaFree(obscnt);cudaFree(rk_sv);
+   cublasDestroy(blas);
+   CsvClose();
+   return log;
+@@ -9017,7 +9310,23 @@
+ 
+ }  // namespace
+ 
++// OCA_PROFILE also breaks down the pre-solve setup, which the crossing
++// analysis hides (it normalises to each solver's first logged iteration) but
++// the user still pays: measured 0.48-0.74 s between the wrapper's "BA
++// options" line and MFREE's first outer, vs Caspar's 0.06-0.08 s.
++#define OCA_SETUP_MARK(tag)                                                    \
++  if (setup_prof) {                                                            \
++    cudaDeviceSynchronize();                                                   \
++    const double _e = std::chrono::duration<double>(                           \
++                          std::chrono::steady_clock::now() - _tsetup).count(); \
++    std::printf("  [SETUP] %-28s %7.1f ms\n", tag, 1e3 * (_e - _tprev));       \
++    _tprev = _e;                                                               \
++  }
++
+ Result Solve(const Problem& pr, const Options& opt, State* st) {
++  const bool setup_prof = getenv("OCA_PROFILE") != nullptr;
++  const auto _tsetup = std::chrono::steady_clock::now();
++  double _tprev = 0.0;
+   Result res;
+   if (const char* bad = CheckProblem(pr, st)) {
+     res.message = bad;
+@@ -9101,9 +9410,12 @@
+                             cudaMemcpyHostToDevice));
+     }
+ 
++    OCA_SETUP_MARK("upload + index build");
+     const Diagnostics diag0 = ComputeDiagnostics(p, s);
++    OCA_SETUP_MARK("initial diagnostics");
+     res.initial_cost = ComputeCost(p, s);
+     res.initial_median_error_px = diag0.median_reproj_err_px;
++    OCA_SETUP_MARK("initial cost");
+ 
+     std::vector<int> ckpts = opt.cg_checkpoints;
+     if (ckpts.empty()) ckpts.push_back(opt.max_iterations);
+@@ -9117,7 +9429,9 @@
+                    opt.use_fp32_fragments, opt.refine_k2 ? 1.0 : 0.0,
+                    /*equil_floor=*/0.0, /*intr_damp=*/1.0,
+                    opt.max_inner_retries, /*tau_persist=*/false,
+-                   opt.func_tolerance, opt.max_consecutive_failures)
++                   opt.func_tolerance, opt.max_consecutive_failures,
++                   opt.robust_kernel, opt.robust_scale2, opt.robust_nu,
++                   opt.fast_opening, opt.fast_opening_depth)
+              : SolveMFreeShiftedCG<6>(
+                    p, s, opt.initial_lambda, opt.max_iterations, opt.verbose,
+                    opt.point_damping, ckpts, opt.num_shifts, opt.equilibrate,
+@@ -9132,7 +9446,9 @@
+                    // starved the solver completely: 0 accepted steps, output
+                    // identical to input, while the dof9 path solved it fine.
+                    opt.max_inner_retries, /*tau_persist=*/false,
+-                   opt.func_tolerance, opt.max_consecutive_failures);
++                   opt.func_tolerance, opt.max_consecutive_failures,
++                   opt.robust_kernel, opt.robust_scale2, opt.robust_nu,
++                   opt.fast_opening, opt.fast_opening_depth);
+     CUDA_CHECK(cudaDeviceSynchronize());
+ 
+     // Write the solution back through the caller's arrays.
+@@ -9155,6 +9471,13 @@
+ 
+     const Diagnostics diag1 = ComputeDiagnostics(p, s);
+     res.final_cost = ComputeCost(p, s);
++    // Under a robust kernel the reported endpoints must be the ROBUST
++    // objective the solver actually minimized (the bare ComputeCost calls
++    // around this block are L2). The solver's own log already carries it.
++    if (opt.robust_kernel && !log.costs.empty()) {
++      res.initial_cost = log.costs.front();
++      res.final_cost = log.costs.back();
++    }
+     res.final_median_error_px = diag1.median_reproj_err_px;
+     res.cost_per_iteration.assign(log.costs.begin(), log.costs.end());
+     // costs[0] is the initial cost, so the accepted-step count is one less.
+@@ -9258,7 +9581,8 @@
+         opt.verbose,(Scalar)opt.point_damping,ckpts,/*n_shifts=*/5,
+         /*use_equil=*/true,kCliEtaMax,kCliUseAlpha,opt.use_fp32_fragments,
+         opt.max_inner_retries,(Scalar)opt.func_tolerance,
+-        opt.max_consecutive_failures,opt.gauge_frame,&final_lam);
++        opt.max_consecutive_failures,opt.gauge_frame,&final_lam,
++        opt.robust_kernel,(Scalar)opt.robust_scale2,(Scalar)opt.robust_nu);
+     res.final_lambda=(double)final_lam;
+ 
+     auto Down=[&](double* h,const Scalar* d,size_t n){
+diff -ru /workspace/bundle_adjustment/mfree_r10/solver/oca_rigfisheye.cuh /workspace/bundle_adjustment/mfree_agent/solver/oca_rigfisheye.cuh
+--- /workspace/bundle_adjustment/mfree_r10/solver/oca_rigfisheye.cuh	2026-08-29 13:44:45.000000000 +0000
++++ /workspace/bundle_adjustment/mfree_agent/solver/oca_rigfisheye.cuh	2026-08-30 00:16:21.000000000 +0000
+@@ -143,13 +143,50 @@
+                              const Scalar* __restrict__ X,
+                              const Scalar* __restrict__ intr,
+                              const int* __restrict__ calib_of_cam,
+-                             int nobs, Scalar* __restrict__ cost) {
++                             int nobs, Scalar* __restrict__ cost,
++                             int rk = 0, Scalar rk_a2 = 0.0) {
+   int o = blockIdx.x * blockDim.x + threadIdx.x; if (o >= nobs) return;
+   int c = ci[o];
+   Scalar rx, ry;
++  // Inactive (far-field / behind-camera) observations return rx=ry=0 here, so
++  // they contribute 0 under L2 and rho(0)=0 under every robust kernel too --
++  // the mask semantics survive the reweighting untouched.
+   RFResidual(Rc + 9 * c, tc + 3 * c, X + 3 * pi[o],
+              intr + RF_NI * calib_of_cam[c], uv[2 * o], uv[2 * o + 1], &rx, &ry);
+-  atomicAdd(cost, 0.5 * (rx * rx + ry * ry));
++  const Scalar ss = rx * rx + ry * ry;
++  atomicAdd(cost, 0.5 * (rk ? OcaRho(rk, rk_a2, ss) : ss));
++}
++
++// Per-observation |r|^2 for the student-t EM scale, reusing RFResidual so the
++// scale is never estimated from a re-derived projection. INACTIVE
++// observations are marked -1, not 0: they carry no scene information, and
++// folding them in as zeros would drag sigma toward 0 and turn the kernel into
++// a hard outlier filter (on gba_164 that is 27k of 4.6M observations).
++__global__ void RFResidSqKernel(const int* __restrict__ ci, const int* __restrict__ pi,
++                                const Scalar* __restrict__ uv,
++                                const Scalar* __restrict__ Rc, const Scalar* __restrict__ tc,
++                                const Scalar* __restrict__ X,
++                                const Scalar* __restrict__ intr,
++                                const int* __restrict__ calib_of_cam,
++                                int nobs, Scalar* __restrict__ s_out) {
++  int o = blockIdx.x * blockDim.x + threadIdx.x; if (o >= nobs) return;
++  int c = ci[o];
++  Scalar rx, ry;
++  const bool act = RFResidual(Rc + 9 * c, tc + 3 * c, X + 3 * pi[o],
++                              intr + RF_NI * calib_of_cam[c],
++                              uv[2 * o], uv[2 * o + 1], &rx, &ry);
++  s_out[o] = act ? (rx * rx + ry * ry) : (Scalar)(-1.0);
++}
++
++// One EM M-step over the ACTIVE observations: acc[0] += u_i s_i, acc[1] += 1.
++__global__ void RFTEMSum(const Scalar* __restrict__ sv, int nobs, Scalar nu,
++                         Scalar sig2, Scalar* __restrict__ acc) {
++  int o = blockIdx.x * blockDim.x + threadIdx.x; if (o >= nobs) return;
++  const Scalar si = sv[o];
++  if (si < 0.0) return;                       // inactive: excluded from the fit
++  const Scalar u = (nu + 2.0)/(nu + si/sig2);
++  atomicAdd(&acc[0], u*si);
++  atomicAdd(&acc[1], (Scalar)1.0);
+ }
+ 
+ __global__ void RFCheirKernel(const int* __restrict__ ci, const int* __restrict__ pi,
+@@ -176,7 +213,8 @@
+     const int* __restrict__ o2p, const int* __restrict__ o2c, int nobs,
+     Scalar* __restrict__ Hcc, Scalar* __restrict__ Cdiag,
+     HT* __restrict__ Gp, HT* __restrict__ Gc, HT* __restrict__ Bo,
+-    Scalar* __restrict__ bc, Scalar* __restrict__ bp) {
++    Scalar* __restrict__ bc, Scalar* __restrict__ bp,
++    int rk = 0, Scalar rk_a2 = 0.0) {
+   constexpr int CD = RF_CD;
+   int o = blockIdx.x * blockDim.x + threadIdx.x; if (o >= nobs) return;
+   int c = ci[o], p = pi[o];
+@@ -204,6 +242,14 @@
+       in[0],in[1],in[2],in[3],in[4],in[5],in[6],in[7],
+       uv[2*o],uv[2*o+1],gx,gy,&rx,&ry);
+   for (int j = 0; j < RF_NI; ++j) { gx[6 + j] *= imask[j]; gy[6 + j] *= imask[j]; }
++  // IRLS: sqrt-weight the residual AND the Jacobian rows (same contract as the
++  // CD=9 path). Only reached for ACTIVE observations -- the inactive branch
++  // above already returned with zeroed fragments.
++  if (rk) {
++    const Scalar sw = sqrt(OcaRobustW(rk, rk_a2, rx*rx + ry*ry));
++    rx *= sw; ry *= sw;
++    for (int i = 0; i < CD + 3; ++i) { gx[i] *= sw; gy[i] *= sw; }
++  }
+   for (int i = 0; i < CD; ++i) atomicAdd(&bc[CD*c+i], rx*gx[i] + ry*gy[i]);
+   for (int i = 0; i < 3; ++i)  atomicAdd(&bp[3*p+i], rx*gx[CD+i] + ry*gy[CD+i]);
+   for (int i = 0; i < CD; ++i)
+@@ -401,10 +447,11 @@
+ }
+ 
+ inline Scalar RFComputeCost(const RFDeviceProblem& p, const RFDeviceState& s,
+-                            Scalar* dcost) {
++                            Scalar* dcost, int rk = 0, Scalar rk_a2 = 0.0) {
+   CUDA_CHECK(cudaMemset(dcost, 0, sizeof(Scalar)));
+   RFCostKernel<<<GridSize(p.nobs), 256>>>(p.cam_idx, p.pt_idx, p.uv, s.Rc, s.tc,
+-                                          s.X, s.intr, p.calib_of_cam, p.nobs, dcost);
++                                          s.X, s.intr, p.calib_of_cam, p.nobs, dcost,
++                                          rk, rk_a2);
+   Scalar h; CUDA_CHECK(cudaMemcpy(&h, dcost, sizeof(Scalar), cudaMemcpyDeviceToHost));
+   return h;
+ }
+@@ -432,7 +479,10 @@
+                               int max_inner_retry, Scalar func_tolerance,
+                               int max_consecutive_failures,
+                               int gauge_frame = -1,
+-                              Scalar* final_lambda_out = nullptr) {
++                              Scalar* final_lambda_out = nullptr,
++                              // IRLS robust kernel: 0 = L2 (bit-compat default).
++                              int rk = 0, Scalar rk_scale2 = 0.0,
++                              Scalar rk_nu = 4.0) {
+   constexpr int CD = RF_CD;
+   const int ncam = p.ncam, npt = p.npt, nobs = p.nobs;
+   const int nframes = p.nframes, ncalib = p.ncalib;
+@@ -504,7 +554,43 @@
+   cublasHandle_t blas; cublasCreate(&blas);
+   RFCompose<<<GridSize(ncam),256>>>(s.Rf,s.tf,s.Rs,s.ts,p.frame_of_cam,p.sensor_of_cam,
+                                     ncam,s.Rc,s.tc);
+-  Scalar cost=RFComputeCost(p,s,dcost);
++  // ---- robust kernel state (see the CD=9 solver for the rationale) --------
++  // The one rig-specific wrinkle is the far-field mask: only ACTIVE
++  // observations may enter the scale estimate, so both the median auto-init
++  // and the EM sums filter on the -1 sentinel written by RFResidSqKernel.
++  Scalar rk_a2 = rk_scale2;
++  Scalar* rk_sv = nullptr;
++  Scalar* rk_acc = nullptr;
++  if(rk==3){ M((void**)&rk_sv,(size_t)nobs*sizeof(Scalar));
++             M((void**)&rk_acc,2*sizeof(Scalar)); }
++  auto RobustUpdateScale=[&](){
++    if(rk!=3) return;
++    RFResidSqKernel<<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.Rc,s.tc,s.X,
++        s.intr,p.calib_of_cam,nobs,rk_sv);
++    if(!(rk_a2>0.0)){
++      std::vector<Scalar> h(nobs);
++      CUDA_CHECK(cudaMemcpy(h.data(),rk_sv,(size_t)nobs*sizeof(Scalar),cudaMemcpyDeviceToHost));
++      std::vector<Scalar> act; act.reserve(h.size());
++      for(Scalar v : h) if(v>=0.0) act.push_back(v);
++      if(act.empty()){ rk_a2 = rk_nu*(Scalar)1e-8; }
++      else{
++        std::nth_element(act.begin(),act.begin()+act.size()/2,act.end());
++        const Scalar med=act[act.size()/2];
++        rk_a2 = rk_nu*std::max(med/(Scalar)1.386,(Scalar)1e-8);
++      }
++    }
++    Scalar sig2 = rk_a2/rk_nu;
++    for(int em=0; em<3; ++em){
++      CUDA_CHECK(cudaMemset(rk_acc,0,2*sizeof(Scalar)));
++      RFTEMSum<<<GridSize(nobs),256>>>(rk_sv,nobs,rk_nu,sig2,rk_acc);
++      Scalar hacc[2]; CUDA_CHECK(cudaMemcpy(hacc,rk_acc,2*sizeof(Scalar),cudaMemcpyDeviceToHost));
++      if(!(hacc[1]>0.0)) break;
++      sig2 = std::max(hacc[0]/(2.0*hacc[1]),(Scalar)1e-10);
++    }
++    rk_a2 = rk_nu*sig2;
++  };
++  RobustUpdateScale();
++  Scalar cost=RFComputeCost(p,s,dcost,rk,rk_a2);
+   int cheir0=RFCheirality(p,s,dviol);
+   RunLog log; log.iters.push_back(0); log.costs.push_back(cost);
+   Scalar lam_cam=lam0, lam_floor=lam0*1e-8;
+@@ -521,12 +607,13 @@
+     CUDA_CHECK(cudaMemset(Cdiag,0,3ul*npt*sizeof(Scalar)));
+     CUDA_CHECK(cudaMemset(bc,0,(size_t)n_cf*sizeof(Scalar)));
+     CUDA_CHECK(cudaMemset(bp,0,(size_t)n_p*sizeof(Scalar)));
++    RobustUpdateScale();   // frozen for this outer, incl. assembly-reusing retries
+     if(mf_fp32) RFAssemble<float><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,
+         s.Rc,s.tc,s.X,s.intr,p.calib_of_cam,p.imask,p.obs2pslot,p.obs2cslot,nobs,
+-        Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp);
++        Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,rk,rk_a2);
+     else        RFAssemble<Scalar><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,
+         s.Rc,s.tc,s.X,s.intr,p.calib_of_cam,p.imask,p.obs2pslot,p.obs2cslot,nobs,
+-        Hcc,Cdiag,Gp,Gc,Bo,bc,bp);
++        Hcc,Cdiag,Gp,Gc,Bo,bc,bp,rk,rk_a2);
+    }
+     // tau ratchet with warm ladder (always on here; this path always has
+     // intrinsics in the camera block, the situation the ratchet exists for).
+@@ -583,7 +670,16 @@
+     static const bool rf_rho = getenv("OCA_RHO_LAMBDA")!=nullptr;
+     static const int rf_gd_env = [](){ const char* e=getenv("OCA_GRID_DOWN"); return e?std::atoi(e):0; }();
+     const int rf_gd = std::min(std::max(rf_gd_env,0),L-1);
++    // OCA_RHO_SHIFT / OCA_ALPHA_RHO: same semantics as the CD9 solver (anchor
++    // Nielsen at the winning shift's damping; alpha grid under rho with an
++    // alpha-aware prediction). Off by default = bit-compat.
++    static const int rf_rho_shift_down = [](){
++      const char* e = getenv("OCA_RHO_SHIFT");
++      return e ? std::max(1, std::atoi(e)) : 0; }();
++    static const bool rf_rho_shift = rf_rho_shift_down > 0;
++    static const bool rf_alpha_rho = getenv("OCA_ALPHA_RHO")!=nullptr;
+     std::vector<Scalar> preds(L,0.0); Scalar pred_best=0.0;
++    Scalar bpd_best=0.0;   // b'^T x of the winning candidate (scaled space)
+     auto Score=[&](const Scalar* x_scaled,int sh,int ck){
+       // Unscale in the reduced space, lift to full for the point relaxation,
+       // but keep the REDUCED delta: the retraction wants frame tangents.
+@@ -598,10 +694,13 @@
+       CUDA_CHECK(cudaMemcpy(dred+n_c,xpv,(size_t)n_p*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+       KernelNegateInPlace<<<GridSize(n_red),256>>>(dred,n_red);
+       DoRetract(dred,s_new);
+-      Scalar c=RFComputeCost(p,s_new,dcost);
++      Scalar c=RFComputeCost(p,s_new,dcost,rk,rk_a2);
+       ++st.cand_evals;
+       if(c<best_cost){ best_cost=c; best_sh=sh; best_ck=ck; have=true;
+         pred_best=(sh>=0&&sh<L)?preds[sh]:0.0;
++        if(rf_rho && rf_alpha_rho){
++          Scalar bd=0; cublasDdot(blas,n_c,bprime,1,x_scaled,1,&bd);
++          bpd_best=bd; }
+         CUDA_CHECK(cudaMemcpy(d_best,dred,(size_t)n_red*sizeof(Scalar),cudaMemcpyDeviceToDevice)); }
+     };
+     std::vector<Scalar> shifts(L);
+@@ -658,14 +757,21 @@
+     else if(ci_==0){ for(int l=0;l<L;++l) Score(xs[l],l,cg_it); }
+ 
+     int alpha_win=0;
+-    if(have && use_alpha && !rf_rho){
++    if(have && use_alpha && (!rf_rho || rf_alpha_rho)){
+       const Scalar as[3]={0.7,1.0,1.4};
++      // Under rho mode the winning combo must carry a matching prediction:
++      // pred(s) = s*b'd - s^2*(b'd - pred1), s compounding across wins.
++      const Scalar bpd0=bpd_best, pred1=pred_best;
++      Scalar s_cum=1.0;
+       for(int a1=0;a1<3;++a1) for(int a2=0;a2<3;++a2){
+         if(as[a1]==1.0&&as[a2]==1.0) continue;
+         MFAlphaScale<<<GridSize(n_red),256>>>(dred,d_best,as[a1],as[a2],n_c,n_red);
+         DoRetract(dred,s_new);
+-        Scalar c=RFComputeCost(p,s_new,dcost);
++        Scalar c=RFComputeCost(p,s_new,dcost,rk,rk_a2);
+         if(c<best_cost){ best_cost=c; alpha_win=1;
++          if(rf_rho){
++            s_cum*=as[a1];
++            pred_best=s_cum*bpd0-s_cum*s_cum*(bpd0-pred1); }
+           CUDA_CHECK(cudaMemcpy(d_best,dred,(size_t)n_red*sizeof(Scalar),cudaMemcpyDeviceToDevice)); }
+       }
+     }
+@@ -684,7 +790,14 @@
+         if(rho<0.25) fac=2.0;
+         const Scalar rel=act/std::max(cost_pre_accept,(Scalar)1e-300);
+         if(rel>(Scalar)1e-4) fac=std::min(fac,(Scalar)0.5);
+-        const Scalar base=(rej_streak>0)?lam_pre_streak:lam_cam;
++        Scalar base=(rej_streak>0)?lam_pre_streak:lam_cam;
++        // OCA_RHO_SHIFT: anchor Nielsen at the winning shift's damping.
++        if(rf_rho_shift && best_sh>=0 && rej_streak==0){
++          // Clean accepts only; down free, up clamped (see oca_cuda.cu).
++          const int rel_sh=std::max(std::min(best_sh-rf_gd,1),
++                                    -rf_rho_shift_down);
++          base=lam_cam*std::pow((Scalar)10.0,(Scalar)rel_sh);
++        }
+         lam_cam=std::min(std::max(base*fac,lam_floor),(Scalar)1e8);
+       }
+       else if(rej_streak>0) lam_cam=std::max(lam_pre_streak*0.5,lam_floor);
+@@ -737,6 +850,7 @@
+   cudaFree(E);cudaFree(dk);cudaFree(xc_un);cudaFree(xr_un);cudaFree(xpv);cudaFree(dred);cudaFree(d_best);
+   cudaFree(r_);cudaFree(pv_);cudaFree(Ap_);cudaFree(okf);
+   cudaFree(bcast_in);cudaFree(bcast_out);cudaFree(dcost);cudaFree(dviol);
++  cudaFree(rk_sv);cudaFree(rk_acc);
+   cublasDestroy(blas);
+   CsvClose();
+   return log;

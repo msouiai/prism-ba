@@ -1,0 +1,90 @@
+{
+  "audit": "independent CPU FP64 SIMPLE_RADIAL cost on original observation set",
+  "calibration": {
+    "arm": "control-five",
+    "flags": {
+      "OCA_ALPHA_RHO": "1",
+      "OCA_BACKTRACK_REARM": "1",
+      "OCA_CAMERA_TR": "0",
+      "OCA_COMPACT_FRAGMENTS": "2",
+      "OCA_DEMAND_MENU": "0",
+      "OCA_DIAG_NORM": "1",
+      "OCA_FORCE_UNSHARED": "1",
+      "OCA_FTOL": "1e-5",
+      "OCA_FTOL_K": "40",
+      "OCA_GRID_DOWN": "2",
+      "OCA_MENU_BACKTRACK": "8",
+      "OCA_MENU_GATE": "1e-2",
+      "OCA_MULTI_RHS": "1",
+      "OCA_NSHIFTS": "5",
+      "OCA_POINT_SAFEGUARD": "1",
+      "OCA_RETRI": "0",
+      "OCA_RETRY_CACHE": "1",
+      "OCA_RHO_LAMBDA": "1",
+      "OCA_RHO_SHIFT": "1",
+      "OCA_SWITCH_RESTART": "0"
+    }
+  },
+  "combination_rule": "Run tr-retri-five N=3 only if tr-five and retri-five each hit 3/3 and each has median crossing < 0.97 * control-five median crossing.",
+  "combined_binary": "/workspace/prism-muell-variants/camera_tr_retri_build/prism-tr",
+  "combined_binary_sha256": "a53d0cdb776ece065d19f92ff68a6ce740b91ed136e8ee16e16ba0c060b55cc0",
+  "factor_arms": {
+    "annealed-s-five": {
+      "OCA_CAMERA_TR": "0",
+      "OCA_NSHIFTS": "5",
+      "OCA_RETRI": "5",
+      "OCA_RETRY_SPAN": "3",
+      "OCA_TAU_LAM": "10",
+      "OCA_TAU_LAM_ANNEAL": "0.8"
+    },
+    "control-five": {
+      "OCA_CAMERA_TR": "0",
+      "OCA_NSHIFTS": "5",
+      "OCA_RETRI": "0"
+    },
+    "control-single": {
+      "OCA_CAMERA_TR": "0",
+      "OCA_NSHIFTS": "1",
+      "OCA_RETRI": "0"
+    },
+    "retri-five": {
+      "OCA_CAMERA_TR": "0",
+      "OCA_NSHIFTS": "5",
+      "OCA_RETRI": "5"
+    },
+    "retri-single": {
+      "OCA_CAMERA_TR": "0",
+      "OCA_NSHIFTS": "1",
+      "OCA_RETRI": "5"
+    },
+    "tr-five": {
+      "OCA_CAMERA_TR": "1",
+      "OCA_NSHIFTS": "5",
+      "OCA_RETRI": "0"
+    },
+    "tr-single": {
+      "OCA_CAMERA_TR": "1",
+      "OCA_NSHIFTS": "1",
+      "OCA_RETRI": "0"
+    }
+  },
+  "input": {
+    "absolute_difference": 3.189779818058014e-07,
+    "data_sha256": "33de7cd28b7f0e91550f8af332990ac8e84b13b35563e9429c8f64849e58ba6c",
+    "dimensions": [
+      493,
+      313987,
+      2118671
+    ],
+    "initial_cpu_cost": 2442177.030208319,
+    "provided_initial_cost": 2442177.030208
+  },
+  "legacy_arm": "schur-guarded-lm",
+  "legacy_binary": "/workspace/prism-model-followup/candidate/prism-tr",
+  "legacy_binary_sha256": "117773562d33949cdbfdc27905d1f23a2cc1faedb7f77c3e619c17caa50a86dc",
+  "native_seconds_cap": 90.0,
+  "outer_cap": 600,
+  "repeats": 3,
+  "target_margin": "solver requires a further 1e-8 inward margin",
+  "target_rule": "1.005 * median audited endpoint of three fixed-five no-treatment calibration runs"
+}

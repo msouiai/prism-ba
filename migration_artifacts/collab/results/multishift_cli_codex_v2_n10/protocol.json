@@ -1,0 +1,46 @@
+{
+  "started_utc": "2026-09-10T16:07:19.983804+00:00",
+  "host": "2237c6528e79",
+  "binary_sha256": "fb76817faae3290a9a815f7a8fce1681d2dc34cfa60b25134b54e72998120698",
+  "source_sha256": "e95e313584467cfc662d7f57f717c9918196652d8ca233403be3ca8f23c425a2",
+  "flags": {
+    "OCA_RHO_LAMBDA": "1",
+    "OCA_GRID_DOWN": "2",
+    "OCA_RHO_SHIFT": "1",
+    "OCA_ALPHA_RHO": "1"
+  },
+  "cli": [
+    "--algo",
+    "mfree_shifted_cg",
+    "--dof9",
+    "--zero_k2",
+    "--max_iter",
+    "60",
+    "--lam0",
+    "10.0",
+    "--tau_pt",
+    "3e-3",
+    "--func-tol",
+    "1e-6",
+    "--max-consec-fail",
+    "3"
+  ],
+  "inputs": {
+    "dubrovnik-88": {
+      "bytes": 19754447,
+      "sha256": "ca37a2a145210dc7a49ef6f00b73bca96099b727694db25e2a151c2f9e728253"
+    },
+    "venice-52": {
+      "bytes": 18257269,
+      "sha256": "7622ddb436323d3080d858a5319025a51cfef232bae0b793b6ef29abc1a3385b"
+    },
+    "final-3068": {
+      "bytes": 90952578,
+      "sha256": "f6bd559b2e0316e177742ebf73bd5311766e8a40ccca2628bfe29cd5989de481"
+    }
+  },
+  "repetitions": 10,
+  "order": "Interleaved scenes; cyclic rotation per repetition. Preselected no outcome-driven reruns.",
+  "timeout_per_process_seconds": 3600,
+  "scope": "V2 library-settings within-host repeatability only, not a champion A/B or universally calibrated noise floor"
+}

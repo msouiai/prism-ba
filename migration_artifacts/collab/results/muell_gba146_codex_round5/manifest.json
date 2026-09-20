@@ -1,0 +1,21 @@
+{
+  "command": [
+    "/usr/local/cuda/bin/nvcc",
+    "-O3",
+    "-DNDEBUG",
+    "-std=c++17",
+    "-arch=sm_89",
+    "-I/workspace/prism-muell-variants/camera_tr_retri_build/headers",
+    "/workspace/prism-muell-variants/camera_tr_retri_build/source.cu",
+    "-o",
+    "/workspace/prism-muell-variants/camera_tr_retri_build/prism-tr",
+    "-lcublas",
+    "-lcusolver"
+  ],
+  "base_source": "/workspace/prism-camera-tr-ablation/source-tr.cu",
+  "base_source_sha256": "e9bdc03bdf2ab9286981511f910847b1e149d4fbb6de638f0b1db9554cddf38d",
+  "upstream_revision": "ec7d5e62b78277a70abff87a37e9d94feb8db854",
+  "source_sha256": "03c5798a26451855f8734ddee7a29227448636f5b0603441b2549388a8d99118",
+  "binary_sha256": "a53d0cdb776ece065d19f92ff68a6ce740b91ed136e8ee16e16ba0c060b55cc0",
+  "mechanism": "camera-TR width ablation source plus committed pointwise DLT retriangulation only"
+}
