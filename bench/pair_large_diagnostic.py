@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+import pathlib,os,json,subprocess,sys,re,time
+from cached_benchmark_input import load_input
+from audit_prism_state import audit
+from build_tr_candidate import sha
+root=pathlib.Path('/workspace/prism-tr-safeguard/diagnostic');root.mkdir();capture=root/'capture';capture.mkdir();m=json.load(open('/workspace/prism-tr-reference/large/final-13682-tr.manifest.json'));env={k:v for k,v in os.environ.items() if not k.startswith(('OCA_','CASPAR_','COLMAP_MFREE','MF_DEBUG'))};env.update(m['flags'],OCA_PAIR_SAFE='1',OCA_BLOCK_MODEL_AUDIT='1',OCA_PAIR_CAPTURE=str(capture),OCA_MAX_SECONDS='60',OCA_PROFILE='1',OCA_CG_STOP_TRACE='1');binary=pathlib.Path('/workspace/prism-tr-safeguard/pair/prism-tr');cmd=['flock','/tmp/prism_gpu.lock','timeout','180',str(binary),'--problem','/workspace/bal/final-13682.txt','--algo','mfree_shifted_cg','--dof9','--zero_k2','--max_iter','7','--state_out',str(root/'endpoint.state')];(root/'manifest.json').write_text(json.dumps(dict(command=cmd,flags={k:v for k,v in env.items() if k.startswith('OCA_')},binary_sha256=sha(binary),note='Seven-outer diagnostic, captures both directions, no candidate-selection change. Cap60 covers IO/instrumentation, not a benchmark.'),indent=2))
+with (root/'run.log').open('x') as f,(root/'run.stderr').open('x') as e:r=subprocess.run(cmd,env=env,stdout=f,stderr=e)
+assert r.returncode==0;dh,(dims,obs),initial=load_input(pathlib.Path('/workspace/bal/final-13682.txt'),'/workspace/prism-caspar-expanded/cpu-cache');cost=audit(root/'endpoint.state',dims,obs);log=(root/'run.log').read_text();native=float(re.search(r'RESULT .*final_cost=(\S+)',log)[1]);error=abs(cost-native)/cost;assert error<1e-7
+(root/'result.json').write_text(json.dumps(dict(cost=cost,audit_error=error,input_sha256=dh,state_sha256=sha(root/'endpoint.state'),capture={p.name:dict(bytes=p.stat().st_size,sha256=sha(p)) for p in capture.iterdir()}),indent=2));print('DIAGNOSTIC cost',cost,'audit_error',error)

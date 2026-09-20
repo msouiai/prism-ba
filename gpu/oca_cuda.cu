@@ -1,3 +1,8 @@
+#include "replay_checkpoint.h"
+#include "adaptive_menu.h"
+#include "demand_menu.h"
+#include "backtrack_schedule.h"
+#include "lambda_hysteresis.h"
 // CUDA implementation of OCA (Optimal Control Algorithm) bundle adjustment,
 // Xu, Wang, Han & Zhang, arXiv:2411.06343, plus LM (Algorithm 1) for comparison.
 // This is the parallel port of reference_oca.py -- see that file for the algorithm
@@ -48,8 +53,17 @@
 #include <vector>
 
 #include <stdexcept>
+#include <memory>
+#include "cg_capture.cuh"
+#include "selective_reuse.h"
+#ifdef PRISM_ENABLE_REUSE_FIXED_STUDY
+#include "reuse_fixed_study.cuh"
+#endif
 
 using Scalar = double;
+#ifdef PRISM_ENABLE_KRYLOV_AUDIT
+#include "krylov_audit.cuh"
+#endif
 
 namespace oca_detail {
 struct CudaError : std::runtime_error {
@@ -224,12 +238,27 @@ __global__ void KernelCost(const int* __restrict__ cam_idx, const int* __restric
 // memory and issues ONE atomicAdd per 256-thread block (~20k atomics instead
 // of millions). Same math; summation order differs (rounding-level).
 // Selected by OCA_COST_BLOCKRED=1; default off = bit-compat.
+template<bool Bounded = false>
 __global__ void KernelCostBlockRed(const int* __restrict__ cam_idx, const int* __restrict__ pt_idx,
                             const Scalar* __restrict__ uv, const Scalar* __restrict__ R,
                             const Scalar* __restrict__ t, const Scalar* __restrict__ X,
                             const Scalar* __restrict__ f, const Scalar* __restrict__ k1,
                             const Scalar* __restrict__ k2, int nobs, Scalar* __restrict__ cost_out,
-                            int rk, Scalar rk_a2) {
+                            int rk, Scalar rk_a2, Scalar reject_bound = 0,
+                            unsigned int* skipped = nullptr) {
+  // For plain L2 every block contributes a nonnegative cost. Once the
+  // accumulated partial sum exceeds the rejection bound, later blocks can
+  // skip projection. The atomic read is race-free; a stale small sum would
+  // merely do extra work. All threads take the same branch before barriers.
+  if constexpr (Bounded) {
+    __shared__ int reject;
+    if (threadIdx.x == 0) reject = atomicAdd(cost_out, (Scalar)0) > reject_bound;
+    __syncthreads();
+    if (reject) {
+      if (threadIdx.x == 0) atomicAdd(skipped, 1u);
+      return;
+    }
+  }
   int o = blockIdx.x * blockDim.x + threadIdx.x;
   Scalar v = 0.0;
   if (o < nobs) {
@@ -255,6 +284,48 @@ __global__ void KernelCostBlockRed(const int* __restrict__ cam_idx, const int* _
     __syncthreads();
   }
   if (threadIdx.x == 0) atomicAdd(cost_out, sh[0]);
+}
+
+// Opt-in: share observation indices/measurements across a full-cost menu.
+// Each candidate keeps fp64 projection and the existing block reduction.
+struct CostMenuArgs {
+  const Scalar *R[5],*t[5],*X[5],*intr[5];
+  int ncam;
+};
+__global__ void KernelCostMenu(const int* __restrict__ cam_idx, const int* __restrict__ pt_idx,
+                            const Scalar* __restrict__ uv, CostMenuArgs args, int nobs, int nl,
+                            Scalar* __restrict__ cost_out, int rk, Scalar rk_a2) {
+  int o = blockIdx.x * blockDim.x + threadIdx.x;
+  const int c = o<nobs ? cam_idx[o] : 0, p = o<nobs ? pt_idx[o] : 0;
+  const Scalar u0=o<nobs?uv[2*o]:0, u1=o<nobs?uv[2*o+1]:0;
+  __shared__ Scalar sh[256];
+  for(int l=0;l<nl;++l){
+  const Scalar *R=args.R[l],*t=args.t[l],*X=args.X[l],
+               *f=args.intr[l],*k1=f+args.ncam,*k2=k1+args.ncam;
+  Scalar v = 0.0;
+  if (o < nobs) {
+    const Scalar* Rc = R + 9 * c;
+    const Scalar* Xp = X + 3 * p;
+    Scalar Px = Rc[0]*Xp[0]+Rc[1]*Xp[1]+Rc[2]*Xp[2] + t[3*c];
+    Scalar Py = Rc[3]*Xp[0]+Rc[4]*Xp[1]+Rc[5]*Xp[2] + t[3*c+1];
+    Scalar Pz = Rc[6]*Xp[0]+Rc[7]*Xp[1]+Rc[8]*Xp[2] + t[3*c+2];
+    Scalar xp = -Px / Pz, yp = -Py / Pz;
+    Scalar r2 = xp*xp + yp*yp;
+    Scalar dist = 1.0 + k1[c]*r2 + k2[c]*r2*r2;
+    Scalar rx = f[c]*dist*xp - u0;
+    Scalar ry = f[c]*dist*yp - u1;
+    const Scalar ss = rx*rx + ry*ry;
+    v = 0.5 * (rk ? OcaRho(rk, rk_a2, ss) : ss);
+  }
+  sh[threadIdx.x] = v;
+  __syncthreads();
+  for (int st = 128; st > 0; st >>= 1) {
+    if (threadIdx.x < st) sh[threadIdx.x] += sh[threadIdx.x + st];
+    __syncthreads();
+  }
+  if (threadIdx.x == 0) atomicAdd(cost_out+l, sh[0]);
+  __syncthreads();
+  }
 }
 
 // Strided clone of KernelCost (subsampled candidate scoring). Same body.
@@ -1191,7 +1262,7 @@ __global__ void MFAssemble(const int* __restrict__ ci,const int* __restrict__ pi
   for(int i=0;i<CD;++i) for(int j=0;j<3;++j){
     Scalar g=gx[i]*gx[CD+j]+gy[i]*gy[CD+j];
     Gp[(size_t)(3*i+j)*nobs+kp]=(HT)g;
-    Gc[(size_t)(3*i+j)*nobs+kc]=(HT)g; }
+    if(Gc) Gc[(size_t)(3*i+j)*nobs+kc]=(HT)g; }
   for(int j=0;j<3;++j){ Bo[6*o+j]=(HT)gx[CD+j]; Bo[6*o+3+j]=(HT)gy[CD+j]; }
 }
 __device__ __forceinline__ void MFGivens(Scalar* Rp, Scalar* v){
@@ -1427,17 +1498,24 @@ __global__ void MFVinvApply(const Scalar* __restrict__ Rf,const Scalar* __restri
   Scalar tv[3]={tacc[3*p],tacc[3*p+1],tacc[3*p+2]},uu[3]; MFVinv(Rp,tv,uu);
   u[3*p]=uu[0];u[3*p+1]=uu[1];u[3*p+2]=uu[2];
 }
+// Map camera traversal slots to the single point-major fragment store.
+// o2c is a permutation of observations: one writer per entry. The first
+// array may hold point slots (mode 1) or camera IDs (mode 2).
+__global__ void MFFragmentSlots(const int* o2p,const int* o2c,int nobs,int* c2p){
+  const int o=blockIdx.x*blockDim.x+threadIdx.x;
+  if(o<nobs) c2p[o2c[o]]=o2p[o];
+}
 template <int CD, class HT>
 __global__ void MFPass2(const HT* __restrict__ Gc,const int* __restrict__ cspt,
     const int* __restrict__ coff,const Scalar* __restrict__ u,const Scalar* __restrict__ Hcc,
-    const Scalar* __restrict__ v,int nobs,Scalar* __restrict__ w){
+    const Scalar* __restrict__ v,int nobs,Scalar* __restrict__ w,const int* __restrict__ slots=nullptr){
   int c=blockIdx.x; int s=coff[c],e=coff[c+1];
   Scalar acc[CD];
   for(int i=0;i<CD;++i) acc[i]=0;
   for(int k=s+threadIdx.x;k<e;k+=blockDim.x){
-    int p=cspt[k]; Scalar up[3]={u[3*p],u[3*p+1],u[3*p+2]};
+    int p=cspt[k]; const int gk=slots?slots[k]:k; Scalar up[3]={u[3*p],u[3*p+1],u[3*p+2]};
     for(int i=0;i<CD;++i){ Scalar q=0;
-      for(int j=0;j<3;++j) q+=Gc[(size_t)(3*i+j)*nobs+k]*up[j];
+      for(int j=0;j<3;++j) q+=Gc[(size_t)(3*i+j)*nobs+gk]*up[j];
       acc[i]+=q; } }
   __shared__ Scalar sh[CD][256];
   for(int i=0;i<CD;++i) sh[i][threadIdx.x]=acc[i];
@@ -1464,7 +1542,7 @@ __global__ void MFRhsPrime(const HT* __restrict__ Gp,const int* __restrict__ sca
     for(int j=0;j<3;++j) q+=Gp[(size_t)(3*i+j)*nobs+k]*up[j];
     atomicAdd(&corr[CD*c+i],q); }
 }
-template <int CD, class HT>
+template <int CD, class HT, bool NormOnly=false>
 __global__ void MFDiagK(const HT* __restrict__ Gp,const int* __restrict__ spt,
     const int* __restrict__ scam,const Scalar* __restrict__ Rf,int nobs,Scalar* __restrict__ dk){
   int k=blockIdx.x*blockDim.x+threadIdx.x; if(k>=nobs)return;
@@ -1472,13 +1550,74 @@ __global__ void MFDiagK(const HT* __restrict__ Gp,const int* __restrict__ spt,
   if(!(Rp[0]>0.0&&Rp[3]>0.0&&Rp[5]>0.0)) return;
   for(int i=0;i<CD;++i){
     Scalar g[3]={Gp[(size_t)(3*i+0)*nobs+k],Gp[(size_t)(3*i+1)*nobs+k],Gp[(size_t)(3*i+2)*nobs+k]},uu[3];
-    MFVinv(Rp,g,uu);
-    atomicAdd(&dk[CD*c+i], -(g[0]*uu[0]+g[1]*uu[1]+g[2]*uu[2])); }
+    Scalar q;
+    if constexpr (NormOnly){
+      // V=R^T R, hence g^T V^-1 g = ||R^-T g||^2. The backward
+      // solve is unnecessary when only the quadratic form is needed.
+      const Scalar y0=g[0]/Rp[0];
+      const Scalar y1=(g[1]-Rp[1]*y0)/Rp[3];
+      const Scalar y2=(g[2]-Rp[2]*y0-Rp[4]*y1)/Rp[5];
+      q=y0*y0+y1*y1+y2*y2;
+    } else {
+      MFVinv(Rp,g,uu);
+      q=g[0]*uu[0]+g[1]*uu[1]+g[2]*uu[2];
+    }
+    atomicAdd(&dk[CD*c+i], -q); }
 }
 template <int CD>
 __global__ void MFDiagHcc(const Scalar* __restrict__ Hcc,int ncam,Scalar* __restrict__ dk){
   int c=blockIdx.x*blockDim.x+threadIdx.x; if(c>=ncam)return;
   for(int i=0;i<CD;++i) dk[CD*c+i]+=Hcc[CD*CD*c+CD*i+i];
+}
+// Build the RHS correction and (optionally) Schur diagonal together from the
+// existing camera-major fragments. Each camera owns its output: no contended
+// global atomics, and one fragment read serves both calculations. Keep the
+// per-observation arithmetic (including the full triangular solve) unchanged.
+// The reduction order differs from the legacy atomic path; trajectory gates
+// are required before enabling this globally.
+template <int CD, class HT>
+__global__ void MFRhsDiagCamera(const HT* __restrict__ Gc,
+    const int* __restrict__ cspt,const int* __restrict__ coff,
+    const Scalar* __restrict__ Rf,const Scalar* __restrict__ ub,
+    int nobs,Scalar* __restrict__ corr,Scalar* __restrict__ dk,const int* __restrict__ slots=nullptr){
+  const int c=blockIdx.x;
+  Scalar rhs[CD]={},diag[CD]={};
+  for(int k=coff[c]+threadIdx.x;k<coff[c+1];k+=blockDim.x){
+    const int p=cspt[k]; const int gk=slots?slots[k]:k; const Scalar* Rp=Rf+6*p;
+    const bool valid=Rp[0]>0.0&&Rp[3]>0.0&&Rp[5]>0.0;
+    const Scalar up[3]={ub[3*p],ub[3*p+1],ub[3*p+2]};
+    for(int i=0;i<CD;++i){
+      Scalar g[3]={Gc[(size_t)(3*i)*nobs+gk],
+                   Gc[(size_t)(3*i+1)*nobs+gk],
+                   Gc[(size_t)(3*i+2)*nobs+gk]};
+      Scalar q=0;
+      for(int j=0;j<3;++j) q+=g[j]*up[j];
+      rhs[i]+=q;
+      if(dk && valid){
+        Scalar u[3]; MFVinv(Rp,g,u);
+        diag[i]-=g[0]*u[0]+g[1]*u[1]+g[2]*u[2];
+      }
+    }
+  }
+  __shared__ Scalar sums[256];
+  for(int i=0;i<CD;++i){
+    sums[threadIdx.x]=rhs[i]; __syncthreads();
+    for(int stride=128;stride;stride>>=1){
+      if(threadIdx.x<stride) sums[threadIdx.x]+=sums[threadIdx.x+stride];
+      __syncthreads();
+    }
+    if(threadIdx.x==0) corr[CD*c+i]=sums[0];
+    __syncthreads();
+    if(dk){
+      sums[threadIdx.x]=diag[i]; __syncthreads();
+      for(int stride=128;stride;stride>>=1){
+        if(threadIdx.x<stride) sums[threadIdx.x]+=sums[threadIdx.x+stride];
+        __syncthreads();
+      }
+      if(threadIdx.x==0) dk[CD*c+i]=sums[0];
+      __syncthreads();
+    }
+  }
 }
 // ===== REVIEW: block-congruence scaling (OCA_BLOCKEQ=1) ======================
 // Jacobi equilibration scales S by a DIAGONAL D (D S D + sigma I). The same
@@ -1522,19 +1661,19 @@ __global__ void MFBlockSchur(const HT* __restrict__ Gp,const int* __restrict__ s
 template <int CD, typename HT>
 __global__ void MFBlockSchurCM(const HT* __restrict__ Gc,const int* __restrict__ cspt,
     const int* __restrict__ coff,const Scalar* __restrict__ Rf,int nobs,
-    Scalar* __restrict__ Bk){
+    Scalar* __restrict__ Bk,const int* __restrict__ slots=nullptr){
   const int c=blockIdx.x; const int s=coff[c],e=coff[c+1];
   constexpr int NT=(CD*(CD+1))/2;
   Scalar acc[NT];
   for(int t=0;t<NT;++t) acc[t]=0.0;
   for(int k=s+threadIdx.x;k<e;k+=warpSize){
-    int p=cspt[k]; const Scalar* Rp=Rf+6*p;
+    int p=cspt[k]; const int gk=slots?slots[k]:k; const Scalar* Rp=Rf+6*p;
     if(!(Rp[0]>0.0&&Rp[3]>0.0&&Rp[5]>0.0)) continue;
     Scalar W[CD*3],U[CD*3];
     for(int i=0;i<CD;++i){
-      W[3*i+0]=Gc[(size_t)(3*i+0)*nobs+k];
-      W[3*i+1]=Gc[(size_t)(3*i+1)*nobs+k];
-      W[3*i+2]=Gc[(size_t)(3*i+2)*nobs+k];
+      W[3*i+0]=Gc[(size_t)(3*i+0)*nobs+gk];
+      W[3*i+1]=Gc[(size_t)(3*i+1)*nobs+gk];
+      W[3*i+2]=Gc[(size_t)(3*i+2)*nobs+gk];
       MFVinv(Rp,&W[3*i],&U[3*i]);
     }
     int t=0;
@@ -2503,6 +2642,7 @@ struct DeviceState {
 #define INTR_K2(p, s) ((s).intr ? (s).intr + 2*(s).ncam_for_intr : (p).k2)
 
 static int GridSize(int n, int block = 256) { return (n + block - 1) / block; }
+#include "point_trust.cuh"
 
 
 // ---- Problem indexing, shared by the CLI and the embeddable core -----------
@@ -2738,6 +2878,56 @@ Scalar ComputeCost(const DeviceProblem& p, const DeviceState& s,
   Scalar cost;
   CUDA_CHECK(cudaMemcpy(&cost, d_cost, sizeof(Scalar), cudaMemcpyDeviceToHost));
   return cost;
+}
+
+#include "full_step_model.cuh"
+#include "subspace_model.cuh"
+#include "point_safeguard.cuh"
+#include "repair_damping.h"
+#include "subspace_capture.cuh"
+#include "repair_block_capture.cuh"
+struct BoundedCostStats {
+  long calls=0, rejected=0, audit_calls=0;
+  unsigned long long blocks=0, skipped=0;
+};
+
+// Only used for Armijo rejection, never to rank menu candidates or report
+// an accepted objective. Robust losses retain the original full evaluation.
+static Scalar ComputeBacktrackCost(const DeviceProblem& p, const DeviceState& s,
+    int rk, Scalar rk_a2, Scalar bound, Scalar current, BoundedCostStats& stats) {
+  static const bool enabled = [](){const char* e=getenv("OCA_BOUNDED_BACKTRACK");
+    return e && atoi(e)!=0;}();
+  if (!enabled || rk || !std::isfinite(bound) || bound<0)
+    return ComputeCost(p,s,rk,rk_a2);
+  struct Result {Scalar cost; unsigned int skipped;};
+  static Result* d_result=nullptr;
+  if (!d_result) CUDA_CHECK(cudaMalloc(&d_result,sizeof(Result)));
+  CUDA_CHECK(cudaMemset(d_result,0,sizeof(Result)));
+  // Leave near-boundary comparisons to the complete cost. This margin is
+  // deliberately much larger than observed block-summation roundoff.
+  const Scalar cutoff=bound+1e-10*std::max((Scalar)1,std::abs(bound));
+  KernelCostBlockRed<true><<<GridSize(p.nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,
+    s.R,s.t,s.X,INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),p.nobs,
+    &d_result->cost,rk,rk_a2,cutoff,&d_result->skipped);
+  Result result;
+  CUDA_CHECK(cudaMemcpy(&result,d_result,sizeof(Result),cudaMemcpyDeviceToHost));
+  ++stats.calls; stats.blocks+=GridSize(p.nobs); stats.skipped+=result.skipped;
+  stats.rejected+=result.skipped!=0;
+  const Scalar c=result.skipped ? std::numeric_limits<Scalar>::infinity() : result.cost;
+  static const bool audit = [](){const char* e=getenv("OCA_BOUNDED_BACKTRACK_AUDIT");
+    return e && atoi(e)!=0;}();
+  if (audit) {
+    const Scalar full=ComputeCost(p,s,rk,rk_a2);
+    auto accepts=[&](Scalar v){return std::isfinite(v)&&v<current&&v<=bound;};
+    if (accepts(c)!=accepts(full) || (!result.skipped && std::isfinite(full) &&
+        (!std::isfinite(c) || std::abs(c-full)>1e-10*std::max((Scalar)1,std::abs(full))))) {
+      std::fprintf(stderr,"BOUNDED_COST audit failed partial=%.17g full=%.17g bound=%.17g skipped=%u\n",
+        (double)c,(double)full,(double)bound,result.skipped);
+      std::abort();
+    }
+    ++stats.audit_calls;
+  }
+  return c;
 }
 
 // Strided variants for SUBSAMPLED CANDIDATE SCORING (OCA_SCORE_STRIDE=S).
@@ -8727,6 +8917,31 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
                            // mapper (Result::final_lambda). The rig path has
                            // always had this; the BAL path returned 0.0.
                            Scalar* final_lambda_out = nullptr) {
+  const auto budget_start=std::chrono::steady_clock::now();
+  const char* budget_env=getenv("OCA_MAX_SECONDS");
+  const double max_seconds=budget_env?std::atof(budget_env):0;
+  if(budget_env && !(std::isfinite(max_seconds) && max_seconds>0))
+    throw std::runtime_error("OCA_MAX_SECONDS must be finite and positive");
+  auto BudgetExpired=[&](){
+    return max_seconds>0 && std::chrono::duration<double>(std::chrono::steady_clock::now()-budget_start).count()>max_seconds;
+  };
+  // Research measurement hook: stop at the first accepted state meeting a
+  // common objective target. Export/audit happens outside the solve timer.
+  const char* target_env=getenv("OCA_TARGET_COST");
+  const double target_cost=target_env?std::atof(target_env):0;
+  if(target_env && !(std::isfinite(target_cost) && target_cost>0))
+    throw std::runtime_error("OCA_TARGET_COST must be finite and positive");
+  auto TargetReached=[&](Scalar objective,int outer){
+    // Small inward margin prevents CPU/GPU rounding at the threshold from
+    // certifying a state infinitesimally above the requested target.
+    if(target_cost>0 && objective<=target_cost*(1.0-1e-8)){
+      const double elapsed=std::chrono::duration<double>(std::chrono::steady_clock::now()-budget_start).count();
+      std::printf("TARGET reached outer=%d seconds=%.9f cost=%.17g threshold=%.17g\n",
+                  outer,elapsed,(double)objective,target_cost);
+      return true;
+    }
+    return false;
+  };
   int ncam=p.ncam, npt=p.npt, n_p=3*npt, nobs=p.nobs;
   // ROUND 11: with shared intrinsics the CG runs in the REDUCED camera space
   // [6*ncam poses | 3*ncalib calibrations]; the assembly kernels keep writing
@@ -8747,6 +8962,67 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   int n_c = shared_intr ? (6*ncam+3*ncalib) : n_cf;
   int n=n_cf+n_p;
   bool prof = (getenv("OCA_PROFILE")!=nullptr);
+  // A failed camera-shift menu need not imply a bad full-step direction:
+  // every shift shares the same point relaxation. Try bounded full-step
+  // Armijo backtracking before rebuilding at a new (lambda,tau).
+  const int menu_backtrack = [](){ const char* e=getenv("OCA_MENU_BACKTRACK");
+    return e ? std::min(12,std::max(0,atoi(e))) : 0; }();
+  const bool backtrack_on = menu_backtrack>0 && !shared_intr && !mf_fp32 && CD==9;
+  Scalar* d_backtrack=nullptr;
+  if(backtrack_on) CUDA_CHECK(cudaMalloc(&d_backtrack,(size_t)n*sizeof(Scalar)));
+  if(menu_backtrack>0) std::printf("  [menu-backtrack] active=%d max_evals=%d warmup_accepts=3 confirm_stop=original armijo=1e-4\n",
+                                  backtrack_on?1:0,menu_backtrack);
+  long backtrack_evals=0,backtrack_rescues=0,backtrack_trials=0;
+  BoundedCostStats bounded_cost_stats;
+  const int point_trust_mode=[](){const char* e=getenv("OCA_POINT_TRUST");
+    return e?std::clamp(atoi(e),0,3):0;}();
+  double point_trust_tau=0,point_trust_seconds=0;
+  long point_trust_updates=0,point_trust_calls=0,point_trust_invalid=0;
+  std::unique_ptr<PrismPointTrust> point_trust;
+  if(point_trust_mode)point_trust=std::make_unique<PrismPointTrust>();
+  const bool full_model_rho=[](){const char* e=getenv("OCA_FULL_MODEL_RHO");return e&&atoi(e)!=0;}();
+  std::unique_ptr<PrismFullModel> full_model;
+  if(full_model_rho)full_model=std::make_unique<PrismFullModel>();
+  long full_model_calls=0,full_model_nonpositive=0;double full_model_seconds=0;
+  const int repair_damping_mode=[](){const char* e=getenv("OCA_REPAIR_DAMPING");return e?atoi(e):0;}();
+  if(repair_damping_mode<0 || repair_damping_mode>3)throw std::runtime_error("repair damping: 0=off,1=audit,2=relax,3=symmetric");
+  std::unique_ptr<PrismFullModel> repair_model;
+
+  long repair_calls=0,repair_invalid=0,repair_down=0,repair_up=0;double repair_seconds=0;
+  const bool repair_split=[](){const char* e=getenv("OCA_REPAIR_SPLIT");return e&&atoi(e)!=0;}();
+  const bool repair_skip_probes=[](){const char* e=getenv("OCA_REPAIR_SKIP_PROBES");return e&&atoi(e)!=0;}();
+  if(repair_skip_probes && !repair_split)throw std::runtime_error("repair probe skipping requires split repair");
+  long split_probe_evals=0,split_probe_skips=0;
+  if(repair_split && repair_damping_mode!=1)throw std::runtime_error("split repair requires repair damping audit mode 1");
+  if(repair_damping_mode && !repair_split)repair_model=std::make_unique<PrismFullModel>();
+  long split_camera_down=0,split_point_down=0;double split_seconds=0;
+  const char* repair_block_capture=getenv("OCA_REPAIR_BLOCK_CAPTURE");
+  if(repair_block_capture && !repair_damping_mode)throw std::runtime_error("repair block capture requires repair damping audit or active mode");
+  std::unique_ptr<PrismSubspaceModel> repair_blocks;
+  if(repair_block_capture || repair_split)repair_blocks=std::make_unique<PrismSubspaceModel>();
+  const int point_safeguard_mode=[](){const char* e=getenv("OCA_POINT_SAFEGUARD");return e?atoi(e):0;}();
+  if(point_safeguard_mode<0 || point_safeguard_mode>2)throw std::runtime_error("point safeguard: 0=off,1=full-camera zero/full,2=baseline-camera baseline/full");
+  std::unique_ptr<PrismPointSafeguard> point_safeguard;
+  if(point_safeguard_mode)point_safeguard=std::make_unique<PrismPointSafeguard>();
+  long point_safeguard_calls=0,point_safeguard_wins=0,point_safeguard_evals=0;
+  unsigned long long point_safeguard_frozen=0;double point_safeguard_seconds=0;
+  const int subspace_mode=[](){const char* e=getenv("OCA_SUBSPACE_RESCUE");return e?atoi(e):0;}();
+  const char* subspace_capture=getenv("OCA_SUBSPACE_CAPTURE");
+  if(subspace_capture && subspace_mode!=3)throw std::runtime_error("subspace capture requires audit mode 3");
+  if(subspace_mode<0 || subspace_mode>5)throw std::runtime_error("subspace rescue mode: 0=off,1=scalar,2=box,3=audit,4=calibrated scalar,5=calibrated box");
+  std::unique_ptr<PrismSubspaceModel> subspace;
+  if(subspace_mode)subspace=std::make_unique<PrismSubspaceModel>();
+  long subspace_calls=0,subspace_evals=0,subspace_wins=0,subspace_invalid=0;
+  double subspace_seconds=0;
+  const int backtrack_policy=[](){const char* e=getenv("OCA_BACKTRACK_POLICY");
+    return e?std::clamp(atoi(e),0,5):0;}();
+  const bool backtrack_trace=getenv("OCA_BACKTRACK_TRACE")!=nullptr;
+  PrismBacktrackHistory backtrack_history;
+  long bt_policy_searches=0,bt_policy_predicted=0,bt_policy_probes=0,bt_policy_recoveries=0;
+  long bt_upward_probes=0,bt_upward_wins=0;
+  double t_backtrack=0;
+  bool backtrack_confirm=false;
+
   auto now = [](){ return std::chrono::steady_clock::now(); };
   // REVIEW 2026-09-01: every pointer nullptr-initialised so the cleanup block
   // can free unconditionally (cudaFree(nullptr) is a no-op). The fp32 branch
@@ -8796,10 +9072,45 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   int psw_streak=0; bool psw_switched=false;
   if(block_eq){ M((void**)&Bk,(size_t)CD*CD*ncam*sizeof(Scalar));
                 M((void**)&bscr,(size_t)n_cf*sizeof(Scalar)); }
+  // One exact FP64 fragment copy instead of point- and camera-major copies.
+  // Opt-in: camera gathers trade locality for memory; arithmetic and reduction
+  // order are unchanged. No changes to damping, scoring, or backtracking.
+  const int compact_mode=[](){const char* e=getenv("OCA_COMPACT_FRAGMENTS");
+    return e ? std::atoi(e) : 0;}();
+  if(compact_mode<0 || compact_mode>2)
+    throw std::runtime_error("OCA_COMPACT_FRAGMENTS must be 0, 1, or 2");
+  const bool compact_fragments=compact_mode!=0;
+  if(compact_fragments && mf_fp32)
+    throw std::runtime_error("compact fragments currently requires FP64 storage");
+  int* fragment_slots=nullptr;
+  int* fragment_camera_ids=nullptr;
+  const int* fragment_o2slot=compact_mode==2?p.obs2cslot:p.obs2pslot;
+  const int* fragment_cams=p.mf_scam;
+  const int* fragment_points=p.mf_spt;
   if(mf_fp32){ M((void**)&Gp32,(size_t)3*CD*nobs*sizeof(float));M((void**)&Gc32,(size_t)3*CD*nobs*sizeof(float));
                M((void**)&Bo32,6ul*nobs*sizeof(float)); }
-  else       { M((void**)&Gp,(size_t)3*CD*nobs*sizeof(Scalar));M((void**)&Gc,(size_t)3*CD*nobs*sizeof(Scalar));
+  else       { M((void**)&Gp,(size_t)3*CD*nobs*sizeof(Scalar));
+               if(!compact_fragments) M((void**)&Gc,(size_t)3*CD*nobs*sizeof(Scalar));
                M((void**)&Bo,6ul*nobs*sizeof(Scalar)); }
+  if(compact_fragments){
+    if(compact_mode==1){
+      M((void**)&fragment_slots,(size_t)nobs*sizeof(int));
+      MFFragmentSlots<<<GridSize(nobs),256>>>(p.obs2pslot,p.obs2cslot,nobs,fragment_slots);
+    } else {
+      // Camera-major storage lets BOTH operator passes read contiguous values.
+      // Point scatters now arrive in camera order: the mathematical products
+      // are identical, but atomic summation order (already nondeterministic)
+      // changes. The fixed-input gate checks those sums within roundoff.
+      M((void**)&fragment_camera_ids,(size_t)nobs*sizeof(int));
+      MFFragmentSlots<<<GridSize(nobs),256>>>(p.cam_idx,p.obs2cslot,nobs,fragment_camera_ids);
+      fragment_cams=fragment_camera_ids;
+      fragment_points=p.mf_cspt;
+    }
+    CUDA_CHECK(cudaGetLastError());
+    std::printf("  [compact-fragments] active=%d saved_bytes=%zu storage=fp64 camera_reads=%s\n",
+                compact_mode,(size_t)nobs*(3*CD*sizeof(Scalar)-sizeof(int)),
+                compact_mode==1?"gather":"contiguous");
+  }
   M((void**)&bc,(size_t)n_cf*sizeof(Scalar));M((void**)&bp,(size_t)n_p*sizeof(Scalar));
   M((void**)&Rf,6ul*npt*sizeof(Scalar));M((void**)&tacc,(size_t)n_p*sizeof(Scalar));
   M((void**)&uu,(size_t)n_p*sizeof(Scalar));M((void**)&w,(size_t)n_cf*sizeof(Scalar));
@@ -8812,8 +9123,6 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     return e ? atoi(e)!=0 : true; }();
   if(tau_split) M((void**)&R0f,6ul*npt*sizeof(Scalar));
   static const bool multi_rhs = getenv("OCA_MULTI_RHS")!=nullptr;
-  if(multi_rhs){ M((void**)&XCU,(size_t)n_shifts*n_cf*sizeof(Scalar));
-                 M((void**)&TACC,(size_t)n_shifts*n_p*sizeof(Scalar)); }
   if(getenv("OCA_POLY_CONG")){
     M((void**)&pp1,(size_t)n_c*sizeof(Scalar));M((void**)&pp2,(size_t)n_c*sizeof(Scalar));
     M((void**)&pp3,(size_t)n_c*sizeof(Scalar));M((void**)&pp4,(size_t)n_c*sizeof(Scalar)); }
@@ -8827,9 +9136,91 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   static const int nshifts_env = [](){
     const char* e = getenv("OCA_NSHIFTS"); return e ? std::atoi(e) : 0; }();
   int L = nshifts_env > 0 ? nshifts_env : n_shifts;
+  const int menu_capacity=L;
+  const char* demand_env=getenv("OCA_DEMAND_MENU");
+  int demand_mode=demand_env?atoi(demand_env):0;
+  if(demand_mode<0 || demand_mode>3)
+    throw std::runtime_error("OCA_DEMAND_MENU: 1=scheduling, 2=retained damping pair, 3=switch after two rejects");
+  const bool demand_switch=demand_mode==3;
+  const bool switch_restart=getenv("OCA_SWITCH_RESTART") && atoi(getenv("OCA_SWITCH_RESTART"))!=0;
+  if(switch_restart && !demand_switch)throw std::runtime_error("early restart requires demand mode 3");
+  bool restart_requested=false;
+  bool demand_on=demand_mode==1 || demand_mode==2;
+  long demand_switches=0;
+  if(demand_switch && (!backtrack_on || point_safeguard_mode!=1 ||
+      repair_damping_mode || full_model_rho || point_trust_mode || subspace_mode || backtrack_policy!=0))
+    throw std::runtime_error("rejection switching requires original backtracking and point safeguard 1, without other feedback");
+  if(repair_damping_mode && (demand_mode!=2 || !backtrack_on || CD!=9 || shared_intr || mf_fp32 || rk ||
+      full_model_rho || subspace_mode || point_trust_mode || backtrack_policy!=0 ||
+      getenv("OCA_ADAPTIVE_MENU") || getenv("OCA_REPLAY_LOAD") || getenv("OCA_REPLAY_SAVE")))
+    throw std::runtime_error("repair damping requires paired demand and original FP64 CD9 unshared L2 rescue, no other model/feedback/replay");
+  if(point_safeguard_mode && (!backtrack_on || CD!=9 || shared_intr || mf_fp32 || rk ||
+      point_trust_mode || full_model_rho || subspace_mode || backtrack_policy!=0 ||
+      getenv("OCA_REPLAY_LOAD") || getenv("OCA_REPLAY_SAVE")))
+    throw std::runtime_error("point safeguard requires original backtracking, FP64 CD9 unshared L2, no other rescue/full-rho/point-feedback/replay");
+  if(subspace_mode && (!backtrack_on || CD!=9 || shared_intr || mf_fp32 || rk ||
+      point_trust_mode || full_model_rho || backtrack_policy!=0 ||
+      getenv("OCA_REPLAY_LOAD") || getenv("OCA_REPLAY_SAVE")))
+    throw std::runtime_error("subspace rescue requires original backtracking, FP64 unshared L2, no point feedback/full-rho/replay");
+  if(full_model_rho && (demand_on || CD!=9 || shared_intr || mf_fp32 || rk || point_trust_mode ||
+      !getenv("OCA_RHO_LAMBDA") || getenv("OCA_REPLAY_LOAD") || getenv("OCA_REPLAY_SAVE")))
+    throw std::runtime_error("full model rho requires plain fixed-menu FP64 unshared L2 rho controller, no point feedback or replay");
+  if(point_trust_mode && (!backtrack_on || !tau_split || CD!=9 || shared_intr || mf_fp32 || rk ||
+      backtrack_policy!=0 || getenv("OCA_TAU_LAM_COND") || getenv("OCA_TAU_LAM_MAXOBS") ||
+      getenv("OCA_REPLAY_LOAD") || getenv("OCA_REPLAY_SAVE")))
+    throw std::runtime_error("point trust requires plain FP64 unshared L2, uniform split point damping and original backtracking");
+  if((demand_on || demand_switch) && (L!=5 || CD!=9 || shared_intr || mf_fp32 || rk || block_eq || !use_equil ||
+      fast_opening || getenv("OCA_ADAPTIVE_MENU") || getenv("OCA_PROGRESSIVE_DEPTH") ||
+      getenv("OCA_LAMBDA_HYSTERESIS") || getenv("OCA_LAMBDA_HYSTERESIS_LOG") || getenv("OCA_LEARN_POLICY") ||
+      getenv("OCA_BATCH_COST") || getenv("OCA_BATCH_COST_CHECK") || getenv("OCA_SCORE_STRIDE") ||
+      getenv("OCA_CAND_PRUNE") || getenv("OCA_PRUNE_ALWAYS") || getenv("OCA_SHIFT_PRUNE") || getenv("OCA_NEGCURV_RESEED") ||
+      getenv("OCA_POLY_CONG") || getenv("OCA_TAU_LAM_COND") || getenv("OCA_TAU_LAM_MAXOBS") ||
+      getenv("OCA_REPLAY_LOAD") || getenv("OCA_REPLAY_SAVE")))
+    throw std::runtime_error("demand menu requires plain five-slot FP64 unshared diagonal full scoring");
+  const int recycle_mode=getenv("OCA_KRYLOV_REUSE")?atoi(getenv("OCA_KRYLOV_REUSE")):0;
+  if(recycle_mode<0 || recycle_mode>5 || (recycle_mode && !demand_on))
+    throw std::runtime_error("OCA_KRYLOV_REUSE requires demand menu: 1=projected reuse, 2=projected rebuild, 3=CG capture reuse, 4=CG capture rebuild, 5=selective CG reuse");
+  std::unique_ptr<prism_recycle::Basis> retained;
+  if(recycle_mode) retained.reset(new prism_recycle::Basis(n_c,64));
+  std::unique_ptr<prism_recycle::CgCapture> captured;
+  if(recycle_mode>=3) captured.reset(new prism_recycle::CgCapture(n_c,64));
+#ifdef PRISM_ENABLE_REUSE_FIXED_STUDY
+  prism_fixed::Collector fixed_collector;
+#endif
+  PrismSelectiveReuse selective_reuse;
+  bool retain_expansion=false;
+  long recycle_hits=0,recycle_fallbacks=0,recycle_saved=0;
+  PrismDemandMenu demand;
+  Scalar* demand_step=nullptr;
+  if(demand_on || demand_switch) M((void**)&demand_step,(size_t)n*sizeof(Scalar));
+  bool demand_fallback=false,demand_rescued=false;
+  Scalar demand_backtrack_scale=1;
+  Scalar demand_cost=0,demand_pred=0,demand_bpd=0,demand_prev_norm=0;
+  int demand_depth=0,demand_alpha=0;
+  long demand_expansions=0,demand_narrow_accepts=0,demand_fallbacks=0,demand_joint_rebuilds=0;
+  if(multi_rhs){ M((void**)&XCU,(size_t)L*n_cf*sizeof(Scalar));
+                 M((void**)&TACC,(size_t)L*n_p*sizeof(Scalar)); }
   std::vector<Scalar*> xs(L),ps(L);
   for(int l=0;l<L;++l){ M((void**)&xs[l],(size_t)n_c*sizeof(Scalar)); M((void**)&ps[l],(size_t)n_c*sizeof(Scalar)); }
   DeviceState s_new; AllocState(s_new,ncam,npt,CD==9);
+  const bool batch_cost=getenv("OCA_BATCH_COST")!=nullptr;
+  const bool batch_check=getenv("OCA_BATCH_COST_CHECK")!=nullptr;
+  if((batch_cost || batch_check) && (L!=5 || CD!=9 || shared_intr || mf_fp32 || !multi_rhs ||
+      getenv("OCA_SCORE_STRIDE") || getenv("MF_DEBUG")))
+    throw std::runtime_error("batch cost requires fp64 unshared five-shift full multi-RHS scoring");
+  DeviceState batch_state[5]; Scalar *batch_steps=nullptr,*batch_costs=nullptr;
+  CostMenuArgs batch_args{}; batch_args.ncam=ncam;
+  if(batch_cost || batch_check){
+    M((void**)&batch_steps,(size_t)L*n*sizeof(Scalar));
+    M((void**)&batch_costs,(size_t)L*sizeof(Scalar));
+    for(int l=0;l<L;++l){
+      AllocState(batch_state[l],ncam,npt,true);
+      batch_args.R[l]=batch_state[l].R;batch_args.t[l]=batch_state[l].t;
+      batch_args.X[l]=batch_state[l].X;batch_args.intr[l]=batch_state[l].intr;
+    }
+  }
+  long batch_menus=0;
+
   // ROUND 11 scratch: one full-width vector for the broadcast operand and one
   // for the operator's full-width output. Allocated only when sharing is on.
   Scalar *bcast_in=nullptr,*bcast_out=nullptr;
@@ -8893,6 +9284,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   };
   RobustUpdateScale();   // the initial cost below already needs a valid scale
   Scalar cost=ComputeCost(p,s,rk,rk_a2);
+  std::printf("  MFCG score_init=%.17g precision=fp64\n",(double)cost);
   int cheir0=CountCheiralityViolations(p,s);
   RunLog log; log.iters.push_back(0); log.costs.push_back(cost);
   // OCA_LAM_FLOOR=<exp>: override the damping floor's decade offset below lam0.
@@ -8955,7 +9347,8 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   static const int tau_v3_dec = [](){
     const char* e=getenv("OCA_TAU_V3"); return e?std::atoi(e):0; }();
   Scalar tau_base=tau_pt, tau_used=tau_pt, tau_win=0.0;
-  double t_asm=0,t_fac=0,t_mv=0,t_cand=0;
+  double t_asm=0,t_fac=0,t_mv=0,t_cand=0,t_alpha=0;
+  long alpha_evals=0;
   // OCA_PROF_SCORE=1: sub-phase breakdown of the candidate-scoring path.
   static const bool prof_score = getenv("OCA_PROF_SCORE")!=nullptr;
   double ts_unscale=0,ts_pass1=0,ts_copy=0,ts_retract=0,ts_cost=0; long ts_n=0;
@@ -8977,6 +9370,25 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // score_stride is therefore per-outer: env stride while the last accepted
   // relative improvement exceeds 1e-3, full scoring once the grind begins.
   int score_stride = score_stride_env;
+  if((point_safeguard_mode || repair_damping_mode) && score_stride_env!=1)throw std::runtime_error("point safeguard requires full observation scoring");
+  const char* hyst_env=getenv("OCA_LAMBDA_HYSTERESIS");
+  const double hyst_keep=hyst_env?std::atof(hyst_env):0.0;
+  const bool hyst_log=getenv("OCA_LAMBDA_HYSTERESIS_LOG")!=nullptr;
+  const bool hyst_track=hyst_log || hyst_env;
+  if(hyst_env && !(hyst_keep>0 && hyst_keep<=1))
+    throw std::runtime_error("OCA_LAMBDA_HYSTERESIS must be in (0,1]");
+  if(hyst_track && (CD!=9 || shared_intr || mf_fp32 || score_stride_env!=1))
+    throw std::runtime_error("lambda hysteresis requires fp64 unshared dof9 full scoring");
+  Scalar* hyst_steps=nullptr;
+  if(hyst_track) M((void**)&hyst_steps,(size_t)L*n*sizeof(Scalar));
+  double hyst_prior=std::numeric_limits<double>::quiet_NaN();
+  const bool adaptive_menu=getenv("OCA_ADAPTIVE_MENU")!=nullptr;
+  if(adaptive_menu && (L!=5 || CD!=9 || shared_intr || mf_fp32 || score_stride_env!=1 || hyst_track || g_lp.on ||
+      getenv("OCA_CAND_PRUNE") || getenv("OCA_NEGCURV_RESEED") || getenv("OCA_SHIFT_PRUNE")))
+    throw std::runtime_error("adaptive menu requires five shifts, fp64 unshared dof9/full scoring and no other menu policy");
+  PrismAdaptiveMenu adaptive_policy;
+
+
   std::vector<std::string> jrows;
   std::chrono::steady_clock::time_point t0;
   // ---- OCA_LEARN_LOG=<path>: opt-in JSONL for the learned-damping study ----
@@ -9048,10 +9460,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       CUDA_CHECK(cudaMemset(bp,0,(size_t)n_p*sizeof(Scalar)));
       if(mf_fp32) MFAssemble<CD,float><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
           INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
-          p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+          fragment_o2slot,p.obs2cslot,nobs,Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
       else        MFAssemble<CD,Scalar><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
           INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
-          p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+          fragment_o2slot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
       // RESECTION half: per-camera damped block solve H_cc dx_c = b_c with the
       // point coupling dropped, points held FIXED. Accepted on true cost.
       CUDA_CHECK(cudaMemcpy(RIb,Hcc,(size_t)CD*CD*ncam*sizeof(Scalar),cudaMemcpyDeviceToDevice));
@@ -9080,10 +9492,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         CUDA_CHECK(cudaMemset(bp,0,(size_t)n_p*sizeof(Scalar)));
         if(mf_fp32) MFAssemble<CD,float><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
             INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
-            p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+            fragment_o2slot,p.obs2cslot,nobs,Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
         else        MFAssemble<CD,Scalar><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
             INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
-            p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+            fragment_o2slot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
       }
       if(mf_fp32) MFPointFactor<float><<<GridSize(npt),256>>>(Bo32,Cdiag,p.point_obs_offsets,p.point_obs_list,ri_tau,npt,Rf,okf);
       else        MFPointFactor<Scalar><<<GridSize(npt),256>>>(Bo,Cdiag,p.point_obs_offsets,p.point_obs_list,ri_tau,npt,Rf,okf);
@@ -9133,7 +9545,100 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // behaviour exactly (max_inner_retry is forced to 0 at the call site).
   bool need_assembly=true; int retries=0;
   bool pf_obs_dirty=true;   // GAP-4090 F5: R0f stale whenever assembly reran
-  for(int k=0;k<max_iter;){
+  // A lambda-only retry leaves S(tau), its scaled RHS and Jacobi scaling
+  // unchanged. Restrict caching to the plain unshared diagonal path; the
+  // polynomial path modifies bprime later and must not reuse it.
+  const bool retry_cache = [](){ const char* e=getenv("OCA_RETRY_CACHE");
+    return e && atoi(e)!=0; }();
+  bool factor_cached=false;
+  Scalar cached_tau=0,cached_floor=0,cached_pred_pt=0;
+  long factor_builds=0,factor_reuses=0;
+  const char* replay_save=getenv("OCA_REPLAY_SAVE");
+  const char* replay_load=getenv("OCA_REPLAY_LOAD");
+  const char* replay_at=getenv("OCA_REPLAY_AT");
+  bool replay_saved=false; int replay_start=0;
+  std::string replay_policy="PRISM_REPLAY_V1";
+  if(replay_save || replay_load){
+    if(CD!=9 || shared_intr || mf_fp32 || rk || block_eq || jit_on ||
+       adaptive_menu || hyst_track || g_lp.on || ri_open || fast_opening)
+      throw std::runtime_error("replay supports plain fp64 unshared L2 diagonal CG only");
+    // Reject unrepresented experimental controller state. Logging and the one
+    // rearming intervention may differ; all other allowed policy values match.
+    const std::vector<std::string> allowed={"OCA_FORCE_UNSHARED","OCA_RHO_LAMBDA",
+      "OCA_GRID_DOWN","OCA_RHO_SHIFT","OCA_ALPHA_RHO","OCA_MENU_GATE","OCA_FTOL",
+      "OCA_FTOL_K","OCA_TAU_LAM","OCA_TAU_LAM_RATCHET","OCA_RETRY_CACHE",
+      "OCA_MULTI_RHS","OCA_DIAG_NORM","OCA_NSHIFTS","OCA_MENU_BACKTRACK"};
+    extern char** environ;
+    for(char** e=environ;*e;++e){
+      std::string entry=*e, key=entry.substr(0,entry.find('='));
+      if(key.rfind("OCA_",0)!=0) continue;
+      if(key.rfind("OCA_REPLAY_",0)==0 || key=="OCA_LEARN_LOG" || key=="OCA_BACKTRACK_REARM") continue;
+      if(std::find(allowed.begin(),allowed.end(),key)==allowed.end())
+        throw std::runtime_error("unsupported replay environment: "+key);
+    }
+    for(const auto& key:allowed){ const char* v=getenv(key.c_str());
+      replay_policy += "|"+key+"="+(v?v:"<unset>"); }
+    replay_policy += "|"+std::to_string(ncam)+"|"+std::to_string(npt)+"|"+std::to_string(nobs);
+  }
+  auto Replay=[&](const char* path,bool read,int& outer){
+    PrismReplayIO io(path,read); io.expect(replay_policy);
+    // CLI numerical settings must match too (max_iter is a rollout budget).
+    auto match=[&](auto expected){auto actual=expected;io.scalar(actual);
+      if(actual!=expected) throw std::runtime_error("checkpoint solver setting mismatch");};
+    match(L);match(lam0);match(lam_floor);match(tau_pt);match(use_equil);match(ew_eta_max);
+    match(use_alpha);match(k2mask);match(equil_floor);match(intr_damp);match(max_inner_retry);
+    match(tau_persist);match(func_tolerance);match(max_consecutive_failures);
+    std::vector<int> saved_ckpts=ckpts;io.vector(saved_ckpts);
+    if(saved_ckpts!=ckpts) throw std::runtime_error("checkpoint depth ladder mismatch");
+    io.scalar(outer);io.scalar(cost);io.scalar(lam_cam);io.scalar(prev_bnorm);
+    io.scalar(n_accept);io.scalar(n_reject);io.scalar(rej_streak);io.scalar(clean_streak);
+    io.scalar(tau_lam_off);io.scalar(tau_lam_floor_cur);io.scalar(last_win_sh);io.scalar(last_rel);
+    io.scalar(stuck);io.scalar(converged);io.scalar(prev_cost);io.scalar(ftol_streak);
+    io.scalar(lam_pre_streak);io.scalar(tau_base);io.scalar(tau_used);io.scalar(tau_win);
+    io.scalar(backtrack_confirm);io.scalar(backtrack_evals);io.scalar(backtrack_rescues);
+    io.scalar(backtrack_trials);io.scalar(alpha_evals);io.scalar(st);io.scalar(learn_att_id);
+    io.vector(log.iters);io.vector(log.costs);
+    auto device=[&](Scalar* d,size_t count){
+      std::vector<Scalar> h(count);
+      if(!read) CUDA_CHECK(cudaMemcpy(h.data(),d,count*sizeof(Scalar),cudaMemcpyDeviceToHost));
+      io.bytes(h.data(),count*sizeof(Scalar));
+      if(read) CUDA_CHECK(cudaMemcpy(d,h.data(),count*sizeof(Scalar),cudaMemcpyHostToDevice));
+    };
+    device(s.R,9ul*ncam);device(s.t,3ul*ncam);device(s.X,3ul*npt);device(s.intr,3ul*ncam);
+    if(read){
+      if(std::fgetc(io.file)!=EOF) throw std::runtime_error("trailing checkpoint data");
+      Scalar checked=ComputeCost(p,s,rk,rk_a2);
+      if(!std::isfinite(checked) || std::fabs(checked-cost)>1e-10*std::max((Scalar)1,std::fabs(cost)))
+        throw std::runtime_error("checkpoint objective does not match input observations");
+      // Rebuild derived assembly/factors from the restored exact matrix state.
+      need_assembly=true;factor_cached=false;pf_obs_dirty=true;retries=0;
+    } else if(std::fflush(io.file)) throw std::runtime_error("cannot flush checkpoint");
+    std::printf("REPLAY %s outer=%d cost=%.17g lam=%.17g tauwin=%.17g prev_bnorm=%.17g confirm=%d accepts=%d rejects=%d matvecs=%ld scored=%ld rescues=%ld\n",
+      read?"load":"save",outer,(double)cost,(double)lam_cam,(double)tau_win,(double)prev_bnorm,
+      (int)backtrack_confirm,n_accept,n_reject,st.matvecs,st.cand_evals+alpha_evals+backtrack_evals,backtrack_rescues);
+  };
+  if(replay_load){
+    Replay(replay_load,true,replay_start);
+    CsvClose();CsvOpen("mfree_shifted_cg",g_csv_problem.c_str());CsvRow(replay_start,cost);
+    if(const char* steps=getenv("OCA_REPLAY_STEPS")) max_iter=replay_start+std::max(1,atoi(steps));
+  }
+  if(TargetReached(cost,replay_start)) max_iter=replay_start;
+  for(int k=replay_start;k<max_iter;){
+   if(BudgetExpired()){std::printf("BUDGET stop=before_attempt outer=%d seconds=%.9g\n",k,max_seconds);break;}
+
+   if(replay_save && !replay_saved && need_assembly &&
+      ((replay_at && std::string(replay_at)=="confirm") ? backtrack_confirm : k==(replay_at?atoi(replay_at):0))){
+     std::string temporary=std::string(replay_save)+".tmp";Replay(temporary.c_str(),false,k);
+     if(std::rename(temporary.c_str(),replay_save)) throw std::runtime_error("cannot publish replay checkpoint");
+     replay_saved=true;
+     if(const char* steps=getenv("OCA_REPLAY_STEPS")) max_iter=k+std::max(1,atoi(steps));
+   }
+   if(demand_on){
+     if(backtrack_confirm) demand.wide=true; // retain the original full-menu confirmation
+     L=demand.wide?menu_capacity:1;
+     if(!demand.wide) demand_prev_norm=prev_bnorm;
+     if(demand_mode==2 && demand.pair_known) lam_cam=demand.lambda;
+   }
    if(need_assembly){
     if (g_bal_ptr && std::find(g_dump_iters.begin(), g_dump_iters.end(), k) != g_dump_iters.end())
       DumpBalState(g_dump_prefix + "_it" + std::to_string(k) + ".txt", *g_bal_ptr, s, ncam, npt);
@@ -9150,12 +9655,13 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     RobustUpdateScale();
     if(mf_fp32) MFAssemble<CD,float><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
         INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
-        p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+        fragment_o2slot,p.obs2cslot,nobs,Hcc,Cdiag,Gp32,Gc32,Bo32,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
     else        MFAssemble<CD,Scalar><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
         INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),
-        p.obs2pslot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
+        fragment_o2slot,p.obs2cslot,nobs,Hcc,Cdiag,Gp,Gc,Bo,bc,bp,k2mask,r2acc,obscnt,rk,rk_a2);
     if(r2acc) KernelDampIntr9<<<GridSize(ncam),256>>>(Hcc,INTR_F(p,s),r2acc,obscnt,ncam,intr_damp,k2mask);
     pf_obs_dirty=true;   // Bo/Cdiag just rebuilt
+    factor_cached=false;
     if(prof){cudaDeviceSynchronize();t_asm+=std::chrono::duration<double>(now()-t0).count();}
    }  // end if(need_assembly)
     if(prof){cudaDeviceSynchronize();t0=now();}
@@ -9310,7 +9816,21 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       // kernel (thin tracks only); globally it just raises tau_eff.
       if(tau_lam_maxobs<=0 && tau_lam_cond<=0.0 && tl>tau_eff) tau_eff=tl;
     }
+    if(demand_mode==2 && demand.pair_known) tau_eff=demand.tau;
+    if(point_trust_tau>0)tau_eff=point_trust_tau;
     tau_used = tau_eff;
+    const Scalar selected_floor =
+      (tau_lam_maxobs>0 || tau_lam_cond>0.0) && tau_floor_now>tau_eff
+        ? tau_floor_now : 0.0;
+    const char* poly_env=getenv("OCA_POLY_CONG");
+    const bool cache_eligible=retry_cache && !shared_intr && !block_on &&
+                              !(poly_env && atoi(poly_env)>0);
+    const bool reuse_factor=cache_eligible && factor_cached &&
+                           tau_eff==cached_tau && selected_floor==cached_floor;
+    Scalar pred_pt=cached_pred_pt;
+    if(reuse_factor){ ++factor_reuses; }
+    else {
+    ++factor_builds;
     if(tau_split){
       if(pf_obs_dirty){
         if(mf_fp32) MFPointFactorObs<float><<<GridSize(npt),256>>>(Bo32,p.point_obs_offsets,p.point_obs_list,npt,R0f);
@@ -9337,11 +9857,22 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     // Ddot per attempt. Selection-facing via the lambda trajectory: needs the
     // full trajectory-validation protocol, hence opt-in.
     static const bool rho_pt_fix = getenv("OCA_RHO_PT")!=nullptr;
-    Scalar pred_pt = 0.0;
+    pred_pt = 0.0;
     if(rho_pt_fix){ Scalar v=0; cublasDdot(blas,n_p,bp,1,uu,1,&v); pred_pt=0.5*v; }
-    CUDA_CHECK(cudaMemset(corr,0,(size_t)n_cf*sizeof(Scalar)));
-    if(mf_fp32) MFRhsPrime<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,uu,nobs,corr);
-    else        MFRhsPrime<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,uu,nobs,corr);
+    static const bool rhs_diag_camera = [](){
+      const char* e=getenv("OCA_RHS_DIAG_CAMERA"); return e && atoi(e)!=0; }();
+    static const bool f3_off = getenv("OCA_F3_OFF")!=nullptr;
+    const bool e_dead = !f3_off && ((block_on && !shared_intr) || BlockRedOn());
+    if(rhs_diag_camera){
+      Scalar* diag_out=use_equil && !e_dead ? dk : nullptr;
+      if(mf_fp32) MFRhsDiagCamera<CD,float><<<ncam,256>>>(Gc32,p.mf_cspt,p.mf_coff,Rf,uu,nobs,corr,diag_out);
+      else        MFRhsDiagCamera<CD,Scalar><<<ncam,256>>>(Gc?Gc:Gp,p.mf_cspt,p.mf_coff,Rf,uu,nobs,corr,diag_out,fragment_slots);
+      if(k==0 && retries==0) std::printf("  [rhs-diag-camera] active (fp64 accumulation)\n");
+    } else {
+      CUDA_CHECK(cudaMemset(corr,0,(size_t)n_cf*sizeof(Scalar)));
+      if(mf_fp32) MFRhsPrime<CD,float><<<GridSize(nobs),256>>>(Gp32,fragment_cams,fragment_points,uu,nobs,corr);
+      else        MFRhsPrime<CD,Scalar><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,uu,nobs,corr);
+    }
     // bc and corr live in the full space; the reduced rhs is B^T (bc - corr).
     if(shared_intr){
       CUDA_CHECK(cudaMemcpy(bcast_out,bc,(size_t)n_cf*sizeof(Scalar),cudaMemcpyDeviceToDevice));
@@ -9360,12 +9891,20 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       // including every retry. Skipping it on block outers is bit-identical.
       // With the scheduler, diag opening outers still build E as before.
       // OCA_F3_OFF=1 restores the old always-build for A/B.
-      static const bool f3_off = getenv("OCA_F3_OFF")!=nullptr;
-      const bool e_dead = !f3_off && ((block_on && !shared_intr) || BlockRedOn());
       if(!e_dead){
+      if(!rhs_diag_camera){
       CUDA_CHECK(cudaMemset(dk,0,(size_t)n_cf*sizeof(Scalar)));
-      if(mf_fp32) MFDiagK<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_spt,p.mf_scam,Rf,nobs,dk);
-      else        MFDiagK<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_spt,p.mf_scam,Rf,nobs,dk);
+      static const bool diag_norm = [](){ const char* e=getenv("OCA_DIAG_NORM");
+        return e && atoi(e)!=0; }();
+      if(diag_norm){
+        if(mf_fp32) MFDiagK<CD,float,true><<<GridSize(nobs),256>>>(Gp32,fragment_points,fragment_cams,Rf,nobs,dk);
+        else        MFDiagK<CD,Scalar,true><<<GridSize(nobs),256>>>(Gp,fragment_points,fragment_cams,Rf,nobs,dk);
+        if(k==0 && retries==0) std::printf("  [diag-norm] active (fp64 forward-solve quadratic form)\n");
+      } else {
+      if(mf_fp32) MFDiagK<CD,float><<<GridSize(nobs),256>>>(Gp32,fragment_points,fragment_cams,Rf,nobs,dk);
+      else        MFDiagK<CD,Scalar><<<GridSize(nobs),256>>>(Gp,fragment_points,fragment_cams,Rf,nobs,dk);
+      }
+      }
       MFDiagHcc<CD><<<GridSize(ncam),256>>>(Hcc,ncam,dk);
       // Equilibrate the diagonal the CG actually sees: B^T diag(S) B when the
       // intrinsics are shared, diag(S) otherwise.
@@ -9383,10 +9922,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           const char* e=getenv("OCA_BLOCK_CM"); return e&&atoi(e)!=0; }();
         if(block_cm){
           if(mf_fp32) MFBlockSchurCM<CD,float><<<ncam,32>>>(Gc32,p.mf_cspt,p.mf_coff,Rf,nobs,Bk);
-          else        MFBlockSchurCM<CD,Scalar><<<ncam,32>>>(Gc,p.mf_cspt,p.mf_coff,Rf,nobs,Bk);
+          else        MFBlockSchurCM<CD,Scalar><<<ncam,32>>>(Gc?Gc:Gp,p.mf_cspt,p.mf_coff,Rf,nobs,Bk,fragment_slots);
         } else {
-          if(mf_fp32) MFBlockSchur<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_spt,p.mf_scam,Rf,nobs,Bk);
-          else        MFBlockSchur<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_spt,p.mf_scam,Rf,nobs,Bk);
+          if(mf_fp32) MFBlockSchur<CD,float><<<GridSize(nobs),256>>>(Gp32,fragment_points,fragment_cams,Rf,nobs,Bk);
+          else        MFBlockSchur<CD,Scalar><<<GridSize(nobs),256>>>(Gp,fragment_points,fragment_cams,Rf,nobs,Bk);
         }
         MFBlockAddHcc<CD><<<GridSize(ncam),256>>>(Hcc,ncam,Bk);
         { static int* d_nf=nullptr; static bool once=false;
@@ -9404,10 +9943,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           const char* e=getenv("OCA_BLOCK_CM"); return e&&atoi(e)!=0; }();
         if(block_cm_r){
           if(mf_fp32) MFBlockSchurCM<CD,float><<<ncam,32>>>(Gc32,p.mf_cspt,p.mf_coff,Rf,nobs,Bk);
-          else        MFBlockSchurCM<CD,Scalar><<<ncam,32>>>(Gc,p.mf_cspt,p.mf_coff,Rf,nobs,Bk);
+          else        MFBlockSchurCM<CD,Scalar><<<ncam,32>>>(Gc?Gc:Gp,p.mf_cspt,p.mf_coff,Rf,nobs,Bk,fragment_slots);
         } else {
-          if(mf_fp32) MFBlockSchur<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_spt,p.mf_scam,Rf,nobs,Bk);
-          else        MFBlockSchur<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_spt,p.mf_scam,Rf,nobs,Bk);
+          if(mf_fp32) MFBlockSchur<CD,float><<<GridSize(nobs),256>>>(Gp32,fragment_points,fragment_cams,Rf,nobs,Bk);
+          else        MFBlockSchur<CD,Scalar><<<GridSize(nobs),256>>>(Gp,fragment_points,fragment_cams,Rf,nobs,Bk);
         }
         MFBlockAddHcc<CD><<<GridSize(ncam),256>>>(Hcc,ncam,Bk);
         CUDA_CHECK(cudaMemset(Bg,0,(size_t)9*ncalib*sizeof(Scalar)));
@@ -9425,6 +9964,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       } else
       MFScaleVec<<<GridSize(n_c),256>>>(bprime,E,n_c);
     }
+    cached_tau=tau_eff; cached_floor=selected_floor; cached_pred_pt=pred_pt;
+    factor_cached=cache_eligible;
+    } // factor/RHS rebuild
     if(prof){cudaDeviceSynchronize();t_fac+=std::chrono::duration<double>(now()-t0).count();}
 
     // ---- operator ----
@@ -9443,12 +9985,12 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         MFPass2JIT<9><<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,s.R,s.t,s.X,
             INTR_F(p,s),INTR_K1(p,s),INTR_K2(p,s),uu,nobs,k2mask,rk,rk_a2,wf);
         }
-      } else if(mf_fp32){ MFPass1<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,vf,nobs,tacc);
+      } else if(mf_fp32){ MFPass1<CD,float><<<GridSize(nobs),256>>>(Gp32,fragment_cams,fragment_points,vf,nobs,tacc);
                    MFVinvApply<<<GridSize(npt),256>>>(Rf,tacc,npt,uu);
                    MFPass2<CD,float><<<ncam,256>>>(Gc32,p.mf_cspt,p.mf_coff,uu,Hcc,vf,nobs,wf); }
-      else       { MFPass1<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,vf,nobs,tacc);
+      else       { MFPass1<CD,Scalar><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,vf,nobs,tacc);
                    MFVinvApply<<<GridSize(npt),256>>>(Rf,tacc,npt,uu);
-                   MFPass2<CD,Scalar><<<ncam,256>>>(Gc,p.mf_cspt,p.mf_coff,uu,Hcc,vf,nobs,wf); }
+                   MFPass2<CD,Scalar><<<ncam,256>>>(Gc?Gc:Gp,p.mf_cspt,p.mf_coff,uu,Hcc,vf,nobs,wf,fragment_slots); }
       if(shared_intr) Reduce(wf,vout);
       ++st.matvecs;
     };
@@ -9538,8 +10080,26 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     }
     // ---- candidate scoring by TRUE nonlinear cost (existing rule, unchanged) ----
     Scalar best_cost=cost; int best_sh=-1,best_ck=-1; bool have=false;
+    // Preserve the initial basin-selection phase, where the point-damping
+    // retry ladder is part of the established Config A/B behavior.
+    const bool backtrack_ready=backtrack_on && !backtrack_confirm && n_accept>=3;
+    bool backtrack_candidate=false,backtrack_rescued=false;
+    Scalar backtrack_cost=std::numeric_limits<Scalar>::infinity();
+    Scalar backtrack_alpha=1,backtrack_slope=0;
+    int backtrack_sh=-1,backtrack_ck=-1;
     bool doomed_probe_failed=false;   // OCA_DOOMED neutrality accounting
     std::vector<Scalar> cbest_sh(L,std::numeric_limits<Scalar>::infinity());
+    std::vector<Scalar> hyst_preds(L,0),hyst_bpd(L,0);
+    std::vector<int> hyst_ck(L,-1);
+    const bool adaptive_wide=adaptive_menu && adaptive_policy.Wide(k,rej_streak);
+    bool adaptive_expanded=false;
+    int adaptive_full=0,adaptive_narrow=0,adaptive_flat=0,adaptive_informative=0;
+    long adaptive_anchor_evals=0,adaptive_extra_evals=0;
+    double adaptive_anchor_gain=0,adaptive_extra_gain=0,adaptive_anchor_seconds=0,adaptive_extra_seconds=0;
+    double adaptive_menu_gain=0;
+    const Scalar adaptive_prior_center=rej_streak>0?lam_pre_streak:lam_cam;
+
+
     // OCA_RHO_LAMBDA: running model reduction per shift, from CG scalars alone
     // (phi drops 0.5*alpha_i*|r_i|^2 per step; |r^sigma|^2 = zeta^2 |r|^2).
     // Validated in the CPU port (mfree_cpu.h): rho-gated lambda control gives
@@ -9652,8 +10212,14 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       }
     };
     auto _ps=[&](double& acc,auto&& fn){ if(prof_score){cudaDeviceSynchronize();auto q=now();fn();cudaDeviceSynchronize();acc+=std::chrono::duration<double>(now()-q).count();} else fn(); };
+    std::vector<int> scored_depth(L,-1);
     auto ScoreTail=[&](const Scalar* x_scaled,const Scalar* xcu,Scalar* tac,int sh,int ck,
-                       std::chrono::steady_clock::time_point q0){
+                       std::chrono::steady_clock::time_point q0,
+                       const Scalar* prepared=nullptr, Scalar prepared_cost=0){
+      Scalar c=prepared_cost;
+      if(prepared){
+        CUDA_CHECK(cudaMemcpy(dfull,prepared,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+      } else {
       _ps(ts_pass1,[&]{
       MFBackSub<<<GridSize(npt),256>>>(Rf,bp,tac,npt,xpv); });
       _ps(ts_copy,[&]{
@@ -9661,15 +10227,23 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       CUDA_CHECK(cudaMemcpy(dfull+n_cf,xpv,(size_t)n_p*sizeof(Scalar),cudaMemcpyDeviceToDevice));
       KernelNegateInPlace<<<GridSize(n),256>>>(dfull,n); });
       _ps(ts_retract,[&]{ DoRetract(dfull,s_new); });
-      Scalar c=0;
       _ps(ts_cost,[&]{ c = score_stride>1 ? ComputeCostStride(p,s_new,score_stride,rk,rk_a2)
                                           : ComputeCost(p,s_new,rk,rk_a2); });
+      }
+      if(backtrack_ready && !have &&
+         (!backtrack_candidate || (std::isfinite(c) && c<backtrack_cost))){
+        CUDA_CHECK(cudaMemcpy(d_backtrack,dfull,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+        backtrack_candidate=true;
+        backtrack_cost=std::isfinite(c)?c:std::numeric_limits<Scalar>::infinity();
+        backtrack_sh=sh; backtrack_ck=ck;
+      }
       if(prof_score) ++ts_n;
       if(getenv("MF_DEBUG")){ Scalar nx,np2;
         cublasDnrm2(blas,n_cf,xcu,1,&nx); cublasDnrm2(blas,n_p,xpv,1,&np2);
         std::printf("      [dbg] shift=%d ckpt=%d  |x_c|=%.6e |x_p|=%.6e  cand_cost=%.10e  (cur=%.10e)%s\n",
                     sh,ck,(double)nx,(double)np2,(double)c,(double)cost, std::isfinite((double)c)?"":"  <-- NON-FINITE"); }
       ++st.cand_evals;
+      if(sh>=0 && sh<L) scored_depth[sh]=ck;
       if(prof){cudaDeviceSynchronize();t_cand+=std::chrono::duration<double>(now()-q0).count();}
       if(learn_f){
         // One record per scored (shift, depth) candidate. xn = |x| in the CG's
@@ -9685,7 +10259,14 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           (sh>=0&&sh<L)?(double)preds[sh]:0.0,(double)c,(double)xn,
           std::isfinite((double)c)?1:0);
       }
-      if(sh>=0 && sh<L && c<cbest_sh[sh]) cbest_sh[sh]=c;
+      if(sh>=0 && sh<L && c<cbest_sh[sh]) {
+        cbest_sh[sh]=c;
+        if(hyst_track && std::isfinite(c) && c<cost){
+          CUDA_CHECK(cudaMemcpy(hyst_steps+(size_t)sh*n,dfull,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+          hyst_preds[sh]=preds[sh]; hyst_ck[sh]=ck;
+          if(rho_mode && alpha_rho) cublasDdot(blas,n_c,bprime,1,x_scaled,1,&hyst_bpd[sh]);
+        }
+      }
       // ORDER-INDEPENDENT tie-break. With a strict `<` the winner of an exact
       // tie is whichever shift happened to be scored FIRST, so any change to
       // scoring order silently changes best_sh -> the lambda update -> the
@@ -9710,11 +10291,11 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       _ps(ts_pass1,[&]{
       CUDA_CHECK(cudaMemset(tacc,0,(size_t)n_p*sizeof(Scalar)));
       if(score_stride>1){
-        if(mf_fp32) MFPass1Stride<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,xc_un,nobs,score_stride,tacc);
-        else        MFPass1Stride<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,xc_un,nobs,score_stride,tacc);
+        if(mf_fp32) MFPass1Stride<CD,float><<<GridSize(nobs),256>>>(Gp32,fragment_cams,fragment_points,xc_un,nobs,score_stride,tacc);
+        else        MFPass1Stride<CD,Scalar><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,xc_un,nobs,score_stride,tacc);
       } else {
-        if(mf_fp32) MFPass1<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,xc_un,nobs,tacc);
-        else        MFPass1<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,xc_un,nobs,tacc);
+        if(mf_fp32) MFPass1<CD,float><<<GridSize(nobs),256>>>(Gp32,fragment_cams,fragment_points,xc_un,nobs,tacc);
+        else        MFPass1<CD,Scalar><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,xc_un,nobs,tacc);
       } });
       ScoreTail(x_scaled,xc_un,tacc,sh,ck,q0);
     };
@@ -9742,7 +10323,67 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     static const double shift_prune = [](){
       const char* e=getenv("OCA_SHIFT_PRUNE"); return e?std::atof(e):0.0; }();
     std::vector<char> sconv(L,0), sdone(L,0);
+    // Score the four noncentral shifts with the same batched RHS machinery
+    // used by the normal full menu; the central candidate is already scored.
+    auto AdaptiveExtras=[&](int anchor,int depth){
+      if(multi_rhs){
+        int act[5],na=0;
+        for(int l=0;l<L;++l) if(l!=anchor) act[na++]=l;
+        for(int a=0;a<na;++a){
+          Lift(xs[act[a]]);
+          CUDA_CHECK(cudaMemcpy(XCU+(size_t)a*n_cf,xc_un,(size_t)n_cf*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+        }
+        CUDA_CHECK(cudaMemset(TACC,0,(size_t)na*n_p*sizeof(Scalar)));
+        MFPass1Multi<CD,Scalar><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,XCU,n_cf,na,nobs,TACC,n_p);
+        for(int a=0;a<na;++a){
+          auto q=now();
+          ScoreTail(xs[act[a]],XCU+(size_t)a*n_cf,TACC+(size_t)a*n_p,act[a],depth,q);
+        }
+      } else for(int l=0;l<L;++l) if(l!=anchor) Score(xs[l],l,depth);
+    };
+    // Experimental candidate-coverage guard: retain the central stopping
+    // candidate and evaluate computed terminal iterates. A flat MODEL menu
+    // alone is not proof that all nonlinear candidates fail.
+    const bool menu_coverage = demand_on || [](){ const char* e=getenv("OCA_MENU_COVERAGE");
+      return e && std::atoi(e)!=0; }();
+    int coverage_gate_fallbacks=0;
     auto ScoreAll=[&](int depth){
+      if(demand_on){
+        // Expansion means actual coverage, even when the model menu is flat.
+        for(int l=0;l<L;++l) if(scored_depth[l]!=depth) Score(xs[l],l,depth);
+        return;
+      }
+      if(adaptive_menu){
+        const char* gd=getenv("OCA_GRID_DOWN");
+        const int anchor=std::min(std::max(gd?std::atoi(gd):0,0),L-1);
+        bool flat=false;
+        if(menu_gate>0 && rho_mode){
+          double lo=preds[0],hi=preds[0];bool finite=std::isfinite(lo);
+          for(int l=1;l<L;++l){finite=finite&&std::isfinite(preds[l]);lo=std::min(lo,(double)preds[l]);hi=std::max(hi,(double)preds[l]);}
+          flat=finite && hi-lo<=menu_gate*std::max(std::fabs(hi),1e-300);
+        }
+        if(depth>0 && !flat) ++adaptive_informative;
+        const double before=std::min((double)cost,(double)best_cost);
+        auto started=now();Score(xs[anchor],anchor,depth);
+        adaptive_anchor_seconds+=std::chrono::duration<double>(now()-started).count();
+        ++adaptive_anchor_evals;
+        const double anchored=std::min((double)cost,(double)best_cost);
+        adaptive_anchor_gain+=std::max(0.0,before-anchored);
+        if(flat) ++adaptive_flat;
+        if(flat && !(adaptive_wide || adaptive_expanded)){++st.menu_gated;return;}
+        if(!have || !(best_cost<cost)) adaptive_expanded=true;
+        if(!(adaptive_wide || adaptive_expanded)){++adaptive_narrow;return;}
+        started=now();AdaptiveExtras(anchor,depth);
+        adaptive_extra_seconds+=std::chrono::duration<double>(now()-started).count();
+        adaptive_extra_evals+=L-1;++adaptive_full;++st.menu_full;
+        const double gained=std::max(0.0,anchored-std::min((double)cost,(double)best_cost));
+        adaptive_extra_gain+=gained;
+        if(flat && depth>0 && gained>0.01*std::max((double)cost-std::min((double)cost,(double)best_cost),1e-300))
+          ++adaptive_informative; // actual candidate scores overrule a flat model proxy
+
+        return;
+      }
+
       // Gate on the MODEL predictions, not on scored costs. preds[l] is the
       // accumulated quadratic-model decrease 1/2*sum(al*zeta^2*rr) per shift,
       // maintained by the zeta recurrence at every CG iteration -- free, and
@@ -9783,7 +10424,12 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           else { lo=std::min(lo,v); hi=std::max(hi,v); }
         }
         if(fin && (hi-lo)<=menu_gate*std::max(std::fabs(hi),1e-300)){
-          Score(xs[0],0,depth); ++st.menu_gated; return;
+          Score(xs[0],0,depth); ++st.menu_gated;
+          if(menu_coverage && !have){
+            ++coverage_gate_fallbacks;
+            for(int l=1;l<L;++l) Score(xs[l],l,depth);
+          }
+          return;
         }
       }
       // ---- OCA_LEARN_POLICY hook (Exp 5-7): choose the candidate SET.
@@ -9927,7 +10573,9 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       if(multi_rhs && score_stride<=1){
         // GAP-4090 F2: one Gp stream for the whole menu, then the identical
         // per-candidate tail in canonical order 0..L-1.
-        int act[16]; int na=0;
+        std::chrono::steady_clock::time_point multi_t0;
+        if(prof){cudaDeviceSynchronize();multi_t0=now();}
+        std::vector<int> act(L); int na=0;
         for(int l=0;l<L;++l){
           if(shift_prune>0.0 && l>0 && sconv[l] && sdone[l]) continue;
           act[na++]=l;
@@ -9938,12 +10586,63 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         }
         _ps(ts_pass1,[&]{
         CUDA_CHECK(cudaMemset(TACC,0,(size_t)na*n_p*sizeof(Scalar)));
-        if(mf_fp32) MFPass1Multi<CD,float><<<GridSize(nobs),256>>>(Gp32,p.mf_scam,p.mf_spt,XCU,n_cf,na,nobs,TACC,n_p);
-        else        MFPass1Multi<CD,Scalar><<<GridSize(nobs),256>>>(Gp,p.mf_scam,p.mf_spt,XCU,n_cf,na,nobs,TACC,n_p); });
+        if(mf_fp32) MFPass1Multi<CD,float><<<GridSize(nobs),256>>>(Gp32,fragment_cams,fragment_points,XCU,n_cf,na,nobs,TACC,n_p);
+        else        MFPass1Multi<CD,Scalar><<<GridSize(nobs),256>>>(Gp,fragment_cams,fragment_points,XCU,n_cf,na,nobs,TACC,n_p); });
+        Scalar costs[5]={};
+        const bool prepared=(batch_cost || batch_check) && na>1;
+        if(prepared){
+          for(int a=0;a<na;++a){
+            Scalar* step=batch_steps+(size_t)a*n;
+            MFBackSub<<<GridSize(npt),256>>>(Rf,bp,TACC+(size_t)a*n_p,npt,step+n_cf);
+            CUDA_CHECK(cudaMemcpy(step,XCU+(size_t)a*n_cf,(size_t)n_cf*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+            KernelNegateInPlace<<<GridSize(n),256>>>(step,n);
+            DoRetract(step,batch_state[a]);
+          }
+          CUDA_CHECK(cudaMemset(batch_costs,0,na*sizeof(Scalar)));
+          KernelCostMenu<<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,batch_args,nobs,na,batch_costs,rk,rk_a2);
+          CUDA_CHECK(cudaMemcpy(costs,batch_costs,na*sizeof(Scalar),cudaMemcpyDeviceToHost));
+          if(batch_check){
+            Scalar reference[5];
+            for(int a=0;a<na;++a){
+              reference[a]=ComputeCost(p,batch_state[a],rk,rk_a2);
+              const double rel=std::fabs(costs[a]-reference[a])/std::max((Scalar)1,std::fabs(reference[a]));
+              if(std::isfinite(costs[a])!=std::isfinite(reference[a]) ||
+                 (std::isfinite(reference[a]) && rel>1e-10))
+                throw std::runtime_error("batch cost fixed-candidate mismatch");
+              std::printf("BATCH_CHECK o=%d depth=%d shift=%d batch=%.17g reference=%.17g rel=%.3g\n",
+                k,depth,act[a],(double)costs[a],(double)reference[a],rel);
+            }
+            for(int a=0;a<na;++a) for(int b=a+1;b<na;++b)
+              if(std::isfinite(reference[a]) && std::isfinite(reference[b]) &&
+                 std::fabs(reference[a]-reference[b])>1e-10*std::max({(Scalar)1,std::fabs(reference[a]),std::fabs(reference[b])}) &&
+                 (costs[a]<costs[b])!=(reference[a]<reference[b]))
+                throw std::runtime_error("batch cost candidate ordering mismatch");
+            // Fixed directions, alternating order, CUDA event elapsed time.
+            // Diagnostic only; no logged timing is used as solver wall evidence.
+            if(batch_menus==0){
+              cudaEvent_t e0,e1;cudaEventCreate(&e0);cudaEventCreate(&e1);
+              for(int rep=0;rep<6;++rep) for(int j=0;j<2;++j){
+                const bool batched=((j+rep)%2)==0;
+                cudaEventRecord(e0);
+                if(batched){
+                  CUDA_CHECK(cudaMemset(batch_costs,0,na*sizeof(Scalar)));
+                  KernelCostMenu<<<GridSize(nobs),256>>>(p.cam_idx,p.pt_idx,p.uv,batch_args,nobs,na,batch_costs,rk,rk_a2);
+                  CUDA_CHECK(cudaMemcpy(costs,batch_costs,na*sizeof(Scalar),cudaMemcpyDeviceToHost));
+                } else for(int a=0;a<na;++a) reference[a]=ComputeCost(p,batch_state[a],rk,rk_a2);
+                cudaEventRecord(e1);cudaEventSynchronize(e1);float ms=0;cudaEventElapsedTime(&ms,e0,e1);
+                std::printf("BATCH_TIME rep=%d batch=%d candidates=%d ms=%.9g\n",rep,(int)batched,na,ms);
+              }
+              cudaEventDestroy(e0);cudaEventDestroy(e1);
+            }
+          }
+          ++batch_menus;
+        }
+        if(prof){cudaDeviceSynchronize();t_cand+=std::chrono::duration<double>(now()-multi_t0).count();}
         for(int a=0;a<na;++a){
           int l=act[a];
           std::chrono::steady_clock::time_point q0; if(prof){cudaDeviceSynchronize();q0=now();}
-          ScoreTail(xs[l],XCU+(size_t)a*n_cf,TACC+(size_t)a*n_p,l,depth,q0);
+          ScoreTail(xs[l],XCU+(size_t)a*n_cf,TACC+(size_t)a*n_p,l,depth,q0,
+                    prepared?batch_steps+(size_t)a*n:nullptr,prepared?costs[a]:(Scalar)0);
           if(sconv[l]) sdone[l]=1;
         }
         return;
@@ -9969,6 +10668,18 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     const int grid_down = std::min(std::max(grid_down_env, 0), L-1);
     std::vector<Scalar> shifts(L);
     for(int l=0;l<L;++l) shifts[l]=lam_cam*std::pow(10.0,(double)(l-grid_down));
+#ifdef PRISM_ENABLE_KRYLOV_AUDIT
+    if(const char* audit=getenv("OCA_KRYLOV_AUDIT")){
+      const int audit_outer=std::max(0,std::atoi(audit));
+      if(k==audit_outer){
+        std::printf("KRYLOV_SNAPSHOT outer=%d n=%d shifts=",k,n_c);
+        for(int l=0;l<L;++l)std::printf("%s%.17g",l?",":"",(double)shifts[l]);
+        std::printf("\n");
+        prism_audit::Run(blas,n_c,bprime,shifts,KvS);
+        std::fflush(stdout);std::exit(0); // diagnostic executable run only
+      }
+    }
+#endif
     learn_shift_ptr=shifts.data();   // OCA_LEARN_LOG (no-op when logging off)
     // OCA_NEGCURV_RESEED=1 (math review 2026-09-02, proposal 2): negative
     // curvature at the SEED shift aborts the whole sweep even though the
@@ -10077,12 +10788,158 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     }
     Scalar al_prev=1.0,be_prev=0.0; size_t ci_=0; int cg_it=0; bool trunc=false;
     int last_ck_fired=-1; bool cg_broke=false;
+    // Progressive depth is a work/quality policy, not a different CG solve.
+    // Check the central shifted residual, then require useful true-cost
+    // descent before abandoning the remaining least-damped seed iterations.
+    const char* progressive_env=getenv("OCA_PROGRESSIVE_DEPTH");
+    const int progressive_mode=progressive_env?atoi(progressive_env):0;
+    if(progressive_mode<0 || progressive_mode>2)
+      throw std::runtime_error("OCA_PROGRESSIVE_DEPTH: 1=stop on useful probe, 2=probe-only ablation");
+    const bool progressive=progressive_mode!=0;
+    if(progressive && (L!=5 || CD!=9 || shared_intr || mf_fp32 || score_stride!=1 ||
+        adaptive_menu || hyst_track || g_lp.on || prune_now || negcurv_reseed))
+      throw std::runtime_error("progressive depth requires plain fp64 five-shift full scoring");
+    bool progressive_checked=false,progressive_stopped=false;
+    int progressive_depth=-1;
+    bool coverage_anchor_scored=false;
+    int coverage_anchor_depth=-1,coverage_terminal_depth=-1;
+
+    bool projected_ok=false;
+    const bool capture_narrow=recycle_mode>=3 && L==1;
+    if(capture_narrow) captured->Reset(shifts[0]);
+    if(recycle_mode>=3){
+      const bool expansion=retain_expansion;
+      retain_expansion=false;
+      bool use_expansion=expansion && captured->m>0;
+#ifdef PRISM_ENABLE_REUSE_FIXED_STUDY
+      if(fixed_collector.on && use_expansion){
+        if(fixed_collector.Want(captured->m)){
+          const int bucket=prism_fixed::Collector::Bucket(captured->m);
+          const int id=fixed_collector.counts[0]+fixed_collector.counts[1]+fixed_collector.counts[2];
+          const char* directory=getenv("OCA_REUSE_FIXED_DIR");
+          if(!directory || compact_mode!=2 || CD!=9 || block_on || shared_intr || poly_on || mf_fp32 || jit_on)
+            throw std::runtime_error("fixed capture requires output dir and compact2 plain FP64 diagonal operator");
+          const std::string prefix=std::string(directory)+"/case"+std::to_string(id);
+          prism_fixed::Save(prefix+".Gp",Gp,(size_t)nobs*27*sizeof(Scalar));
+          prism_fixed::Save(prefix+".Rf",Rf,(size_t)npt*6*sizeof(Scalar));
+          prism_fixed::Save(prefix+".Hcc",Hcc,(size_t)ncam*81*sizeof(Scalar));
+          prism_fixed::Save(prefix+".E",E,(size_t)n_c*sizeof(Scalar));
+          prism_fixed::Save(prefix+".b",bprime,(size_t)n_c*sizeof(Scalar));
+          prism_fixed::Save(prefix+".cams",fragment_cams,(size_t)nobs*sizeof(int));
+          prism_fixed::Save(prefix+".points",fragment_points,(size_t)nobs*sizeof(int));
+          prism_fixed::Save(prefix+".coff",p.mf_coff,(size_t)(ncam+1)*sizeof(int));
+          {std::ofstream meta(prefix+".json");meta.precision(17);
+           meta << "{\"outer\":" << k << ",\"ncam\":" << ncam << ",\"npt\":" << npt
+             << ",\"nobs\":" << nobs << ",\"source_depth\":" << captured->m
+             << ",\"tau\":" << tau_eff << ",\"center\":" << captured->shift
+             << ",\"tolerance\":" << eta << ",\"shifts\":[";
+           for(int l=0;l<L;++l)meta << (l?",":"") << shifts[l];meta << "]}\n";}
+          prism_fixed::Run(blas,n_c,bprime,shifts,captured->shift,eta,maxck,k,captured->m,id,ckpts_eff,KvS);
+          ++fixed_collector.counts[bucket];
+          if(fixed_collector.Done()){
+            std::printf("FIXED_DONE shallow=%d eligible=%d capacity=%d\n",fixed_collector.counts[0],fixed_collector.counts[1],fixed_collector.counts[2]);
+            std::fflush(stdout);std::exit(0);
+          }
+        }
+        use_expansion=false; // Continue the original controller trajectory.
+      }
+#endif
+      if(use_expansion && recycle_mode==5){
+        const auto decision=selective_reuse.Decide(captured->m,L,captured->cap);
+        use_expansion=decision==PrismSelectiveReuse::Use;
+        std::printf("SELECT_REUSE o=%d depth=%d decision=%d cooldown=%d\n",
+          k,captured->m,(int)decision,selective_reuse.cooldown);
+      }
+      if(use_expansion){
+#ifndef OCA_CORE_LIBRARY
+        if(getenv("OCA_CAPTURE_AUDIT")){
+          prism_recycle::AuditCapture(blas,bprime,shifts,*captured,KvS,eta);
+          std::exit(0); // Explicit diagnostic process; no nonlinear result/export.
+        }
+#endif
+        const bool reuse=recycle_mode==3 || recycle_mode==5;
+        const int captured_depth=captured->m;
+        if(reuse){captured->Import(blas,bprime,*retained);++recycle_hits;recycle_saved+=retained->m;}
+        else retained->Reset(blas,bprime);
+        const int imported=retained->m;
+        const int limit=std::min(64,maxck);
+        std::vector<int> depths={std::min(captured_depth,limit)};
+        for(int d: {8,16,32,64})if(d>depths.front() && d<=limit)depths.push_back(d);
+        double worst=0;int terminal=0;
+        for(int depth:depths){
+          retained->Grow(blas,KvS,depth);
+          projected_ok=retained->m>0;worst=0;
+          for(int l=0;l<L;++l){
+            double rel,pred;
+            bool finite=retained->Solve(blas,KvS,bprime,shifts[l],xs[l],rel,pred);
+            preds[l]=pred;worst=std::max(worst,rel);
+            projected_ok=projected_ok && finite && rel<=eta;
+          }
+          terminal=retained->m;
+          if(projected_ok || retained->exhausted)break;
+        }
+        std::printf("CAPTURE o=%d reused=%d captured=%d imported=%d depth=%d residual=%.9g tolerance=%.9g fallback=%d\n",
+          k,(int)reuse,captured_depth,imported,terminal,worst,(double)eta,(int)!projected_ok);
+        if(recycle_mode==5)selective_reuse.Observe(projected_ok);
+        if(projected_ok){
+          // Reconstruct the original menu checkpoint depths as prefix
+          // projections; the narrow CG path and scoring are unchanged.
+          std::vector<int> scoring;
+          for(int d:ckpts_eff)if(d<=terminal)scoring.push_back(d);
+          if(scoring.empty() || scoring.back()!=terminal)scoring.push_back(terminal);
+          for(int depth:scoring){
+            retained->m=depth;
+            for(int l=0;l<L;++l){
+              double rel,pred;
+              if(!retained->Solve(blas,KvS,bprime,shifts[l],xs[l],rel,pred,
+                    getenv("OCA_CAPTURE_VERIFY_PREFIX")!=nullptr))
+                throw std::runtime_error("qualified CG capture has invalid prefix projection");
+              preds[l]=pred;
+            }
+            ScoreAll(depth);
+          }
+          retained->m=terminal;cg_it=terminal;last_ck_fired=terminal;
+        }else ++recycle_fallbacks;
+      }
+    }
+    if(recycle_mode==1 || recycle_mode==2){
+      const bool reuse=retain_expansion && recycle_mode==1;
+      retain_expansion=false;
+      if(!reuse) retained->Reset(blas,bprime);
+      const int start_depth=retained->m;
+      if(reuse){++recycle_hits;recycle_saved+=start_depth;}
+      double worst=0;
+      for(int depth: {8,16,32,64}){
+        if(depth<start_depth) continue;
+        retained->Grow(blas,KvS,depth);
+        projected_ok=true;worst=0;
+        for(int l=0;l<L;++l){
+          double rel=0,pred=0;
+          const bool finite=retained->Solve(blas,KvS,bprime,shifts[l],xs[l],rel,pred);
+          preds[l]=pred;worst=std::max(worst,rel);
+          projected_ok=projected_ok && finite && rel<=eta;
+        }
+        if(projected_ok || retained->exhausted)break;
+      }
+      std::printf("RECYCLE o=%d slots=%d reused=%d prior=%d depth=%d residual=%.9g tolerance=%.9g fallback=%d\n",
+        k,L,(int)reuse,start_depth,retained->m,worst,(double)eta,(int)!projected_ok);
+      if(projected_ok){
+        ScoreAll(retained->m);
+        cg_it=retained->m;last_ck_fired=retained->m;
+      }else ++recycle_fallbacks;
+    }
+    if(!projected_ok){
+    if(recycle_mode){
+      for(int l=0;l<L;++l) CUDA_CHECK(cudaMemset(xs[l],0,(size_t)n_c*sizeof(Scalar)));
+      std::fill(preds.begin(),preds.end(),0.);
+    }
     if(prof){cudaDeviceSynchronize();t0=now();}
     for(cg_it=0; cg_it<maxck; ++cg_it){
       KvS(pv_,Ap_);
       { const Scalar sh=shifts[0]; cublasDaxpy(blas,n_c,&sh,pv_,1,Ap_,1); }
       Scalar pAp,pp; cublasDdot(blas,n_c,pv_,1,Ap_,1,&pAp); cublasDdot(blas,n_c,pv_,1,pv_,1,&pp);
       if(!(pAp>1e-14*pp)){ ++st.negcurv; trunc=true; nc_pAp=pAp; nc_pp=pp; break; }   // Steihaug-Toint
+      if(capture_narrow) captured->Append(pv_,Ap_);
       Scalar al=rr/pAp;
       if(rho_mode) preds[0]+=0.5*al*rr;
       cublasDaxpy(blas,n_c,&al,pv_,1,xs[0],1);
@@ -10163,7 +11020,42 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         last_ck_fired = cg_it+1;
         ++ci_;
       }
+      if(progressive && !progressive_checked && std::isfinite(zeta[grid_down]) &&
+         std::fabs(zeta[grid_down])*std::sqrt(rr_new)<=eta*nb){
+        progressive_checked=true; progressive_depth=cg_it+1;
+        if(getenv("OCA_PROGRESSIVE_CHECK")){
+          // Diagnostic true residual in the same equilibrated operator;
+          // these extra matvecs are excluded from performance experiments.
+          KvS(xs[grid_down],Ap_);
+          cublasDaxpy(blas,n_c,&shifts[grid_down],xs[grid_down],1,Ap_,1);
+          const Scalar minus_one=-1;
+          cublasDaxpy(blas,n_c,&minus_one,bprime,1,Ap_,1);
+          Scalar actual=0;cublasDnrm2(blas,n_c,Ap_,1,&actual);
+          const Scalar estimated=std::fabs(zeta[grid_down])*std::sqrt(rr_new);
+          if(!std::isfinite(actual) || std::fabs(actual-estimated)>1e-5*std::max(nb,(Scalar)1e-300))
+            throw std::runtime_error("progressive shifted residual disagrees with true residual");
+          std::printf("PROGRESSIVE_CHECK o=%d depth=%d estimated=%.17g actual=%.17g target=%.17g norm_b=%.17g\n",
+            k,cg_it+1,(double)estimated,(double)actual,(double)(eta*nb),(double)nb);
+        }
+        // Include every current shift: the model-flat gate can otherwise hide
+        // the central candidate. Reuse any scores from this exact depth.
+        for(int l=0;l<L;++l)
+          if(scored_depth[l]!=cg_it+1) Score(xs[l],l,cg_it+1);
+        last_ck_fired=cg_it+1;
+        if(progressive_mode==1 && have && std::isfinite(best_cost) &&
+           cost-best_cost>std::max(1e-4,10.0*ftol_env)*std::max(cost,(Scalar)1e-300)){
+          progressive_stopped=true; cg_broke=true; break;
+        }
+      }
       if(prof){cudaDeviceSynchronize();t0=now();}
+      if(menu_coverage && L>1 && !coverage_anchor_scored &&
+         std::isfinite(zeta[grid_down]) &&
+         std::fabs(zeta[grid_down])*std::sqrt(rr_new)<=eta*nb){
+        // Same forcing test as standalone central CG, at its first crossing.
+        // Always score it: a preceding model gate may have skipped the center.
+        if(scored_depth[grid_down]!=cg_it+1) Score(xs[grid_down],grid_down,cg_it+1);
+        coverage_anchor_scored=true;coverage_anchor_depth=cg_it+1;
+      }
       if(sqrt(rr_new)<=eta*nb){ cg_broke=true; break; }    // s2.7
     }
     if(trunc && negcurv_reseed && sweep_attempt==0 && L>1){
@@ -10182,7 +11074,15 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       }
     }
     if(trunc){ ScoreAll(cg_it); }
-    else if(ci_==0){ ScoreAll(cg_it); }
+    else if(ci_==0 && !progressive_stopped &&
+            !(progressive && last_ck_fired==(cg_broke?cg_it+1:maxck))){
+      // cg_it is a zero-based loop index on a forcing-test break. The old
+      // path uses it as metadata; coverage records the actual depth and must
+      // not score this same terminal iterate a second time below.
+      const int depth=menu_coverage ? (cg_broke?cg_it+1:maxck) : cg_it;
+      ScoreAll(depth);
+      if(menu_coverage) last_ck_fired=depth;
+    }
     else if(prune_now){
       // Guarantee one FULL shift menu at the depth CG actually stopped at:
       // that is where 87.5% of winners live. If the last checkpoint coincides
@@ -10196,9 +11096,54 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       }
     }
 
+    if(menu_coverage && !trunc){
+      const int terminal_depth=cg_broke ? cg_it+1 : maxck;
+      if(last_ck_fired!=terminal_depth){
+        ScoreAll(terminal_depth);
+        coverage_terminal_depth=terminal_depth;
+      }
+    }
+    if(menu_coverage && learn_f) std::fprintf(learn_f,
+      "{\"t\":\"coverage\",\"o\":%d,\"a\":%ld,\"anchor_depth\":%d,\"terminal_depth\":%d,\"gate_fallbacks\":%d}\n",
+      k,learn_att_id,coverage_anchor_depth,coverage_terminal_depth,coverage_gate_fallbacks);
+    if(progressive) std::printf("PROGRESSIVE o=%d retry=%d probe=%d stopped=%d depth=%d\n",
+      k,retries,progressive_depth,(int)progressive_stopped,cg_broke?cg_it+1:cg_it);
+
+    } // legacy CG fallback / default path
+
+    // History resolves near-ties across per-shift best checkpoint candidates.
+    // Selection precedes the existing alpha search and never skips scoring.
+    if(hyst_track){
+      const int greedy_sh=best_sh;
+      const int preferred=PrismHysteresisChoice(cost,cbest_sh.data(),shifts.data(),L,hyst_prior,
+                                               hyst_env?hyst_keep:0.95);
+      if(hyst_env && have && preferred>=0 && hyst_ck[preferred]>=0 && preferred!=best_sh){
+        best_sh=preferred; best_ck=hyst_ck[preferred]; best_cost=cbest_sh[preferred];
+        pred_best=hyst_preds[preferred]; bpd_best=hyst_bpd[preferred];
+        CUDA_CHECK(cudaMemcpy(d_best,hyst_steps+(size_t)preferred*n,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+      }
+      if(hyst_log){
+        std::printf("HYST o=%d retry=%d prior=%.17g center=%.17g current=%.17g greedy=%d preferred=%d selected=%d costs=",
+                    k,retries,hyst_prior,(double)lam_cam,(double)cost,greedy_sh,preferred,best_sh);
+        for(int j=0;j<L;++j) std::printf("%s%.17g",j?",":"",(double)cbest_sh[j]);
+        std::printf(" shifts="); for(int j=0;j<L;++j) std::printf("%s%.17g",j?",":"",(double)shifts[j]);
+        std::printf(" depths="); for(int j=0;j<L;++j) std::printf("%s%d",j?",":"",hyst_ck[j]);
+        std::printf("\n");
+      }
+    }
+
+    if(adaptive_menu){
+      adaptive_menu_gain=(double)cost-std::min((double)cost,(double)best_cost);
+      const bool boundary=best_ck>0 && (best_sh==0 || best_sh==L-1) &&
+        adaptive_extra_gain>0.01*std::max(adaptive_anchor_gain+adaptive_extra_gain,1e-300);
+      adaptive_policy.Observe(adaptive_anchor_gain,adaptive_extra_gain,adaptive_anchor_seconds,
+                              adaptive_extra_seconds,adaptive_full>0,!have || !(best_cost<cost),boundary);
+    }
     // ---- existing alpha grid, unchanged ----
     int alpha_win=0;
     if(have && use_alpha && (!rho_mode || alpha_rho)){
+      std::chrono::steady_clock::time_point alpha_t0;
+      if(prof){cudaDeviceSynchronize();alpha_t0=now();}
       const Scalar as[3]={0.7,1.0,1.4};
       Scalar base=best_cost;
       // Under rho mode the winning combo must carry a matching prediction:
@@ -10215,6 +11160,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         MFAlphaScale<<<GridSize(n),256>>>(dfull,d_best,as[a1],as[a2],n_cf,n);
         DoRetract(dfull,s_new);
         Scalar c=ComputeCost(p,s_new,rk,rk_a2);
+        ++alpha_evals;
         if(learn_f)
           std::fprintf(learn_f,"{\"t\":\"al\",\"o\":%d,\"a\":%ld,\"a1\":%.2f,"
             "\"a2\":%.2f,\"cost\":%.10e}\n",
@@ -10226,6 +11172,140 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
           std::swap(d_best,dfull); }   // REVIEW 2026-09-02: same swap as in Score
       }
       (void)base;
+      if(prof){cudaDeviceSynchronize();t_alpha+=std::chrono::duration<double>(now()-alpha_t0).count();}
+    }
+    if(backtrack_ready && !have && backtrack_candidate){
+      auto bt0=now();
+      ++backtrack_trials;
+      Scalar dc=0,dp=0;
+      cublasDdot(blas,n_cf,bc,1,d_backtrack,1,&dc);
+      cublasDdot(blas,n_p,bp,1,d_backtrack+n_cf,1,&dp);
+      backtrack_slope=dc+dp; // bc,bp are J^T r; dfull already has the minus sign.
+      if(std::isfinite(backtrack_slope) && backtrack_slope<0){
+        bool subspace_accepted=false;
+        if(subspace_mode){
+          const auto sm0=now();auto m=subspace->Evaluate(p,s,d_backtrack,k2mask);++subspace_calls;
+          PrismCaptureSubspace(subspace_capture,subspace_calls,k,p,s,d_backtrack,cost,backtrack_cost,m);
+          auto box=PrismSubspaceBox::Solve(m.gc,m.gp,m.cc,m.cp,m.pp);
+          auto line=PrismSubspaceBox::Solve(m.gc,m.gp,m.cc,m.cp,m.pp,true);
+          const double model_full=m.gc+m.gp+.5*(m.cc+2*m.cp+m.pp);
+          const double model_error=std::isfinite(backtrack_cost)?std::max(0.0,(double)(backtrack_cost-cost)-model_full):std::numeric_limits<double>::infinity();
+          auto trial=subspace_mode==1?line:box;
+          if(subspace_mode>=4)trial=PrismSubspaceBox::Calibrated(m.gc,m.gp,m.cc,m.cp,m.pp,model_error,subspace_mode==4);
+          subspace_seconds+=std::chrono::duration<double>(now()-sm0).count();
+          if(!trial.valid)++subspace_invalid;
+          Scalar scost=std::numeric_limits<Scalar>::infinity();
+          if(trial.valid && subspace_mode!=3){
+            MFAlphaScale<<<GridSize(n),256>>>(dfull,d_backtrack,trial.a,trial.b,n_cf,n);
+            DoRetract(dfull,s_new);
+            const Scalar bound=cost+1e-4*trial.slope;
+            scost=ComputeBacktrackCost(p,s_new,rk,rk_a2,bound,cost,bounded_cost_stats);
+            ++backtrack_evals;++subspace_evals;
+            if(std::isfinite(scost) && scost<cost && scost<=bound){
+              best_cost=scost;best_sh=backtrack_sh;best_ck=backtrack_ck;have=true;
+              backtrack_rescued=true;backtrack_alpha=1; // nonuniform; point feedback explicitly forbidden
+              ++backtrack_rescues;++subspace_wins;subspace_accepted=true;std::swap(d_best,dfull);
+            }
+          }
+          std::printf("SUBSPACE o=%d mode=%d a=%.17g b=%.17g pred=%.17g scalar_pred=%.17g gc=%.17g gp=%.17g cc=%.17g cp=%.17g pp=%.17g error=%.17g slope_check=%.17g cost=%.17g accepted=%d valid=%d\n",
+            k,subspace_mode,trial.a,trial.b,trial.prediction,line.prediction,m.gc,m.gp,m.cc,m.cp,m.pp,model_error,
+            (double)backtrack_slope,(double)scost,(int)subspace_accepted,(int)trial.valid);
+        }
+        const int history_lane=L>1?1:0;
+        const Scalar history_lambda=shifts[backtrack_sh];
+        bool predicted=false;
+        int first=0;
+        if(backtrack_policy==1)first=backtrack_history.Start(history_lane,k,history_lambda,tau_eff,predicted);
+        if(backtrack_policy==2){
+          first=PrismBacktrackSchedule::Quadratic(1,backtrack_cost,cost,backtrack_slope,menu_backtrack);
+          predicted=first>0;
+        }
+        PrismBacktrackSchedule schedule(menu_backtrack,first,backtrack_policy);
+        int successful_index=-1;
+        if(backtrack_policy){++bt_policy_searches;bt_policy_predicted+=predicted;}
+        for(int bt=0;bt<menu_backtrack && !subspace_accepted;++bt){
+          const int index=schedule.Next();
+          if(index<0)break;
+          const bool upward=backtrack_rescued;
+          if(upward)++bt_upward_probes;
+          backtrack_alpha=PrismBacktrackSchedule::Alpha(index);
+          MFAlphaScale<<<GridSize(n),256>>>(dfull,d_backtrack,backtrack_alpha,backtrack_alpha,n_cf,n);
+          DoRetract(dfull,s_new);
+          const Scalar bound=cost+(Scalar)1e-4*backtrack_alpha*backtrack_slope;
+          Scalar c=ComputeBacktrackCost(p,s_new,rk,rk_a2,bound,cost,bounded_cost_stats);
+          ++backtrack_evals;
+          if(backtrack_policy)++bt_policy_probes;
+          if(backtrack_trace)std::printf("BT_TRACE o=%d lane=%d lambda=%.17g tau=%.17g mode=%d first=%d index=%d cost=%.17g bound=%.17g predicted=%d recovery=%d\n",
+            k,history_lane,(double)history_lambda,(double)tau_eff,backtrack_policy,first,index,
+            (double)c,(double)bound,(int)predicted,(int)schedule.recovery);
+          if(learn_f) std::fprintf(learn_f,
+            "{\"t\":\"bt\",\"o\":%d,\"a\":%ld,\"alpha\":%.10e,\"slope\":%.10e,\"cost\":%.10e,\"bound\":%.10e}\n",
+            k,learn_att_id,(double)backtrack_alpha,(double)backtrack_slope,(double)c,(double)bound);
+          if(std::isfinite(c) && c<cost && c<=bound){
+            // Retain an earlier, better successful proposal if the upward
+            // probe is valid but buys less actual objective reduction.
+            if(upward && c>=best_cost)break;
+            best_cost=c; best_sh=backtrack_sh; best_ck=backtrack_ck; have=true;
+            if(!backtrack_rescued)++backtrack_rescues;
+            backtrack_rescued=true;
+            if(upward)++bt_upward_wins;
+            successful_index=index;
+            std::swap(d_best,dfull);
+            // Mode 5 asks for a larger step only while actual progress is
+            // weak under the existing demand-menu criterion. It does not
+            // keep maximizing immediate gain after sufficient progress.
+            const bool weak_progress=PrismDemandMenu::Expand(true,
+              (cost-c)/std::max(cost,(Scalar)1e-300),last_rel,ftol_env);
+            if((backtrack_policy==4 || (backtrack_policy==5 && weak_progress)) &&
+               schedule.Upward(index))continue;
+            break;
+          }
+          if(upward)break; // keep the previously saved full-cost winner
+          schedule.Failed(index,c,cost,backtrack_slope);
+          // Mode 3 preserves the first half-step trial, then interpolates
+          // only after observed failure on this actual direction.
+          if(backtrack_policy>=3 && !predicted && schedule.next>index+1){
+            predicted=true;++bt_policy_predicted;
+          }
+        }
+        if(point_safeguard_mode && (point_safeguard_mode==1 || have)){
+          const auto ps0=now();++point_safeguard_calls;
+          const Scalar original_cost=have?best_cost:std::numeric_limits<Scalar>::infinity();
+          const Scalar camera_scale=point_safeguard_mode==2?backtrack_alpha:1;
+          const Scalar keep_scale=point_safeguard_mode==2?backtrack_alpha:0;
+          MFAlphaScale<<<GridSize(n),256>>>(dfull,d_backtrack,camera_scale,1,n_cf,n);
+          DoRetract(dfull,s_new);
+          const auto frozen=point_safeguard->Choose(p,s,s_new,dfull,keep_scale);point_safeguard_frozen+=frozen;
+          Scalar mixed_dp=0;cublasDdot(blas,n_p,bp,1,dfull+n_cf,1,&mixed_dp);
+          const Scalar slope=camera_scale*dc+mixed_dp,bound=cost+(Scalar)1e-4*slope;
+          Scalar candidate=std::numeric_limits<Scalar>::infinity();bool won=false;
+          if((point_safeguard_mode==2 || frozen) && std::isfinite(slope) && slope<0){
+            DoRetract(dfull,s_new);candidate=ComputeCost(p,s_new,rk,rk_a2);
+            ++backtrack_evals;++point_safeguard_evals;
+            if(std::isfinite(candidate) && candidate<cost && candidate<=bound && candidate<original_cost){
+              best_cost=candidate;best_sh=backtrack_sh;best_ck=backtrack_ck;have=true;
+              if(!backtrack_rescued)++backtrack_rescues;
+              backtrack_rescued=true;backtrack_alpha=1; // nonuniform; incompatible feedback is guarded above
+              ++point_safeguard_wins;won=true;std::swap(d_best,dfull);
+            }
+          }
+          point_safeguard_seconds+=std::chrono::duration<double>(now()-ps0).count();
+          std::printf("POINT_SAFE o=%d frozen=%llu slope=%.17g candidate=%.17g original=%.17g current=%.17g won=%d mode=%d camera_scale=%.17g keep_scale=%.17g\n",
+            k,frozen,(double)slope,(double)candidate,(double)original_cost,(double)cost,(int)won,point_safeguard_mode,(double)camera_scale,(double)keep_scale);
+        }
+        if(backtrack_policy){
+          bt_policy_recoveries+=schedule.recovery;
+          if(backtrack_policy==1)backtrack_history.Observe(history_lane,k,history_lambda,tau_eff,successful_index);
+        }
+      }
+      if(prof) {cudaDeviceSynchronize(); t_backtrack+=std::chrono::duration<double>(now()-bt0).count();}
+    }
+    if(adaptive_menu){
+      if(backtrack_rescued) adaptive_policy.force=true;
+      std::printf("ADAPT o=%d retry=%d wide=%d expanded=%d full=%d narrow=%d flat=%d informative=%d anchor_evals=%ld extra_evals=%ld anchor_gain=%.17g extra_gain=%.17g menu_gain=%.17g anchor_s=%.9g extra_s=%.9g value=%.9g force=%d selected=%d depth=%d center_frozen=%d\n",
+        k,retries,(int)adaptive_wide,(int)adaptive_expanded,adaptive_full,adaptive_narrow,adaptive_flat,adaptive_informative,
+        adaptive_anchor_evals,adaptive_extra_evals,adaptive_anchor_gain,adaptive_extra_gain,adaptive_menu_gain,adaptive_anchor_seconds,adaptive_extra_seconds,
+        adaptive_policy.value,(int)adaptive_policy.force,best_sh,best_ck,(int)(best_ck<=0 || adaptive_informative==0 || backtrack_rescued));
     }
     // Subsampled scoring: re-score the WINNER on the full data so the accept
     // decision, rho, ftol and the logged trajectory all use true cost.
@@ -10233,6 +11313,46 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       DoRetract(d_best,s_new);
       best_cost=ComputeCost(p,s_new,rk,rk_a2);
     }
+    // Discard candidates completed after the deadline, before modifying the
+    // accepted state. The reported runtime can overshoot by one attempt;
+    // that extra work cannot improve the audited budget endpoint.
+    auto RestoreDemandFallback=[&](){
+      CUDA_CHECK(cudaMemcpy(d_best,demand_step,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+      best_cost=demand_cost;best_sh=grid_down;best_ck=demand_depth;have=true;
+      pred_best=demand_pred;bpd_best=demand_bpd;alpha_win=demand_alpha;
+      backtrack_rescued=demand_rescued;++demand_fallbacks;
+      backtrack_alpha=demand_backtrack_scale;
+    };
+    if(BudgetExpired()){
+      if(demand_on && demand.wide && demand_fallback){
+        // This candidate was completely evaluated before the earlier budget
+        // check. Discard late expanded work, but keep that eligible proposal.
+        RestoreDemandFallback();
+        std::printf("BUDGET stop=saved_predeadline_fallback outer=%d seconds=%.9g\n",k,max_seconds);
+      } else {std::printf("BUDGET stop=before_commit outer=%d seconds=%.9g\n",k,max_seconds);break;}
+    }
+    if(demand_on && !demand.wide && !backtrack_confirm &&
+       PrismDemandMenu::Expand(have && best_cost<cost,
+         (cost-best_cost)/std::max(cost,(Scalar)1e-300),last_rel,ftol_env)){
+      demand_fallback=have && best_cost<cost;
+      if(demand_fallback){
+        CUDA_CHECK(cudaMemcpy(demand_step,d_best,(size_t)n*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+        demand_cost=best_cost;demand_pred=pred_best;demand_bpd=bpd_best;
+        demand_depth=best_ck;demand_alpha=alpha_win;demand_rescued=backtrack_rescued;
+        demand_backtrack_scale=backtrack_alpha;
+      }
+      demand.wide=true;++demand_expansions;
+      // Same state, lambda and tau: retain assembly/factors/RHS. A fresh CG
+      // sweep is required for the new least-damped seed; no invalid recurrence
+      // continuation or tau-changing shifted reuse is performed.
+      need_assembly=false;prev_bnorm=demand_prev_norm;
+      retain_expansion=recycle_mode!=0;
+      std::printf("DEMAND expand o=%d fallback=%d lambda=%.17g tau=%.17g\n",
+                  k,(int)demand_fallback,(double)lam_cam,(double)tau_eff);
+      continue;
+    }
+    if(demand_on && demand.wide && demand_fallback && (!have || demand_cost<best_cost))
+      RestoreDemandFallback();
     // ---- accept / reject (existing rule) ----
     bool accepted=false;
     double learn_rho=std::numeric_limits<double>::quiet_NaN(),
@@ -10245,7 +11365,68 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       // OCA_PRUNE_REARM bookkeeping: an accept that needed no retries is a
       // "clean" outer; any contested accept restarts the count.
       if(rej_streak==0) ++clean_streak; else clean_streak=0;
+      if(hyst_track && !backtrack_rescued && best_sh>=0 && best_sh<L)
+        hyst_prior=shifts[best_sh]; // successful menu's actual shift, before center update
       const Scalar cost_pre_accept = cost;
+      PrismRepairDamping::Decision repair_decision,split_camera_decision,split_point_decision;
+      if(repair_damping_mode && backtrack_rescued){
+        const auto rm0=now();PrismFullModel::Result m;PrismSubspaceModel::Result split_blocks;
+        double split_model_seconds=0;
+        if(repair_split){
+          const auto sb0=now();split_blocks=repair_blocks->Evaluate(p,s,d_best,k2mask);
+          split_model_seconds=std::chrono::duration<double>(now()-sb0).count();
+          m.slope=split_blocks.gc+split_blocks.gp;
+          m.curvature=split_blocks.cc+2*split_blocks.cp+split_blocks.pp;
+          m.prediction=-m.slope-.5*m.curvature;
+        }else m=repair_model->Evaluate(p,s,d_best,k2mask);
+        repair_decision=PrismRepairDamping::Decide(cost,best_cost,m.slope,m.curvature,repair_damping_mode);
+        ++repair_calls;if(!repair_decision.valid)++repair_invalid;
+        if(repair_block_capture && (repair_calls==1 || repair_calls==2 || repair_calls==4)){
+          auto blocks=repair_blocks->Evaluate(p,s,d_best,k2mask);
+          MFAlphaScale<<<GridSize(n),256>>>(dfull,d_best,1,0,n_cf,n);DoRetract(dfull,s_new);
+          const double camera_cost=ComputeCost(p,s_new,rk,rk_a2);
+          MFAlphaScale<<<GridSize(n),256>>>(dfull,d_best,0,1,n_cf,n);DoRetract(dfull,s_new);
+          const double point_cost=ComputeCost(p,s_new,rk,rk_a2);
+          PrismCaptureRepairBlocks(repair_block_capture,repair_calls,k,p,s,d_best,cost,best_cost,
+            camera_cost,point_cost,learn_lam_att,tau_eff,repair_damping_mode,blocks);
+        }
+        if(repair_split){
+          const auto sp0=now();const auto& b=split_blocks;
+          const bool ce=!repair_skip_probes || PrismRepairDamping::ModelEligible(cost,b.gc,b.cc);
+          const bool pe=!repair_skip_probes || PrismRepairDamping::ModelEligible(cost,b.gp,b.pp);
+          // Current cost is a sentinel for an unmeasured probe; explicit flags
+          // below distinguish it from an actual unchanged-cost evaluation.
+          double cf=cost,pf=cost;
+          if(ce){
+            MFAlphaScale<<<GridSize(n),256>>>(dfull,d_best,1,0,n_cf,n);DoRetract(dfull,s_new);
+            cf=ComputeCost(p,s_new,rk,rk_a2);++split_probe_evals;
+          }else ++split_probe_skips;
+          if(pe){
+            MFAlphaScale<<<GridSize(n),256>>>(dfull,d_best,0,1,n_cf,n);DoRetract(dfull,s_new);
+            pf=ComputeCost(p,s_new,rk,rk_a2);++split_probe_evals;
+          }else ++split_probe_skips;
+          split_camera_decision=PrismRepairDamping::Decide(cost,cf,b.gc,b.cc,2);
+          split_point_decision=PrismRepairDamping::Decide(cost,pf,b.gp,b.pp,2);
+          std::printf("REPAIR_PROBES o=%d camera_evaluated=%d point_evaluated=%d\n",k,(int)ce,(int)pe);
+          split_seconds+=split_model_seconds+std::chrono::duration<double>(now()-sp0).count();
+          std::printf("REPAIR_SPLIT o=%d current=%.17g camera_cost=%.17g point_cost=%.17g gc=%.17g gp=%.17g cc=%.17g pp=%.17g camera_pred=%.17g point_pred=%.17g camera_rho=%.17g point_rho=%.17g camera_factor=%.17g point_factor=%.17g\n",
+            k,(double)cost,cf,pf,b.gc,b.gp,b.cc,b.pp,split_camera_decision.prediction,split_point_decision.prediction,
+            split_camera_decision.rho,split_point_decision.rho,split_camera_decision.factor,split_point_decision.factor);
+        }
+        repair_seconds+=std::chrono::duration<double>(now()-rm0).count();
+        std::printf("REPAIR_MODEL o=%d mode=%d current=%.17g next=%.17g slope=%.17g curvature=%.17g prediction=%.17g rho=%.17g factor=%.17g valid=%d\n",
+          k,repair_damping_mode,(double)cost,(double)best_cost,m.slope,m.curvature,repair_decision.prediction,
+          repair_decision.rho,repair_decision.factor,(int)repair_decision.valid);
+      }
+      Scalar direct_prediction=0;
+      if(full_model_rho && !backtrack_rescued){
+        const auto mt0=now();auto model=full_model->Evaluate(p,s,d_best,k2mask);
+        direct_prediction=model.prediction;++full_model_calls;
+        if(!(direct_prediction>0&&std::isfinite(direct_prediction)))++full_model_nonpositive;
+        full_model_seconds+=std::chrono::duration<double>(now()-mt0).count();
+        std::printf("FULL_MODEL o=%d prediction=%.17g old_prediction=%.17g slope=%.17g curvature=%.17g actual=%.17g\n",
+          k,(double)direct_prediction,(double)(pred_best+pred_pt),model.slope,model.curvature,(double)(cost-best_cost));
+      }
       DoRetract(d_best,s_new); CopyState(s,s_new,ncam,npt);
       cost=best_cost;
       // AUDIT 2026-08-22: lambda ratchet. A reject multiplies lam by 10 and an
@@ -10260,15 +11441,27 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       // after a reject streak (diagnostic switch for the unwind-oscillation
       // investigation on dubrovnik-142 / final-4585).
       static const bool lm_classic = getenv("OCA_LM_CLASSIC")!=nullptr;
-      if(rho_mode){
+      if(backtrack_rescued){
+        // The Schur-only model omits the scaled point relaxation. Do not
+        // feed its prediction into Nielsen for this full-step line search.
+        // Full-step shrinkage is not evidence for larger CAMERA damping:
+        // the common point relaxation can cause the overshoot. Banking
+        // 1/alpha here drives lambda to its ceiling and freezes the cameras.
+        // Preserve the pre-streak centre; clean menu accepts still update it.
+        const Scalar base=rej_streak>0?lam_pre_streak:lam_cam;
+        lam_cam=std::min(std::max(base,lam_floor),(Scalar)1e8);
+      }
+      else if(rho_mode){
         // Trust-region update (Ceres-style): a step that underperforms its
         // quadratic model RAISES lambda even though it is accepted; a step
         // that matches it decays lambda smoothly. Fixes the accepted-step
         // overshoot zig-zag (gradient bouncing 4e3->5e4->1.6e4 measured on
         // venice-52 under the unconditional x0.5 decay).
         const Scalar act = cost_pre_accept - cost;
-        const Scalar pred_full = pred_best + pred_pt;   // OCA_RHO_PT: pred_pt=0 when off
-        const Scalar rho = (pred_full>1e-300) ? act/pred_full : 1.0;
+        const Scalar pred_full = full_model_rho?direct_prediction:pred_best + pred_pt;
+        const Scalar rho = full_model_rho
+          ? ((std::isfinite(pred_full)&&pred_full>1e-300)?act/pred_full:0.0)
+          : ((pred_full>1e-300)?act/pred_full:1.0);
         const Scalar f3 = 2.0*rho - 1.0;
         Scalar fac = 1.0 - f3*f3*f3;
         if(fac < (Scalar)(1.0/3.0)) fac = (Scalar)(1.0/3.0);
@@ -10343,6 +11536,55 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         if(rej_streak>0) tau_win=tau_used;          // remember what won
         else             tau_win*=(Scalar)0.5;      // fade when not needed
       }
+      if(adaptive_menu && (best_ck<=0 || adaptive_informative==0 || backtrack_rescued))
+        lam_cam=std::min(std::max(adaptive_prior_center,lam_floor),(Scalar)1e8);
+      if(demand_on){
+        if(!demand.wide) ++demand_narrow_accepts;
+        const Scalar winner=backtrack_rescued?learn_lam_att:shifts[best_sh];
+        demand.Accept(winner,tau_eff,!backtrack_rescued &&
+          (cost_pre_accept-best_cost)/std::max(cost_pre_accept,(Scalar)1e-300)>1e-4,lam_floor);
+        if(repair_damping_mode && backtrack_rescued){
+          const double old_lambda=demand.lambda,old_tau=demand.tau;
+          const double cf=repair_split?split_camera_decision.factor:repair_decision.factor;
+          const double pf=repair_split?split_point_decision.factor:repair_decision.factor;
+          demand.lambda=std::clamp(old_lambda*cf,(double)lam_floor,1e8);
+          demand.tau=std::clamp(old_tau*pf,1e-7,1e8);
+          if(cf<1 || pf<1)++repair_down;if(cf>1 || pf>1)++repair_up;
+          if(repair_split){
+            if(cf<1)++split_camera_down;if(pf<1)++split_point_down;
+            std::printf("REPAIR_SPLIT_PAIR o=%d lambda=%.17g tau=%.17g next_lambda=%.17g next_tau=%.17g camera_factor=%.17g point_factor=%.17g\n",
+              k,old_lambda,old_tau,demand.lambda,demand.tau,cf,pf);
+          }else std::printf("REPAIR_PAIR o=%d lambda=%.17g tau=%.17g next_lambda=%.17g next_tau=%.17g factor=%.17g\n",
+            k,old_lambda,old_tau,demand.lambda,demand.tau,cf);
+        }
+        if(demand_mode==2) lam_cam=demand.lambda;
+        demand_fallback=false;
+        std::printf("DEMAND accept o=%d slots=%d lambda=%.17g tau=%.17g rescued=%d\n",
+                    k,L,(double)winner,(double)tau_eff,(int)backtrack_rescued);
+      }
+      if(point_trust_mode && backtrack_rescued){
+        const auto pt0=now();
+        auto pt=point_trust->Choose(R0f,Cdiag,d_best+n_cf,npt,tau_eff,backtrack_alpha,
+          point_trust_mode==1?1:2);
+        point_trust_calls+=pt.calls;
+        const bool apply=pt.valid && point_trust_mode!=3;
+        if(apply){point_trust_tau=pt.tau;factor_cached=false;++point_trust_updates;
+          if(demand_mode==2)demand.tau=point_trust_tau;}
+        if(!pt.valid)++point_trust_invalid;
+        if(point_trust_mode==3){
+          auto approx=point_trust->Choose(R0f,Cdiag,d_best+n_cf,npt,tau_eff,backtrack_alpha,1);
+          point_trust_calls+=approx.calls;
+          std::printf("POINT_APPROX o=%d tau=%.17g ratio=%.17g valid=%d\n",k,approx.tau,approx.ratio,(int)approx.valid);
+        }
+        point_trust_seconds+=std::chrono::duration<double>(now()-pt0).count();
+        std::printf("POINT_TRUST o=%d mode=%d alpha=%.17g old=%.17g next=%.17g ratio=%.17g rayleigh=%.17g norm2=%.17g curvature=%.17g calls=%d valid=%d applied=%d\n",
+          k,point_trust_mode,(double)backtrack_alpha,(double)tau_eff,pt.tau,pt.ratio,
+          pt.rayleigh_tau,pt.norm2,pt.curvature,pt.calls,(int)pt.valid,(int)apply);
+      } else if(point_trust_tau>0){
+        const double rel=(cost_pre_accept-best_cost)/std::max(cost_pre_accept,(Scalar)1e-300);
+        point_trust_tau=std::max(1e-7,(double)tau_eff*(rel>1e-4?.5:1));
+        if(demand_mode==2)demand.tau=point_trust_tau;
+      }
       if(best_sh>=0) last_win_sh=best_sh;
       last_rel=(cost_pre_accept-best_cost)/std::max(cost_pre_accept,(Scalar)1e-300);
       accepted=true; ++n_accept; rej_streak=0;
@@ -10375,6 +11617,28 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
       const double esc = span_now
           ? std::pow(10.0,(double)std::max(1,L-1-grid_down)+1.0) : 10.0;
       lam_cam*=(Scalar)esc; ++n_reject; ++rej_streak;
+      if(demand_switch && !demand_on && rej_streak>=2){
+        if(switch_restart){
+          // Bound abandoned work to the opening; the caller may restart from
+          // its original input while retaining this last accepted endpoint.
+          if(k<=2)restart_requested=true;
+        }else{
+          demand_on=true;demand_mode=2;++demand_switches;
+          std::printf("DEMAND_SWITCH o=%d streak=%d lambda=%.17g tau=%.17g\n",
+                      k,rej_streak,(double)learn_lam_att,(double)tau_eff);
+        }
+      }
+      if(demand_on){
+        demand_fallback=false;demand.wide=true;
+        if(demand_mode==2){
+          demand.Reject(learn_lam_att,tau_eff,lam_floor);lam_cam=demand.lambda;
+          // Changing tau changes S AND its RHS; prohibit factor/RHS reuse.
+          factor_cached=false;++demand_joint_rebuilds;
+          std::printf("DEMAND joint_retry o=%d lambda=%.17g tau=%.17g\n",
+                      k,demand.lambda,demand.tau);
+        }
+      }
+      if(point_trust_tau>0)point_trust_tau=demand_mode==2?demand.tau:std::min(1e8,(double)tau_eff*10);
     }
     // OCA_LEARN_LOG: one record per attempt, after the accept/reject decision
     // and the lambda/tau updates (lam=pre-action damping, lam1=post-update).
@@ -10403,6 +11667,10 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     // redoes the point factor / rhs / equilibration / CG at the escalated
     // lam and tau_eff. Give up after max_inner_retry attempts so a genuinely
     // stuck state still advances k and the run terminates.
+    if(restart_requested){
+      std::printf("RESTART_REQUEST o=%d streak=%d cost=%.17g\n",k,rej_streak,(double)cost);
+      break;
+    }
     if(!accepted && retries<max_inner_retry){
       ++retries; need_assembly=false;
       if(verbose)
@@ -10413,6 +11681,7 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
     retries=0; need_assembly=true;
     log.iters.push_back(k+1); log.costs.push_back(cost);
     CsvRow(k+1, (double)cost);
+    if(TargetReached(cost,k+1)) break;
     // Two independent reasons to stop early.
     //  (1) An accepted step that barely moved the cost -- Ceres' function_tolerance.
     //  (2) LM exhausted its retries without finding an improving step, repeatedly.
@@ -10502,6 +11771,29 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
         stuck=0;   // still descending over the window: keep going
       }
     }
+    // A confirmation that finds substantial progress disproves the proposed
+    // stop. Opt-in: restore the safeguard rather than disabling it for every
+    // later iteration. Only an ORIGINAL-policy accepted step can rearm it;
+    // a small scaled rescue cannot bypass confirmation. Hysteresis between
+    // ftol and the rearm threshold avoids toggling on numerical noise.
+    static const bool backtrack_rearm = [](){const char* e=getenv("OCA_BACKTRACK_REARM");
+      return e && std::atoi(e)!=0;}();
+    if(backtrack_rearm && backtrack_on && backtrack_confirm && accepted &&
+       !backtrack_rescued && last_rel>std::max(1e-4,10.0*ftol_env)){
+      backtrack_confirm=false; ftol_streak=0; stuck=0; converged=false;
+      if(learn_f) std::fprintf(learn_f,
+        "{\"t\":\"bt_on\",\"o\":%d,\"next_a\":%ld,\"rel\":%.10e}\n",k,learn_att_id,(double)last_rel);
+      if(verbose) std::printf("  [menu-backtrack] rearmed after meaningful confirmation progress at outer %d\n",k+1);
+    }
+    // Small line-search steps can satisfy a cost-change stop while the
+    // original damped step still has useful progress. Confirm with the
+    // original policy within the SAME outer budget; default never rearms.
+    if(converged && backtrack_on && !backtrack_confirm && backtrack_rescues>0){
+      backtrack_confirm=true;
+      converged=false; ftol_streak=0; stuck=0;
+      if(verbose) std::printf("  [menu-backtrack] confirming stop with original retry policy at outer %d\n",k+1);
+      if(learn_f) std::fprintf(learn_f,"{\"t\":\"bt_off\",\"o\":%d,\"next_a\":%ld}\n",k,learn_att_id);
+    }
     if(converged){ ++k; break; }
     if(verbose)
       std::printf("  MFCG it %3d cost=%.6e lam=%.3e tau=%.2e cg_it=%d shift=%d ckpt=%d alpha=%d %s mv=%ld\n",
@@ -10556,6 +11848,33 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
               (double)st.matvecs/std::max<int>(1,(int)log.costs.size()-1));
   if(prof) std::printf("  [PROFILE] assembly=%.3fs pointfactor+rhs=%.3fs krylov=%.3fs candidates=%.3fs\n",
                        t_asm,t_fac,t_mv,t_cand);
+  if(retry_cache) std::printf("  [retry-cache] builds=%ld reuses=%ld\n",factor_builds,factor_reuses);
+  if(backtrack_on) std::printf("  [menu-backtrack] trials=%ld rescues=%ld evals=%ld total_scored=%ld\n",
+    backtrack_trials,backtrack_rescues,backtrack_evals,
+    st.cand_evals+alpha_evals+backtrack_evals);
+  if(repair_split)std::printf("REPAIR_SPLIT summary camera_down=%ld point_down=%ld seconds=%.9g\n",split_camera_down,split_point_down,split_seconds);
+  if(repair_split)std::printf("REPAIR_PROBES summary evaluated=%ld skipped=%ld\n",split_probe_evals,split_probe_skips);
+  if(repair_damping_mode)std::printf("REPAIR_MODEL summary mode=%d calls=%ld invalid=%ld down=%ld up=%ld seconds=%.9g\n",
+    repair_damping_mode,repair_calls,repair_invalid,repair_down,repair_up,repair_seconds);
+  if(point_safeguard_mode)std::printf("POINT_SAFE summary calls=%ld evals=%ld wins=%ld frozen=%llu seconds=%.9g\n",
+    point_safeguard_calls,point_safeguard_evals,point_safeguard_wins,point_safeguard_frozen,point_safeguard_seconds);
+  if(subspace_mode)std::printf("SUBSPACE summary mode=%d calls=%ld evals=%ld wins=%ld invalid=%ld seconds=%.9g\n",
+    subspace_mode,subspace_calls,subspace_evals,subspace_wins,subspace_invalid,subspace_seconds);
+  if(full_model_rho)std::printf("FULL_MODEL summary calls=%ld nonpositive=%ld seconds=%.9g\n",full_model_calls,full_model_nonpositive,full_model_seconds);
+  if(point_trust_mode)std::printf("POINT_TRUST summary mode=%d updates=%ld invalid=%ld kernels=%ld seconds=%.9g\n",
+    point_trust_mode,point_trust_updates,point_trust_invalid,point_trust_calls,point_trust_seconds);
+  if(backtrack_policy)std::printf("BT_POLICY mode=%d searches=%ld predicted=%ld probes=%ld recoveries=%ld\n",
+    backtrack_policy,bt_policy_searches,bt_policy_predicted,bt_policy_probes,bt_policy_recoveries);
+  if(backtrack_policy>=4)std::printf("BT_UPWARD probes=%ld wins=%ld\n",bt_upward_probes,bt_upward_wins);
+  if(bounded_cost_stats.calls) std::printf("BOUNDED_COST calls=%ld rejected=%ld blocks=%llu skipped=%llu audited=%ld\n",
+    bounded_cost_stats.calls,bounded_cost_stats.rejected,bounded_cost_stats.blocks,
+    bounded_cost_stats.skipped,bounded_cost_stats.audit_calls);
+  std::printf("  [scoring] menu_evals=%ld alpha_evals=%ld backtrack_evals=%ld total_scored=%ld\n",
+    st.cand_evals,alpha_evals,backtrack_evals,st.cand_evals+alpha_evals+backtrack_evals);
+  if(prof && backtrack_on) std::printf("  [PROFILE] backtrack=%.6fs\n",t_backtrack);
+  cudaFree(d_backtrack);
+  if(prof) std::printf("  [PROFILE] alpha=%.3fs alpha_evals=%ld scored_evals=%ld (menu+alpha)\n",
+                       t_alpha,alpha_evals,st.cand_evals+alpha_evals);
   if(!jsonpath.empty()){
     FILE* jf=std::fopen(jsonpath.c_str(),"w");
     if(jf){ std::fprintf(jf,"{\"dataset_ncam\":%d,\"nobs\":%d,\"n_c\":%d,\"shifts\":%d,"
@@ -10572,18 +11891,30 @@ RunLog SolveMFreeShiftedCG(const DeviceProblem& p, DeviceState& s, Scalar lam0, 
   // muell sequence -- leaking 100-300MB per call on a 16GB card. Free
   // everything; all pointers are nullptr-initialised so unallocated branches
   // (fp32 vs fp64, block_eq off, shared_intr off) are safe no-ops.
-  cudaFree(dfull);cudaFree(d_best);cudaFree(r_);cudaFree(pv_);cudaFree(Ap_);cudaFree(okf);
+  cudaFree(hyst_steps);cudaFree(dfull);cudaFree(d_best);cudaFree(r_);cudaFree(pv_);cudaFree(Ap_);cudaFree(okf);
   cudaFree(r2acc);cudaFree(obscnt);cudaFree(rk_sv);
   cudaFree(pp1);cudaFree(pp2);cudaFree(pp3);cudaFree(pp4);cudaFree(R0f);
   cudaFree(XCU);cudaFree(TACC);
-  cudaFree(Hcc);cudaFree(Cdiag);cudaFree(Gp);cudaFree(Gc);cudaFree(Bo);
+  if(batch_cost || batch_check){
+    std::printf("BATCH menus=%ld\n",batch_menus);
+    for(int l=0;l<L;++l){cudaFree(batch_state[l].R);cudaFree(batch_state[l].t);
+      cudaFree(batch_state[l].X);cudaFree(batch_state[l].intr);}
+    cudaFree(batch_steps);cudaFree(batch_costs);
+  }
+  cudaFree(Hcc);cudaFree(Cdiag);cudaFree(Gp);cudaFree(Gc);cudaFree(Bo);cudaFree(fragment_slots);cudaFree(fragment_camera_ids);
   cudaFree(Gp32);cudaFree(Gc32);cudaFree(Bo32);
   cudaFree(bc);cudaFree(bp);cudaFree(Rf);cudaFree(tacc);cudaFree(uu);cudaFree(w);
   cudaFree(bprime);cudaFree(corr);cudaFree(E);cudaFree(dk);
   cudaFree(Bk);cudaFree(bscr);cudaFree(Bp);cudaFree(Bg);
   cudaFree(xc_un);cudaFree(xpv);
   cudaFree(bcast_in);cudaFree(bcast_out);
-  for(int l=0;l<L;++l){ cudaFree(xs[l]); cudaFree(ps[l]); }
+  for(int l=0;l<menu_capacity;++l){ cudaFree(xs[l]); cudaFree(ps[l]); }
+  cudaFree(demand_step);
+  if(recycle_mode) std::printf("RECYCLE summary mode=%d reuse_hits=%ld retained_vectors=%ld fallbacks=%ld\n",
+    recycle_mode,recycle_hits,recycle_saved,recycle_fallbacks);
+  if(demand_switch) std::printf("DEMAND_SWITCH summary switches=%ld active=%d\n",demand_switches,(int)demand_on);
+  if(demand_on) std::printf("DEMAND summary mode=%d expansions=%ld narrow_accepts=%ld fallback_wins=%ld joint_rebuilds=%ld\n",
+    demand_mode,demand_expansions,demand_narrow_accepts,demand_fallbacks,demand_joint_rebuilds);
   cudaFree(s_new.R);cudaFree(s_new.t);cudaFree(s_new.X);cudaFree(s_new.intr);
   cublasDestroy(blas);
   CsvClose();
@@ -10616,6 +11947,7 @@ static int OcaCliMain(int argc, char** argv) {
   bool r2_fp32 = false; int r2_n_ir = 2; Scalar r2_ir_tol = 1e-10;
   bool r2_adaptive = false; Scalar r2_kappa = 1e4; Scalar r2_theta = 1.0;
   std::string dump_residuals;
+  std::string state_out;
   std::string dump_true_cost;
   bool build_edge_csr = false;
   bool r2_span_min = false;
@@ -10689,6 +12021,7 @@ static int OcaCliMain(int argc, char** argv) {
     else if (a == "--no_cheap_first") r2_cheap_first = false;
     else if (a == "--eps_rel") r2_eps_rel = std::stod(next());
     else if (a == "--dump_residuals") dump_residuals = next();
+    else if (a == "--state_out") state_out = next();
     else if (a == "--dump_true_cost") dump_true_cost = next();
     else if (a == "--fp32_refine") r2_fp32 = true;
     else if (a == "--adaptive_pt") r2_adaptive = true;
@@ -10954,6 +12287,23 @@ static int OcaCliMain(int argc, char** argv) {
     CUDA_CHECK(cudaDeviceSynchronize());
     auto t1 = std::chrono::steady_clock::now();
     double solve_seconds = std::chrono::duration<double>(t1 - t0).count();
+
+    // Exact matrix-state export, outside the solve timer. The independent
+    // CPU checker reads original BAL observations rather than GPU residuals.
+    if(!state_out.empty()){
+      if(!dof9) throw std::runtime_error("state_out requires dof9");
+      FILE* fstate=std::fopen(state_out.c_str(),"wb");
+      if(!fstate) throw std::runtime_error("cannot open state_out");
+      auto write=[&](const void* ptr,size_t nbytes){
+        if(std::fwrite(ptr,1,nbytes,fstate)!=nbytes) throw std::runtime_error("state_out write failed");};
+      const char magic[8]={'P','R','I','S','M','S','0','1'};write(magic,8);
+      const uint64_t dims[3]={(uint64_t)ncam,(uint64_t)npt,(uint64_t)nobs};write(dims,sizeof dims);
+      auto device=[&](const Scalar* d,size_t count){
+        std::vector<Scalar> h(count);CUDA_CHECK(cudaMemcpy(h.data(),d,count*sizeof(Scalar),cudaMemcpyDeviceToHost));
+        write(h.data(),count*sizeof(Scalar));};
+      device(s.R,9ul*ncam);device(s.t,3ul*ncam);device(s.X,3ul*npt);device(s.intr,3ul*ncam);
+      if(std::fclose(fstate)) throw std::runtime_error("state_out close failed");
+    }
 
     Diagnostics diag_final = ComputeDiagnostics(p, s);
 
