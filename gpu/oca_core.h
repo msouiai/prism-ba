@@ -123,6 +123,9 @@ struct Options {
   //     (frozen within an outer iteration so candidate scoring stays one
   //     consistent objective). robust_scale2 = nu*sigma0^2, or 0 to auto-init
   //     from the residual median. This is the variant with no scale to tune.
+  //   4 soft-L1 (Ceres SoftLOneLoss): rho = 2a^2(sqrt(1+s/a^2)-1),
+  //     robust_scale2 = a^2, px^2. The loss COLMAP's mapper uses for its
+  //     local bundle adjustments (a = 1 px).
   int robust_kernel = 0;
   double robust_scale2 = 0.0;
   double robust_nu = 4.0;      // student-t degrees of freedom
@@ -197,7 +200,38 @@ struct RigFisheyeProblem {
   const int* camera_index = nullptr;      // [num_observations] -> image
   const int* point_index = nullptr;       // [num_observations]
   const double* observations = nullptr;   // [2*num_observations], raw pixels
+  // Optional constancy flags (nullptr = everything free). They give the rig
+  // path the same vocabulary as a Ceres problem with constant parameter
+  // blocks, which COLMAP's local bundle adjustment relies on: out-of-bundle
+  // poses held fixed, sensor_from_rig fixed unless every frame of the rig is
+  // present, intrinsics fixed per camera, and every point whose track is not
+  // fully inside the problem fixed. A constant frame / sensor / calibration
+  // keeps its parameters exactly: its columns are removed from the linear
+  // solve (mask on b' and on the operator output) and its step is zero. A
+  // constant point is not eliminated (its V^-1 is zero), so its observations
+  // constrain the cameras through Hcc and the gradient but the point itself
+  // never moves -- exactly Ceres' constant point block.
+  const unsigned char* frame_constant = nullptr;        // [num_frames]
+  const unsigned char* sensor_constant = nullptr;       // [num_sensors]
+  const unsigned char* calibration_constant = nullptr;  // [num_calibrations]
+  const unsigned char* point_constant = nullptr;        // [num_points]
+  // Optional projection model per calibration group (nullptr = every group
+  // OPENCV_FISHEYE). RIG_MODEL_PINHOLE selects the pinhole + polynomial radial
+  // chain on the same intrinsics vector: fx fy cx cy k1 k2 (k3 k4 ignored),
+  // i.e. COLMAP's SIMPLE_PINHOLE / PINHOLE / SIMPLE_RADIAL / RADIAL. OR in
+  // RIG_MODEL_TIED_FOCAL for the SIMPLE_* models (one focal length: fy is
+  // kept equal to fx throughout the solve). Behind-camera points (Pz <= 0)
+  // poison the cost of a pinhole group, they are never silently dropped.
+  const int* calibration_model = nullptr;               // [num_calibrations]
+  // Optional per-parameter freeze on top of the refine_* options, 8 entries
+  // per calibration group in intrinsics order, 1 = free (nullptr = all free).
+  // The wrapper uses it to pin the parameters a model does not have (k2 of
+  // SIMPLE_RADIAL, all k of PINHOLE, ...).
+  const unsigned char* calibration_param_mask = nullptr; // [8*num_calibrations]
 };
+constexpr int RIG_MODEL_FISHEYE = 0;
+constexpr int RIG_MODEL_PINHOLE = 1;
+constexpr int RIG_MODEL_TIED_FOCAL = 2;
 
 struct RigFisheyeState {
   double* frame_rotations = nullptr;     // [9*num_frames], row-major
@@ -225,10 +259,21 @@ struct RigFisheyeOptions {
   bool refine_sensor_from_rig = false;
   double func_tolerance = 1e-6;
   int max_consecutive_failures = 3;
-  // Index of a frame to hold fixed (gauge fix), or -1 for none. Matches
-  // Caspar's FixGaugeWithOneFrameFromWorld: one frame pinned, scale left as the
-  // remaining free gauge DOF.
+  // Index of a frame to hold fixed (gauge fix), or -1 for none. Pins six of the
+  // seven gauge DOF; scale is the seventh and needs gauge_scale_frame below.
   int gauge_frame = -1;
+  // Index of a second, well-separated frame whose translation update is zeroed
+  // along gauge_scale_axis (0=x, 1=y, 2=z), fixing the distance to gauge_frame
+  // and hence scale. -1 leaves scale free.
+  //
+  // Leaving it free is not harmless for incremental mapping: with only
+  // gauge_frame pinned, consecutive Fuchsberg mapper snapshots differed by scale
+  // factors of 0.519/0.761/0.833/0.913 while agreeing on shape to <0.1% of
+  // extent. The drift damps out as the map grows, so it does not run away, but
+  // over the full sequence it cost 18.1% of the reference's 3D points (vs 5.5%
+  // with the pin) -- invisible in the cost, which is scale-invariant.
+  int gauge_scale_frame = -1;
+  int gauge_scale_axis = 0;
   int gpu_index = -1;
   bool verbose = false;
 

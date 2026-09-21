@@ -12681,11 +12681,14 @@ Result SolveRigFisheye(const RigFisheyeProblem& pr,
     p.uv=UpS(pr.observations,2ul*nobs);
     // Free-sensor maps. Sensor slot 0 is by construction the shared identity
     // for reference sensors and is never freed.
+    // A sensor flagged constant simply gets no reduced slot: the retraction
+    // then applies the identity update to it, exactly as for reference sensors.
     {
       std::vector<int> slot_of_sensor(pr.num_sensors,-1);
       int nf=0;
       if (opt.refine_sensor_from_rig)
-        for (int q2=1;q2<pr.num_sensors;++q2) slot_of_sensor[q2]=nf++;
+        for (int q2=1;q2<pr.num_sensors;++q2)
+          if (!(pr.sensor_constant && pr.sensor_constant[q2])) slot_of_sensor[q2]=nf++;
       std::vector<int> free_of_cam(ncam,-1);
       for (int q2=0;q2<ncam;++q2)
         free_of_cam[q2]=slot_of_sensor[pr.sensor_of_image[q2]];
@@ -12693,12 +12696,61 @@ Result SolveRigFisheye(const RigFisheyeProblem& pr,
       p.free_sensor_of_cam=UpI(free_of_cam.data(),ncam);
       p.free_slot_of_sensor=UpI(slot_of_sensor.data(),pr.num_sensors);
     }
-    Scalar hmask[RF_NI]={opt.refine_focal?1.0:0.0,opt.refine_focal?1.0:0.0,
+    // Constant frames / calibration groups: a column mask over the reduced
+    // space [6*nframes | 6*nfree | 8*ncalib], applied inside the linear solve.
+    std::vector<Scalar> col_mask;
+    {
+      bool any=false;
+      if (pr.frame_constant)
+        for (int f=0;f<pr.num_frames;++f) if (pr.frame_constant[f]) any=true;
+      if (pr.calibration_constant)
+        for (int c=0;c<pr.num_calibrations;++c) if (pr.calibration_constant[c]) any=true;
+      if (any) {
+        const int n_c=6*pr.num_frames+6*p.nfree_sensors+RF_NI*pr.num_calibrations;
+        col_mask.assign((size_t)n_c,(Scalar)1);
+        if (pr.frame_constant)
+          for (int f=0;f<pr.num_frames;++f) if (pr.frame_constant[f])
+            for (int k=0;k<6;++k) col_mask[6*f+k]=(Scalar)0;
+        if (pr.calibration_constant)
+          for (int c=0;c<pr.num_calibrations;++c) if (pr.calibration_constant[c])
+            for (int k=0;k<RF_NI;++k)
+              col_mask[6*pr.num_frames+6*p.nfree_sensors+RF_NI*c+k]=(Scalar)0;
+      }
+    }
+    if (pr.point_constant) {
+      bool any=false;
+      for (int q2=0;q2<npt;++q2) if (pr.point_constant[q2]) { any=true; break; }
+      if (any) {
+        p.pt_const=(unsigned char*)arena.Alloc((size_t)npt);
+        CUDA_CHECK(cudaMemcpy(p.pt_const,pr.point_constant,(size_t)npt,cudaMemcpyHostToDevice));
+      }
+    }
+    {
+      // Per-calibration column masks: refine options AND the model's own
+      // parameter mask (pinhole groups never touch k3/k4).
+      const Scalar base[RF_NI]={opt.refine_focal?1.0:0.0,opt.refine_focal?1.0:0.0,
                          opt.refine_principal_point?1.0:0.0,opt.refine_principal_point?1.0:0.0,
                          opt.refine_distortion?1.0:0.0,opt.refine_distortion?1.0:0.0,
                          opt.refine_distortion?1.0:0.0,opt.refine_distortion?1.0:0.0};
-    p.imask=(Scalar*)arena.Alloc(RF_NI*sizeof(Scalar));
-    CUDA_CHECK(cudaMemcpy(p.imask,hmask,RF_NI*sizeof(Scalar),cudaMemcpyHostToDevice));
+      std::vector<Scalar> hmask((size_t)RF_NI*pr.num_calibrations);
+      for (int c=0;c<pr.num_calibrations;++c) {
+        const int model=pr.calibration_model?pr.calibration_model[c]:RF_MODEL_FISHEYE;
+        for (int k=0;k<RF_NI;++k) {
+          Scalar m=base[k];
+          if (pr.calibration_param_mask && !pr.calibration_param_mask[RF_NI*c+k]) m=0.0;
+          if ((model&RF_MODEL_PINHOLE) && k>=6) m=0.0;
+          if ((model&RF_MODEL_TIED_FOCAL) && k==1) m=0.0;
+          hmask[(size_t)RF_NI*c+k]=m;
+        }
+      }
+      p.imask=(Scalar*)arena.Alloc(hmask.size()*sizeof(Scalar));
+      CUDA_CHECK(cudaMemcpy(p.imask,hmask.data(),hmask.size()*sizeof(Scalar),cudaMemcpyHostToDevice));
+      if (pr.calibration_model) {
+        bool any=false;
+        for (int c=0;c<pr.num_calibrations;++c) if (pr.calibration_model[c]) any=true;
+        if (any) p.calib_model=UpI(pr.calibration_model,pr.num_calibrations);
+      }
+    }
     // CSR + slot maps through the shared helpers, via a scratch DeviceProblem.
     DeviceProblem q; q.ncam=ncam; q.npt=npt; q.nobs=nobs;
     const std::vector<int> order=BuildPointObsCSR(q,pr.point_index,npt,nobs);
@@ -12734,8 +12786,10 @@ Result SolveRigFisheye(const RigFisheyeProblem& pr,
         opt.verbose,(Scalar)opt.point_damping,ckpts,/*n_shifts=*/5,
         /*use_equil=*/true,kCliEtaMax,kCliUseAlpha,opt.use_fp32_fragments,
         opt.max_inner_retries,(Scalar)opt.func_tolerance,
-        opt.max_consecutive_failures,opt.gauge_frame,&final_lam,
-        opt.robust_kernel,(Scalar)opt.robust_scale2,(Scalar)opt.robust_nu);
+        opt.max_consecutive_failures,opt.gauge_frame,
+        opt.gauge_scale_frame,opt.gauge_scale_axis,&final_lam,
+        opt.robust_kernel,(Scalar)opt.robust_scale2,(Scalar)opt.robust_nu,
+        col_mask.empty()?nullptr:&col_mask);
     res.final_lambda=(double)final_lam;
 
     auto Down=[&](double* h,const Scalar* d,size_t n){

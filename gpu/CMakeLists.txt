@@ -115,3 +115,9 @@ set_target_properties(test_reuse_fixed_study PROPERTIES
     CUDA_ARCHITECTURES "${OCA_CUDA_ARCHITECTURES}")
 target_link_libraries(test_reuse_fixed_study PRIVATE ${CUBLAS_LIB} cudart)
 endif()  # PROJECT_IS_TOP_LEVEL
+
+# Rig / fisheye / pinhole path gate (constant blocks, gauge, soft-L1, pinhole masks).
+if(PROJECT_IS_TOP_LEVEL)
+add_executable(test_rigfisheye test_rigfisheye.cc)
+target_link_libraries(test_rigfisheye PRIVATE oca_core)
+endif()

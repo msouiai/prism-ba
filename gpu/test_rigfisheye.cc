@@ -5,11 +5,18 @@
 // +z sign, intrinsics layout) fails loudly rather than "converging" to a
 // slightly wrong optimum.
 //
+// Second half: constant blocks, the vocabulary COLMAP's local bundle
+// adjustment speaks (out-of-bundle frames, sensor_from_rig, per-camera
+// intrinsics and long-track points held). Held blocks start at the truth and
+// must come back bit-identical; the free blocks start perturbed and must still
+// recover exactly, with no gauge pin at all -- the constant blocks fix it.
+//
 // Layout mirrors the Insta360 X4 capture this path exists for: sensor 0 is
 // the identity (reference lens), sensor 1 is a 180-degree yaw with a small
 // baseline; each frame contributes one image per sensor.
 #include "oca_core.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <random>
@@ -178,5 +185,201 @@ int main() {
             std::abs(ts_n[4] - ts[4]) < 2e-3 &&
             std::abs(ts_n[5] - ts[5]) < 2e-3;
   std::printf("%s\n", ok ? "PASS" : "FAIL");
-  return ok ? 0 : 1;
+  if (!ok) return 1;
+
+  // Constant blocks ---------------------------------------------------------
+  // Three configurations, each solved without gauge_frame: the constant
+  // blocks alone must fix the gauge, as in a mapper local BA.
+  //   A  frames 0..3 constant (an out-of-bundle neighbourhood), sensor
+  //      constant, lens 1 constant, every third point constant;
+  //   B  only points constant (one in three), everything else free;
+  //   C  only frames 0 and 1 constant -- two constant frames fix the gauge.
+  struct Config { const char* name; bool frames, sensor, calib, points; };
+  const Config configs[] = {{"A frames+sensor+lens1+points", true, true, true, true},
+                            {"B points only", false, false, false, true},
+                            {"C two frames only", true, false, false, false}};
+  for (const Config& cfg : configs) {
+    std::vector<unsigned char> fc(kFrames, 0), sc(kSensors, 0), cc(kCalib, 0),
+        pc(kPoints, 0);
+    const int n_const_frames = cfg.name[0] == 'C' ? 2 : 4;
+    if (cfg.frames) for (int f = 0; f < n_const_frames; ++f) fc[f] = 1;
+    if (cfg.sensor) sc[1] = 1;
+    if (cfg.calib) cc[1] = 1;
+    if (cfg.points) for (int i = 0; i < kPoints; i += 3) pc[i] = 1;
+
+    // Truth in the held blocks, the earlier perturbation in the free ones.
+    std::vector<double> Rf_c = Rf_n, tf_c = tf_n, X_c = X_n, intr_c = intr_n;
+    std::vector<double> Rs_c = Rs_n, ts_c = ts_n;
+    for (int f = 0; f < kFrames; ++f)
+      if (fc[f]) {
+        for (int i = 0; i < 9; ++i) Rf_c[9*f+i] = Rf[9*f+i];
+        for (int r = 0; r < 3; ++r) tf_c[3*f+r] = tf[3*f+r];
+      }
+    if (sc[1]) { Rs_c = Rs; ts_c = ts; }
+    if (cc[1]) for (int j = 0; j < 8; ++j) intr_c[8+j] = intr[8+j];
+    for (int i = 0; i < kPoints; ++i)
+      if (pc[i]) for (int r = 0; r < 3; ++r) X_c[3*i+r] = X[3*i+r];
+    const std::vector<double> Rf_0 = Rf_c, tf_0 = tf_c, X_0 = X_c, intr_0 = intr_c,
+        Rs_0 = Rs_c, ts_0 = ts_c;
+
+    oca::RigFisheyeProblem pc_prob = prob;
+    pc_prob.frame_constant = cfg.frames ? fc.data() : nullptr;
+    pc_prob.sensor_constant = cfg.sensor ? sc.data() : nullptr;
+    pc_prob.calibration_constant = cfg.calib ? cc.data() : nullptr;
+    pc_prob.point_constant = cfg.points ? pc.data() : nullptr;
+    oca::RigFisheyeState sc_state;
+    sc_state.frame_rotations = Rf_c.data(); sc_state.frame_translations = tf_c.data();
+    sc_state.sensor_rotations = Rs_c.data(); sc_state.sensor_translations = ts_c.data();
+    sc_state.intrinsics = intr_c.data(); sc_state.points = X_c.data();
+    oca::RigFisheyeOptions copt = opt;
+    copt.gauge_frame = -1;
+    copt.gauge_scale_frame = -1;
+
+    oca::Result cres = oca::SolveRigFisheye(pc_prob, copt, &sc_state);
+    if (!cres.success) { std::printf("FAIL [%s]: %s\n", cfg.name, cres.message.c_str()); return 1; }
+    std::printf("[%s] cost %.6e -> %.6e (%d iterations)\n", cfg.name,
+                cres.initial_cost, cres.final_cost, cres.iterations);
+
+    // Held blocks: bit-identical. Free blocks: recovered.
+    bool held = true;
+    for (int f = 0; f < kFrames; ++f)
+      if (fc[f]) {
+        for (int i = 0; i < 9; ++i) held &= Rf_c[9*f+i] == Rf_0[9*f+i];
+        for (int r = 0; r < 3; ++r) held &= tf_c[3*f+r] == tf_0[3*f+r];
+      }
+    if (sc[1]) { held &= Rs_c == Rs_0; held &= ts_c == ts_0; }
+    if (cc[1]) for (int j = 0; j < 8; ++j) held &= intr_c[8+j] == intr_0[8+j];
+    for (int i = 0; i < kPoints; ++i)
+      if (pc[i]) for (int r = 0; r < 3; ++r) held &= X_c[3*i+r] == X_0[3*i+r];
+    // Points are checked only where the data determines them: seen from at
+    // least two frames (0.4 apart). Roughly half of the synthetic points sit
+    // behind the lenses and are never observed (they simply keep their
+    // perturbation), and a point seen from one frame alone is constrained by
+    // the 2 cm rig baseline only -- the first half of this gate never looked
+    // at per-point recovery for the same reason.
+    double max_t = 0.0, max_x = 0.0;
+    int n_checked = 0, n_unobserved = 0;
+    for (int f = 0; f < kFrames; ++f)
+      for (int r = 0; r < 3; ++r) max_t = std::max(max_t, std::abs(tf_c[3*f+r] - tf[3*f+r]));
+    {
+      std::vector<int> first_frame(kPoints, -1), n_frames(kPoints, 0);
+      for (int o = 0; o < nobs; ++o) {
+        const int i = obs_pt[o], f = frame_of[obs_cam[o]];
+        if (first_frame[i] < 0) { first_frame[i] = f; n_frames[i] = 1; }
+        else if (first_frame[i] != f) n_frames[i] = 2;
+      }
+      for (int i = 0; i < kPoints; ++i) {
+        if (n_frames[i] == 0) ++n_unobserved;
+        if (n_frames[i] < 2) continue;
+        ++n_checked;
+        for (int r = 0; r < 3; ++r) max_x = std::max(max_x, std::abs(X_c[3*i+r] - X[3*i+r]));
+      }
+    }
+    const bool cok = held && cres.final_cost < 1e-6 * cres.initial_cost &&
+                     max_t < 2e-3 && max_x < 5e-3 && n_checked >= 100 &&
+                     std::abs(intr_c[0] - intr[0]) < 0.5 &&
+                     std::abs(intr_c[12] - intr[12]) < 1e-3 &&
+                     std::abs(ts_c[3] - ts[3]) < 2e-3;
+    std::printf("[%s] held blocks unchanged: %s; max |dt| %.2e, max |dX| %.2e over %d "
+                "multi-frame points (%d unobserved), lens0 fx %.3f, lens1 k1 %.5f, "
+                "baseline x %.4f -> %s\n",
+                cfg.name, held ? "yes" : "NO", max_t, max_x, n_checked, n_unobserved,
+                intr_c[0], intr_c[12], ts_c[3], cok ? "PASS" : "FAIL");
+    if (!cok) return 1;
+  }
+  std::printf("PASS (constant blocks)\n");
+
+  // Pinhole family -----------------------------------------------------------
+  // A SIMPLE_RADIAL camera without a rig (frame == image, sensor 0 identity),
+  // the Muellcontainer layout. calibration_model selects the x/z projection
+  // with a tied focal length; k2 is masked off through calibration_param_mask
+  // and k3/k4 by the model. Two constant frames fix the gauge. Exact data
+  // again: f, cx, k1 and the free poses must come back, fy must equal fx and
+  // the masked parameters must not move.
+  {
+    const int kPF = 16, kPP = 500;
+    std::vector<double> pRf(9*kPF), ptf(3*kPF);
+    for (int f = 0; f < kPF; ++f) {
+      RotZYX(0.3*U(rng), 0.3*U(rng), 0.3*U(rng), &pRf[9*f]);
+      ptf[3*f] = 0.3*f + 0.1*U(rng); ptf[3*f+1] = 0.1*U(rng); ptf[3*f+2] = 0.1*U(rng);
+    }
+    // Points 2..12 m in front of the cameras, spread across a 75-deg cone.
+    std::vector<double> pX(3*kPP);
+    for (int i = 0; i < kPP; ++i) {
+      const double z = 2.0 + 10.0*(0.5 + 0.5*U(rng));
+      pX[3*i] = 0.3*kPF*0.5 + 0.55*z*U(rng); pX[3*i+1] = 0.55*z*U(rng); pX[3*i+2] = z;
+    }
+    // [fx fy cx cy k1 k2 k3 k4]: SIMPLE_RADIAL 1296/960/540/0.0153 (Frank's camera).
+    std::vector<double> pin = {1296.0, 1296.0, 960.0, 540.0, 0.0153, 0.0, 0.0, 0.0};
+    std::vector<int> pframe_of, psensor_of, pcalib_of, pobs_cam, pobs_pt;
+    std::vector<double> pobs_uv;
+    std::vector<double> pRs = {1,0,0, 0,1,0, 0,0,1}, pts = {0,0,0};
+    for (int f = 0; f < kPF; ++f) {
+      int nvis = 0;
+      for (int i = 0; i < kPP; ++i) {
+        double P[3];
+        for (int r = 0; r < 3; ++r)
+          P[r] = pRf[9*f+3*r]*pX[3*i] + pRf[9*f+3*r+1]*pX[3*i+1] + pRf[9*f+3*r+2]*pX[3*i+2] + ptf[3*f+r];
+        if (P[2] < 0.5) continue;
+        const double x = P[0]/P[2], y = P[1]/P[2], r2 = x*x + y*y;
+        if (r2 > 0.6) continue;
+        const double d = 1.0 + pin[4]*r2;
+        pobs_cam.push_back(f); pobs_pt.push_back(i);
+        pobs_uv.push_back(pin[0]*d*x + pin[2]); pobs_uv.push_back(pin[1]*d*y + pin[3]);
+        ++nvis;
+      }
+      pframe_of.push_back(f); psensor_of.push_back(0); pcalib_of.push_back(0);
+      if (nvis < 30) { std::printf("FAIL: pinhole frame %d sees only %d pts\n", f, nvis); return 1; }
+    }
+    const int pnobs = (int)pobs_pt.size();
+    std::printf("synthetic pinhole: %d images, %d pts, %d obs\n", kPF, kPP, pnobs);
+
+    std::vector<double> Rf_p = pRf, tf_p = ptf, X_p = pX, in_p = pin;
+    std::vector<unsigned char> fc(kPF, 0); fc[0] = fc[1] = 1;
+    for (int f = 2; f < kPF; ++f) {
+      double dR[9], tmp[9];
+      RotZYX(0.01*U(rng), 0.01*U(rng), 0.01*U(rng), dR);
+      MatMul(dR, &pRf[9*f], tmp);
+      for (int i = 0; i < 9; ++i) Rf_p[9*f+i] = tmp[i];
+      for (int r = 0; r < 3; ++r) tf_p[3*f+r] += 0.02*U(rng);
+    }
+    for (int i = 0; i < 3*kPP; ++i) X_p[i] += 0.03*U(rng);
+    in_p[0] = in_p[1] = pin[0] + 8.0; in_p[2] += 4.0; in_p[3] -= 3.0; in_p[4] = 0.0;
+
+    const int model = oca::RIG_MODEL_PINHOLE | oca::RIG_MODEL_TIED_FOCAL;
+    const unsigned char pmask[8] = {1, 1, 1, 1, 1, 0, 0, 0};
+    oca::RigFisheyeProblem pp;
+    pp.num_images = kPF; pp.num_frames = kPF; pp.num_sensors = 1;
+    pp.num_calibrations = 1; pp.num_points = kPP; pp.num_observations = pnobs;
+    pp.frame_of_image = pframe_of.data(); pp.sensor_of_image = psensor_of.data();
+    pp.calibration_of_image = pcalib_of.data();
+    pp.camera_index = pobs_cam.data(); pp.point_index = pobs_pt.data();
+    pp.observations = pobs_uv.data();
+    pp.frame_constant = fc.data();
+    pp.calibration_model = &model;
+    pp.calibration_param_mask = pmask;
+    oca::RigFisheyeState ps;
+    ps.frame_rotations = Rf_p.data(); ps.frame_translations = tf_p.data();
+    ps.sensor_rotations = pRs.data(); ps.sensor_translations = pts.data();
+    ps.intrinsics = in_p.data(); ps.points = X_p.data();
+    oca::RigFisheyeOptions popt;
+    popt.max_iterations = 100;
+    popt.verbose = getenv("RF_VERBOSE") != nullptr;
+    oca::Result pres = oca::SolveRigFisheye(pp, popt, &ps);
+    if (!pres.success) { std::printf("FAIL [pinhole]: %s\n", pres.message.c_str()); return 1; }
+    double max_t = 0.0;
+    for (int f = 0; f < kPF; ++f)
+      for (int r = 0; r < 3; ++r) max_t = std::max(max_t, std::abs(tf_p[3*f+r] - ptf[3*f+r]));
+    const bool pok = pres.final_cost < 1e-6 * pres.initial_cost &&
+                     std::abs(in_p[0] - pin[0]) < 0.3 && in_p[1] == in_p[0] &&
+                     std::abs(in_p[2] - pin[2]) < 0.3 && std::abs(in_p[3] - pin[3]) < 0.3 &&
+                     std::abs(in_p[4] - pin[4]) < 1e-4 &&
+                     in_p[5] == 0.0 && in_p[6] == 0.0 && in_p[7] == 0.0 && max_t < 2e-3;
+    std::printf("[pinhole SIMPLE_RADIAL] cost %.6e -> %.6e (%d its), f %.3f (fy %.3f) cx %.3f cy %.3f "
+                "k1 %.5f k2..k4 %g %g %g, max |dt| %.2e -> %s\n",
+                pres.initial_cost, pres.final_cost, pres.iterations, in_p[0], in_p[1], in_p[2],
+                in_p[3], in_p[4], in_p[5], in_p[6], in_p[7], max_t, pok ? "PASS" : "FAIL");
+    if (!pok) return 1;
+  }
+  return 0;
 }
