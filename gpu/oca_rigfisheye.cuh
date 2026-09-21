@@ -35,6 +35,12 @@ namespace rigfisheye {
 constexpr int RF_CD = 14;   // camera tangent width per image
 constexpr int RF_NI = 8;    // intrinsics per calibration group
 
+// Projection validity is a field-of-view limit, not a cheirality test.  Keep
+// it in device constant memory so cost, Jacobian assembly, and diagnostics use
+// exactly the same threshold.  The host initialises it from
+// OCA_RF_THETA_MAX_DEG for every solve (90 degrees by default).
+__device__ __constant__ Scalar rf_theta_max_rad;
+
 struct RFDeviceProblem {
   int ncam = 0, nframes = 0, nsensors = 0, ncalib = 0, npt = 0, nobs = 0;
   int *cam_idx = nullptr, *pt_idx = nullptr;          // per obs
@@ -117,9 +123,10 @@ __global__ void RFCompose(const Scalar* __restrict__ Rf, const Scalar* __restric
 // instead, which matches what the physical mask says about such rays: they
 // carry no scene information. RFActive is the single definition of validity,
 // shared by cost, gradient, and the inactive-count diagnostic.
-__device__ __forceinline__ bool RFActive(Scalar Pz, Scalar nu, Scalar nv) {
-  // Pz floor: absolute, in scene units; theta cap ~89.4 deg (tan ~ 95).
-  return (Pz > 1e-6) && (nu * nu + nv * nv < 9000.0);
+__device__ __forceinline__ bool RFActive(Scalar Px, Scalar Py, Scalar Pz) {
+  const Scalar q = hypot(Px, Py);
+  return (q*q + Pz*Pz > (Scalar)1e-24) &&
+         (atan2(q, Pz) < rf_theta_max_rad);
 }
 __device__ __forceinline__ bool RFResidual(
     const Scalar* Rc, const Scalar* tc, const Scalar* Xp, const Scalar* in,
@@ -127,14 +134,61 @@ __device__ __forceinline__ bool RFResidual(
   Scalar Px = Rc[0]*Xp[0] + Rc[1]*Xp[1] + Rc[2]*Xp[2] + tc[0];
   Scalar Py = Rc[3]*Xp[0] + Rc[4]*Xp[1] + Rc[5]*Xp[2] + tc[1];
   Scalar Pz = Rc[6]*Xp[0] + Rc[7]*Xp[1] + Rc[8]*Xp[2] + tc[2];
+  if (!RFActive(Px, Py, Pz)) { *rx = 0.0; *ry = 0.0; return false; }
   Scalar nu = Px / Pz, nv = Py / Pz;
-  if (!RFActive(Pz, nu, nv)) { *rx = 0.0; *ry = 0.0; return false; }
   Scalar r = sqrt(nu * nu + nv * nv + 1e-32);
   Scalar th = atan(r), s = th / r, th2 = th * th;
   Scalar d = 1.0 + th2 * (in[4] + th2 * (in[5] + th2 * (in[6] + th2 * in[7])));
   *rx = in[0] * d * s * nu + in[2] - u;
   *ry = in[1] * d * s * nv + in[3] - v;
   return true;
+}
+
+// Analytic OPENCV_FISHEYE residual/Jacobian written in atan2 form.  Unlike the
+// generated x/z form this remains valid across 90 degrees, which is required
+// when the physical fisheye field of view extends slightly behind the camera.
+__device__ __forceinline__ void RFWideResidualGrad17(
+    const Scalar* R, const Scalar* t, const Scalar* X, const Scalar* in,
+    Scalar u, Scalar v, Scalar* gx, Scalar* gy, Scalar* rx, Scalar* ry) {
+  Scalar V[3] = {
+    R[0]*X[0] + R[1]*X[1] + R[2]*X[2],
+    R[3]*X[0] + R[4]*X[1] + R[5]*X[2],
+    R[6]*X[0] + R[7]*X[1] + R[8]*X[2]};
+  Scalar P[3] = {V[0]+t[0], V[1]+t[1], V[2]+t[2]};
+  const Scalar q2=P[0]*P[0]+P[1]*P[1], q=sqrt(q2+(Scalar)1e-32);
+  const Scalar den=q2+P[2]*P[2]+(Scalar)1e-32;
+  const Scalar th=atan2(q,P[2]), th2=th*th, th4=th2*th2;
+  const Scalar th6=th4*th2, th8=th4*th4;
+  const Scalar poly=(Scalar)1+in[4]*th2+in[5]*th4+in[6]*th6+in[7]*th8;
+  const Scalar h=th*poly;
+  const Scalar hp=(Scalar)1+(Scalar)3*in[4]*th2+(Scalar)5*in[5]*th4+
+                  (Scalar)7*in[6]*th6+(Scalar)9*in[7]*th8;
+  const Scalar dth[3]={P[2]*P[0]/(q*den),P[2]*P[1]/(q*den),-q/den};
+  const Scalar iq=(Scalar)1/q, iq3=iq*iq*iq, sc=h*iq;
+  Scalar ds[3]={hp*dth[0]*iq-h*P[0]*iq3,
+                hp*dth[1]*iq-h*P[1]*iq3,
+                hp*dth[2]*iq};
+  Scalar du[3],dv[3];
+  for(int a=0;a<3;++a){
+    du[a]=in[0]*((a==0?sc:(Scalar)0)+P[0]*ds[a]);
+    dv[a]=in[1]*((a==1?sc:(Scalar)0)+P[1]*ds[a]);
+  }
+  *rx=in[0]*sc*P[0]+in[2]-u; *ry=in[1]*sc*P[1]+in[3]-v;
+  // Left rotation of R only: d(RX)/dw = -[RX]_x.
+  const Scalar dPw[9]={0,-V[2],V[1], V[2],0,-V[0], -V[1],V[0],0};
+  for(int k=0;k<3;++k){
+    gx[k]=du[0]*dPw[3*k]+du[1]*dPw[3*k+1]+du[2]*dPw[3*k+2];
+    gy[k]=dv[0]*dPw[3*k]+dv[1]*dPw[3*k+1]+dv[2]*dPw[3*k+2];
+    gx[3+k]=du[k]; gy[3+k]=dv[k];
+  }
+  gx[6]=sc*P[0]; gy[6]=0; gx[7]=0; gy[7]=sc*P[1];
+  gx[8]=1; gy[8]=0; gx[9]=0; gy[9]=1;
+  Scalar tk=th*th2;
+  for(int k=0;k<4;++k){gx[10+k]=in[0]*P[0]*iq*tk;gy[10+k]=in[1]*P[1]*iq*tk;tk*=th2;}
+  for(int k=0;k<3;++k){
+    gx[14+k]=du[0]*R[k]+du[1]*R[3+k]+du[2]*R[6+k];
+    gy[14+k]=dv[0]*R[k]+dv[1]*R[3+k]+dv[2]*R[6+k];
+  }
 }
 
 __global__ void RFCostKernel(const int* __restrict__ ci, const int* __restrict__ pi,
@@ -229,7 +283,7 @@ __global__ void RFCheirKernel(const int* __restrict__ ci, const int* __restrict_
   Scalar Px = R[0]*Xp[0] + R[1]*Xp[1] + R[2]*Xp[2] + tc[3 * c];
   Scalar Py = R[3]*Xp[0] + R[4]*Xp[1] + R[5]*Xp[2] + tc[3 * c + 1];
   Scalar Pz = R[6]*Xp[0] + R[7]*Xp[1] + R[8]*Xp[2] + tc[3 * c + 2];
-  if (!RFActive(Pz, Px / Pz, Py / Pz)) atomicAdd(nviol, 1);
+  if (!RFActive(Px, Py, Pz)) atomicAdd(nviol, 1);
 }
 
 // Fragment assembly: identical storage contract to MFAssemble<14,HT> so the
@@ -256,7 +310,7 @@ __global__ void RFAssemble(const int* __restrict__ ci, const int* __restrict__ p
     Scalar Pz = R[6]*Xp[0] + R[7]*Xp[1] + R[8]*Xp[2] + tc[3*c+2];
     Scalar Px = R[0]*Xp[0] + R[1]*Xp[1] + R[2]*Xp[2] + tc[3*c];
     Scalar Py = R[3]*Xp[0] + R[4]*Xp[1] + R[5]*Xp[2] + tc[3*c+1];
-    if (!RFActive(Pz, Px / Pz, Py / Pz)) {
+    if (!RFActive(Px, Py, Pz)) {
       // Zero fragments: the slots must still be written (they are dense).
       int kp0 = o2p[o], kc0 = o2c[o];
       for (int i = 0; i < CD; ++i)
@@ -521,6 +575,10 @@ inline RunLog SolveRigFisheye(const RFDeviceProblem& p, RFDeviceState& s,
                               // IRLS robust kernel: 0 = L2 (bit-compat default).
                               int rk = 0, Scalar rk_scale2 = 0.0,
                               Scalar rk_nu = 4.0) {
+  Scalar theta_max_deg = (Scalar)90.0;
+  if (const char* e = getenv("OCA_RF_THETA_MAX_DEG")) theta_max_deg = (Scalar)atof(e);
+  const Scalar theta_max_rad = theta_max_deg * (Scalar)(3.14159265358979323846 / 180.0);
+  CUDA_CHECK(cudaMemcpyToSymbol(rf_theta_max_rad, &theta_max_rad, sizeof(Scalar)));
   constexpr int CD = RF_CD;
   const int ncam = p.ncam, npt = p.npt, nobs = p.nobs;
   const int nframes = p.nframes, ncalib = p.ncalib;
