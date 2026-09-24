@@ -39,6 +39,7 @@ nothing at the r ~ 0.1..1.8 range of real fisheye data but keeps the
 generated code finite if an observation lands exactly on the axis.
 """
 import sympy as sp
+from gen_ccode import ccode  # sp.ccode with pow(x,n), |n|<=5, unrolled to products
 
 dwx, dwy, dwz = sp.symbols('dwx dwy dwz', real=True)
 dtx, dty, dtz = sp.symbols('dtx dty dtz', real=True)
@@ -108,11 +109,11 @@ with open('fisheye_grad17_generated.cuh', 'w') as fh:
     fh.write('    Scalar ux,Scalar uy,\n')
     fh.write('    Scalar* __restrict__ grad_res_x, Scalar* __restrict__ grad_res_y,\n')
     fh.write('    Scalar* __restrict__ res_x, Scalar* __restrict__ res_y) {\n')
-    for sym, expr in repl: fh.write(f'  Scalar {sym} = {sp.ccode(expr)};\n')
-    for i, e in enumerate(red[0:NP]):      fh.write(f'  grad_res_x[{i}] = {sp.ccode(e)};\n')
-    for i, e in enumerate(red[NP:2*NP]):   fh.write(f'  grad_res_y[{i}] = {sp.ccode(e)};\n')
-    fh.write(f'  *res_x = {sp.ccode(red[2*NP])};\n')
-    fh.write(f'  *res_y = {sp.ccode(red[2*NP+1])};\n')
+    for sym, expr in repl: fh.write(f'  Scalar {sym} = {ccode(expr)};\n')
+    for i, e in enumerate(red[0:NP]):      fh.write(f'  grad_res_x[{i}] = {ccode(e)};\n')
+    for i, e in enumerate(red[NP:2*NP]):   fh.write(f'  grad_res_y[{i}] = {ccode(e)};\n')
+    fh.write(f'  *res_x = {ccode(red[2*NP])};\n')
+    fh.write(f'  *res_y = {ccode(red[2*NP+1])};\n')
     fh.write('}\n')
 print('temporaries:', len(repl))
 

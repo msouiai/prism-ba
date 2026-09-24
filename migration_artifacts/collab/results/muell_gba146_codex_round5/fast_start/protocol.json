@@ -1,0 +1,103 @@
+{
+  "arms": {
+    "fast-start-16x3": {
+      "OCA_CKPT_OPEN": "16",
+      "OCA_CKPT_OPEN_OUTERS": "3"
+    },
+    "guarded-control": {}
+  },
+  "audit": "independent CPU FP64 SIMPLE_RADIAL cost on original observation set",
+  "binary": "/workspace/prism-fast-start/build/prism-tr",
+  "binary_sha256": "79e9bbe6e9ea6821081f2b7fc78b396a7bc0521bcf221b950cf1743a90d6e0f5",
+  "input": {
+    "final-1936": {
+      "dimensions": [
+        1936,
+        649673,
+        5213733
+      ],
+      "initial_cpu_fp64_cost": 183424245.80393088,
+      "sha256": "46e039c2a5f5715f48450ca74bce19bf4d1b26ac6daf2c14bf188508b0e39313"
+    },
+    "ladybug-1723": {
+      "dimensions": [
+        1723,
+        156502,
+        678718
+      ],
+      "initial_cpu_fp64_cost": 62025077.30472038,
+      "sha256": "a85156db95e9b55fa30831e2a10155243cfd34e830a0828760270be129e0b902"
+    },
+    "muell-gba146": {
+      "dimensions": [
+        493,
+        313987,
+        2118671
+      ],
+      "initial_cpu_fp64_cost": 2442177.030208319,
+      "sha256": "33de7cd28b7f0e91550f8af332990ac8e84b13b35563e9429c8f64849e58ba6c"
+    }
+  },
+  "max_iter": 600,
+  "phase_levels_percent_above_target": [
+    20.0,
+    10.0,
+    5.0,
+    3.0,
+    1.0,
+    0.0
+  ],
+  "repeats": 3,
+  "rule": "The only treatment is OCA_CKPT_OPEN=16 plus OCA_CKPT_OPEN_OUTERS=3. The latter restores ordinary full-depth guarded CG after outer index 2; no quality target participates in switching.",
+  "scenes": {
+    "final-1936": {
+      "cap": 8.0,
+      "target": 5125687.352261469
+    },
+    "ladybug-1723": {
+      "cap": 8.0,
+      "target": 452676.06625000003
+    },
+    "muell-gba146": {
+      "cap": 90.0,
+      "target": 1946488.746262194
+    }
+  },
+  "source_candidate": {
+    "arm": "coupled_radius_numeric_guard",
+    "binary": "/workspace/prism-model-followup/candidate/prism-tr",
+    "binary_sha256": "117773562d33949cdbfdc27905d1f23a2cc1faedb7f77c3e619c17caa50a86dc",
+    "flags": {
+      "OCA_ATTR_RADIUS": "1",
+      "OCA_ATTR_RESCUE": "1",
+      "OCA_ATTR_STRICT": "1",
+      "OCA_BACKTRACK_REARM": "1",
+      "OCA_CAMERA_TR": "0",
+      "OCA_CG_STOP": "0",
+      "OCA_CLASSICAL_LM": "1",
+      "OCA_COMPACT_FRAGMENTS": "2",
+      "OCA_DEMAND_MENU": "0",
+      "OCA_DIAG_NORM": "1",
+      "OCA_FORCE_UNSHARED": "1",
+      "OCA_FTOL": "1e-5",
+      "OCA_FTOL_K": "8",
+      "OCA_GRID_DOWN": "2",
+      "OCA_MENU_BACKTRACK": "8",
+      "OCA_MENU_GATE": "1e-2",
+      "OCA_MULTI_RHS": "1",
+      "OCA_NSHIFTS": "1",
+      "OCA_PCG": "1",
+      "OCA_POINT_SAFEGUARD": "1",
+      "OCA_RETRY_CACHE": "1",
+      "OCA_RHO_LAMBDA": "1",
+      "OCA_RHO_SHIFT": "1",
+      "OCA_SCHUR_NUMERIC_GUARD": "1",
+      "OCA_SWITCH_RESTART": "0",
+      "OCA_TR_RECURRENCE": "0"
+    },
+    "initial_lambda": 0.1,
+    "scope": "Research leader on this four-scene 1%-tolerant panel; directional Schur damping repair, FP32 fragments, FP64 arithmetic/state/acceptance. No production default change. Further independent scenes and tighter-target behavior remain unproven."
+  },
+  "source_sha256": "07166eb368d8e6a8c2cde4d01ca03aa2177ba6f2fd8cf3f42e7812a6b4cc325c",
+  "timeout_seconds": 180
+}

@@ -1,0 +1,32 @@
+{
+  "arm": "caspar32",
+  "audit": "independent original-observation CPU FP64 SIMPLE_RADIAL cost",
+  "binary": "/workspace/prism-caspar-current/caspar32",
+  "binary_sha256": "de038488e929a8fad674d1096c5f61619f3039e6409a81670dab0df7dffe0919",
+  "command": [
+    "flock",
+    "/tmp/prism_gpu.lock",
+    "timeout",
+    "150",
+    "/workspace/prism-caspar-current/caspar32",
+    "/workspace/bal/muell-gba146.txt",
+    "100000",
+    "default"
+  ],
+  "data": "/workspace/bal/muell-gba146.txt",
+  "data_sha256": "33de7cd28b7f0e91550f8af332990ac8e84b13b35563e9429c8f64849e58ba6c",
+  "dimensions": [
+    493,
+    313987,
+    2118671
+  ],
+  "initial_cpu_fp64_cost": 2442177.030208319,
+  "name": "measure-caspar32-3",
+  "native_seconds_cap": 90.0,
+  "native_target": 1946488.7267973064,
+  "process_timeout_seconds": 150,
+  "profile": "Caspar/COLMAP default: diag_init=1, pcg_rel_error_exit=1e-4, pcg_iter_max=20",
+  "rep": 3,
+  "target": 1946488.746262194,
+  "target_margin": "1e-8 inward, matching Prism study solver requirement"
+}

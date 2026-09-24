@@ -1,0 +1,33 @@
+RUN smoke-parent-0
+DONE smoke-parent-0 cost 13674.198977 seconds 0.041666 mv 79
+RUN smoke-new-0
+DONE smoke-new-0 cost 13674.198977 seconds 0.058794 mv 79
+RUN smoke-zero-0
+DONE smoke-zero-0 cost 13674.198977 seconds 0.041359 mv 79
+RUN smoke-parent-1
+DONE smoke-parent-1 cost 13674.198977 seconds 0.044417 mv 79
+RUN smoke-new-1
+DONE smoke-new-1 cost 13674.198977 seconds 0.042044 mv 79
+RUN smoke-zero-1
+DONE smoke-zero-1 cost 13674.198977 seconds 0.040907 mv 79
+RUN smoke-parent-2
+DONE smoke-parent-2 cost 13674.198977 seconds 0.039889 mv 79
+RUN smoke-new-2
+DONE smoke-new-2 cost 13674.198977 seconds 0.041531 mv 79
+RUN smoke-zero-2
+DONE smoke-zero-2 cost 13674.198977 seconds 0.054926 mv 79
+RUN smoke-continuous
+DONE smoke-continuous cost 13577.990438 seconds 0.240296 mv 1003
+RUN smoke-replay-0
+DONE smoke-replay-0 cost 13577.990353 seconds 0.16785 mv 716
+Traceback (most recent call last):
+  File "/workspace/prism-ba/bench/rl_deep_eta2.py", line 201, in <module>
+    elif a.phase=='all':all_stages()
+                        ^^^^^^^^^^^^
+  File "/workspace/prism-ba/bench/rl_deep_eta2.py", line 196, in all_stages
+    smoke();select();collect();analyze();evaluate('family');evaluate('transfer');diagnostic()
+    ^^^^^^^
+  File "/workspace/prism-ba/bench/rl_deep_eta2.py", line 46, in smoke
+    assert abs(a[key]-b[key])/max(1,abs(a[key]))<1e-7,(key,a,b)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('rho', {'type': 'outer', 'outer': 10, 'accepted': 1, 'lambda_used': 4.0000000000000015e-06, 'lambda_next': 4.0000000000000015e-06, 'cost0': 13656.086506835609, 'cost': 13637.766883275495, 'rho': 0.5558864433137055, 'prediction': 32.955694063895635, 'rho_valid': 1, 'cg': 19, 'matvecs': 21, 'rejects': 0, 'repairs': 0, 'dt': 0.004848333}, {'type': 'outer', 'outer': 10, 'accepted': 1, 'lambda_used': 4.0000000000000015e-06, 'lambda_next': 4.0000000000000015e-06, 'cost0': 13656.086507036533, 'cost': 13637.766686668063, 'rho': 0.5558931600897203, 'prediction': 32.95564990494373, 'rho_valid': 1, 'cg': 19, 'matvecs': 21, 'rejects': 0, 'repairs': 0, 'dt': 0.004467422})

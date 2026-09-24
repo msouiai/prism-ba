@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+import pathlib,json,subprocess,os,re
+from build_tr_candidate import sha
+from cached_benchmark_input import load_input
+from audit_prism_state import audit
+root=pathlib.Path('/workspace/prism-tr-safeguard/factored-profile');root.mkdir();stem=root/'final-13682';m=json.load(open('/workspace/prism-tr-cg-stop/large/final-13682-tr.manifest.json'));env={k:v for k,v in os.environ.items() if not k.startswith(('OCA_','CASPAR_','COLMAP_MFREE','MF_DEBUG'))};env.update(m['flags'],OCA_PROFILE='1',OCA_MAX_SECONDS='60');binary=pathlib.Path('/workspace/prism-tr-safeguard/factored/prism-tr');nsys='/opt/nvidia/nsight-compute/2025.1.1/host/target-linux-x64/nsys';cmd=['flock','/tmp/prism_gpu.lock','timeout','180',nsys,'profile','--trace=cuda','--sample=none','--cpuctxsw=none','--output='+str(stem),str(binary),'--problem','/workspace/bal/final-13682.txt','--algo','mfree_shifted_cg','--dof9','--zero_k2','--max_iter','7','--state_out',str(stem)+'.state'];(root/'manifest.json').write_text(json.dumps(dict(command=cmd,flags={k:v for k,v in env.items() if k.startswith('OCA_')},binary_sha256=sha(binary),scope='Instrumented seven-outer profile only; no benchmark speed ratio. Cap60 covers instrumentation.'),indent=2))
+with open(str(stem)+'.log','x') as f,open(str(stem)+'.stderr','x') as e:r=subprocess.run(cmd,env=env,stdout=f,stderr=e)
+assert r.returncode==0
+with open(str(stem)+'.kernels.csv','x') as f:subprocess.run([nsys,'stats','--force-export=true','--report=cuda_gpu_kern_sum','--format=csv',str(stem)+'.nsys-rep'],stdout=f,check=True)
+dh,(dims,obs),initial=load_input(pathlib.Path('/workspace/bal/final-13682.txt'),'/workspace/prism-caspar-expanded/cpu-cache');cost=audit(str(stem)+'.state',dims,obs);log=pathlib.Path(str(stem)+'.log').read_text();native=float(re.search(r'RESULT .*final_cost=(\S+)',log)[1]);err=abs(cost-native)/cost;assert err<1e-7;(root/'result.json').write_text(json.dumps(dict(cost=cost,audit_error=err,input_sha256=dh,state_sha256=sha(str(stem)+'.state'),seconds=float(re.search(r'solve_seconds=(\S+)',log)[1])),indent=2));print('PROFILE DONE',cost,err)

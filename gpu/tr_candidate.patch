@@ -1,0 +1,217 @@
+--- oca_cuda.cu
++++ oca_cuda.cu
+@@ -2881,6 +2881,7 @@
+ }
+ 
+ #include "full_step_model.cuh"
++#include "camera_tr_diagnostic.cuh"
+ #include "subspace_model.cuh"
+ #include "point_safeguard.cuh"
+ #include "repair_damping.h"
+@@ -8980,9 +8981,16 @@
+   long point_trust_updates=0,point_trust_calls=0,point_trust_invalid=0;
+   std::unique_ptr<PrismPointTrust> point_trust;
+   if(point_trust_mode)point_trust=std::make_unique<PrismPointTrust>();
++  const bool camera_tr=getenv("OCA_CAMERA_TR") && atoi(getenv("OCA_CAMERA_TR"))!=0;
++  std::unique_ptr<PrismCameraTR> tr;
++  if(camera_tr)tr=std::make_unique<PrismCameraTR>(n_c);
++  const bool tr_fast_model=getenv("OCA_TR_RECURRENCE")&&atoi(getenv("OCA_TR_RECURRENCE"));
++  const bool tr_fast_audit=getenv("OCA_TR_RECURRENCE_AUDIT")!=nullptr;
++  long tr_fast_calls=0;std::vector<double> tr_residual_scales(5,1.),tr_model_shifts(5,0.);
++  if(tr_fast_model&&!camera_tr)throw std::runtime_error("TR recurrence requires camera TR");
+   const bool full_model_rho=[](){const char* e=getenv("OCA_FULL_MODEL_RHO");return e&&atoi(e)!=0;}();
+   std::unique_ptr<PrismFullModel> full_model;
+-  if(full_model_rho)full_model=std::make_unique<PrismFullModel>();
++  if(full_model_rho || camera_tr)full_model=std::make_unique<PrismFullModel>();
+   long full_model_calls=0,full_model_nonpositive=0;double full_model_seconds=0;
+   const int repair_damping_mode=[](){const char* e=getenv("OCA_REPAIR_DAMPING");return e?atoi(e):0;}();
+   if(repair_damping_mode<0 || repair_damping_mode>3)throw std::runtime_error("repair damping: 0=off,1=audit,2=relax,3=symmetric");
+@@ -9136,6 +9144,7 @@
+   static const int nshifts_env = [](){
+     const char* e = getenv("OCA_NSHIFTS"); return e ? std::atoi(e) : 0; }();
+   int L = nshifts_env > 0 ? nshifts_env : n_shifts;
++  tr_residual_scales.resize(std::max(1,L),1.);tr_model_shifts.resize(std::max(1,L),0.);
+   const int menu_capacity=L;
+   const char* demand_env=getenv("OCA_DEMAND_MENU");
+   int demand_mode=demand_env?atoi(demand_env):0;
+@@ -9177,6 +9186,14 @@
+       getenv("OCA_POLY_CONG") || getenv("OCA_TAU_LAM_COND") || getenv("OCA_TAU_LAM_MAXOBS") ||
+       getenv("OCA_REPLAY_LOAD") || getenv("OCA_REPLAY_SAVE")))
+     throw std::runtime_error("demand menu requires plain five-slot FP64 unshared diagonal full scoring");
++  if(camera_tr && (CD!=9 || shared_intr || mf_fp32 || rk || block_eq || !use_equil ||
++      (L!=1 && L!=5) || demand_mode!=0 || full_model_rho || repair_damping_mode || point_trust_mode ||
++      subspace_mode || backtrack_policy || point_safeguard_mode!=1 ||
++      getenv("OCA_REPLAY_LOAD") || getenv("OCA_REPLAY_SAVE") || getenv("OCA_KRYLOV_REUSE") ||
++      getenv("OCA_ADAPTIVE_MENU") || getenv("OCA_PROGRESSIVE_DEPTH") || getenv("OCA_MENU_COVERAGE") ||
++      getenv("OCA_CAND_PRUNE") || getenv("OCA_POLY_CONG") || getenv("OCA_LAMBDA_HYSTERESIS") ||
++      getenv("OCA_SCORE_STRIDE") || getenv("OCA_TAU_LAM_COND") || getenv("OCA_TAU_LAM_MAXOBS")))
++    throw std::runtime_error("camera TR requires plain FP64 diagonal one/five-shift mode with point safeguard 1");
+   const int recycle_mode=getenv("OCA_KRYLOV_REUSE")?atoi(getenv("OCA_KRYLOV_REUSE")):0;
+   if(recycle_mode<0 || recycle_mode>5 || (recycle_mode && !demand_on))
+     throw std::runtime_error("OCA_KRYLOV_REUSE requires demand menu: 1=projected reuse, 2=projected rebuild, 3=CG capture reuse, 4=CG capture rebuild, 5=selective CG reuse");
+@@ -9818,6 +9835,12 @@
+     }
+     if(demand_mode==2 && demand.pair_known) tau_eff=demand.tau;
+     if(point_trust_tau>0)tau_eff=point_trust_tau;
++    if(camera_tr){
++      if(!need_assembly && !tr->entries.empty())tau_eff=tr->tau;
++      else {tr->entries.clear();tr->tau=tau_eff;}
++      tr->Reset();
++    }
++    const bool tr_reuse=camera_tr && !tr->entries.empty();
+     tau_used = tau_eff;
+     const Scalar selected_floor =
+       (tau_lam_maxobs>0 || tau_lam_cond>0.0) && tau_floor_now>tau_eff
+@@ -10348,6 +10371,16 @@
+       return e && std::atoi(e)!=0; }();
+     int coverage_gate_fallbacks=0;
+     auto ScoreAll=[&](int depth){
++      if(camera_tr){
++        if(!(tr->radius>0)){
++          double central=0;cublasDnrm2(blas,n_c,xs[L/2],1,&central);
++          tr->radius=std::isfinite(central)&&central>0?central:1.;
++        }
++        for(int l=0;l<L;++l){
++#include "tr_recurrence_score.inc"
++        }
++        return;
++      }
+       if(demand_on){
+         // Expansion means actual coverage, even when the model menu is flat.
+         for(int l=0;l<L;++l) if(scored_depth[l]!=depth) Score(xs[l],l,depth);
+@@ -10668,6 +10701,7 @@
+     const int grid_down = std::min(std::max(grid_down_env, 0), L-1);
+     std::vector<Scalar> shifts(L);
+     for(int l=0;l<L;++l) shifts[l]=lam_cam*std::pow(10.0,(double)(l-grid_down));
++    for(int l=0;l<L;++l)tr_model_shifts[l]=shifts[l];
+ #ifdef PRISM_ENABLE_KRYLOV_AUDIT
+     if(const char* audit=getenv("OCA_KRYLOV_AUDIT")){
+       const int audit_outer=std::max(0,std::atoi(audit));
+@@ -10693,6 +10727,7 @@
+     sweep_restart:
+     for(int l=0;l<L;++l){ CUDA_CHECK(cudaMemset(xs[l],0,(size_t)n_c*sizeof(Scalar)));
+       CUDA_CHECK(cudaMemcpy(ps[l],bprime,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice)); }
++    std::fill(tr_residual_scales.begin(),tr_residual_scales.end(),1.);
+     std::vector<Scalar> zeta(L,1.0),zprev(L,1.0),znext(L,1.0),als(L,0.0),bes(L,0.0);
+     CUDA_CHECK(cudaMemset(xs[0],0,(size_t)n_c*sizeof(Scalar)));
+     CUDA_CHECK(cudaMemcpy(r_,bprime,(size_t)n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice));
+@@ -10805,6 +10840,7 @@
+     int coverage_anchor_depth=-1,coverage_terminal_depth=-1;
+ 
+     bool projected_ok=false;
++    if(tr_reuse){tr->Reconsider(blas);projected_ok=true;}
+     const bool capture_narrow=recycle_mode>=3 && L==1;
+     if(capture_narrow) captured->Reset(shifts[0]);
+     if(recycle_mode>=3){
+@@ -10970,6 +11006,7 @@
+           cublasDaxpy(blas,n_c,&znext[l],r_,1,ps[l],1);
+         }
+         zprev[l]=zeta[l]; zeta[l]=znext[l];
++        tr_residual_scales[l]=zeta[l];
+         if(shift_prune>0.0 && std::fabs((double)zeta[l])*std::sqrt((double)rr_new)
+                                 <= shift_prune*(double)nb) sconv[l]=1;
+       }
+@@ -11066,6 +11103,7 @@
+       if(kup>0){
+         ++sweep_attempt;
+         for(int l=0;l<L;++l) shifts[l]*=std::pow((Scalar)10.0,(Scalar)kup);
++        for(int l=0;l<L;++l)tr_model_shifts[l]=shifts[l];
+         std::fill(preds.begin(),preds.end(),(Scalar)0.0);
+         std::fill(sconv.begin(),sconv.end(),0);
+         std::fill(sdone.begin(),sdone.end(),0);
+@@ -11111,6 +11149,20 @@
+ 
+     } // legacy CG fallback / default path
+ 
++    if(camera_tr){
++      if(!tr_reuse){
++        // Explicit Cauchy candidate guarantees reduced-model descent when SPD.
++        double bb=0,bSb=0;cublasDdot(blas,n_c,bprime,1,bprime,1,&bb);
++        KvS(bprime,tr->ax);++tr->model_evals;
++        cublasDdot(blas,n_c,bprime,1,tr->ax,1,&bSb);
++        double a=bSb>0?bb/bSb:1.;
++        CUDA_CHECK(cudaMemcpy(tr->work,bprime,n_c*sizeof(Scalar),cudaMemcpyDeviceToDevice));
++        cublasDscal(blas,n_c,&a,tr->work,1);
++        if(!(tr->radius>0))tr->radius=1.;
++        tr->Add(tr->work,-1,0,bprime,blas,KvS);
++      }
++      if(tr->best_prediction>0)Score(tr->best,tr->best_sh,tr->best_depth);
++    }
+     // History resolves near-ties across per-shift best checkpoint candidates.
+     // Selection precedes the existing alpha search and never skips scoring.
+     if(hyst_track){
+@@ -11141,7 +11193,7 @@
+     }
+     // ---- existing alpha grid, unchanged ----
+     int alpha_win=0;
+-    if(have && use_alpha && (!rho_mode || alpha_rho)){
++    if(have && use_alpha && (!rho_mode || alpha_rho) && !camera_tr){
+       std::chrono::steady_clock::time_point alpha_t0;
+       if(prof){cudaDeviceSynchronize();alpha_t0=now();}
+       const Scalar as[3]={0.7,1.0,1.4};
+@@ -11353,6 +11405,21 @@
+     }
+     if(demand_on && demand.wide && demand_fallback && (!have || demand_cost<best_cost))
+       RestoreDemandFallback();
++    double tr_rho=-1,tr_norm=0,tr_prediction=0,tr_old_radius=camera_tr?tr->radius:0;
++    if(camera_tr){
++      if(have){
++        auto model=full_model->Evaluate(p,s,d_best,k2mask);++full_model_calls;
++        tr_prediction=model.prediction;
++        MFTRUnscale<<<GridSize(n_c),256>>>(d_best,E,tr->work,n_c);
++        cublasDnrm2(blas,n_c,tr->work,1,&tr_norm);
++        if(tr_prediction>0)tr_rho=(cost-best_cost)/tr_prediction;
++        have=prism_camera_tr::accept(cost-best_cost,tr_prediction,tr_norm,tr_old_radius);
++      }
++      tr->radius=prism_camera_tr::radius_after(tr_old_radius,tr_norm,tr_rho);
++      if(!have && tr->radius>=tr_old_radius)tr->radius=std::max(1e-14,.25*tr_old_radius);
++      std::printf("CAMERA_TR o=%d reuse=%d bank=%zu radius=%.17g norm=%.17g prediction=%.17g rho=%.17g accept=%d next_radius=%.17g tau=%.17g\n",
++        k,(int)tr_reuse,tr->entries.size(),tr_old_radius,tr_norm,tr_prediction,tr_rho,(int)have,tr->radius,(double)tau_eff);
++    }
+     // ---- accept / reject (existing rule) ----
+     bool accepted=false;
+     double learn_rho=std::numeric_limits<double>::quiet_NaN(),
+@@ -11441,7 +11508,17 @@
+       // after a reject streak (diagnostic switch for the unwind-oscillation
+       // investigation on dubrovnik-142 / final-4585).
+       static const bool lm_classic = getenv("OCA_LM_CLASSIC")!=nullptr;
+-      if(backtrack_rescued){
++      if(camera_tr){
++        const double anchor=tr->best_sh>=0?shifts[tr->best_sh]:lam_cam;
++        // A feasible interior step with an adequate model must not leave
++        // the menu permanently at a positive damping. Move at least one
++        // menu decade downward; this is a placement heuristic, not a KKT solve.
++        double placement=anchor*std::pow(tr_old_radius/tr->radius,2.);
++        if(tr_norm<.8*tr_old_radius && tr_rho>=.25)
++          placement=std::min(placement,.1*(double)lam_cam);
++        lam_cam=std::clamp(placement,(double)lam_floor,1e8);
++      }
++      else if(backtrack_rescued){
+         // The Schur-only model omits the scaled point relaxation. Do not
+         // feed its prediction into Nielsen for this full-step line search.
+         // Full-step shrinkage is not evidence for larger CAMERA damping:
+@@ -11616,7 +11693,7 @@
+       const bool span_now = retry_span>0 && (rej_streak+1)>=retry_span;
+       const double esc = span_now
+           ? std::pow(10.0,(double)std::max(1,L-1-grid_down)+1.0) : 10.0;
+-      lam_cam*=(Scalar)esc; ++n_reject; ++rej_streak;
++      if(!camera_tr)lam_cam*=(Scalar)esc; ++n_reject; ++rej_streak;
+       if(demand_switch && !demand_on && rej_streak>=2){
+         if(switch_restart){
+           // Bound abandoned work to the opening; the caller may restart from
+@@ -11860,6 +11937,7 @@
+     point_safeguard_calls,point_safeguard_evals,point_safeguard_wins,point_safeguard_frozen,point_safeguard_seconds);
+   if(subspace_mode)std::printf("SUBSPACE summary mode=%d calls=%ld evals=%ld wins=%ld invalid=%ld seconds=%.9g\n",
+     subspace_mode,subspace_calls,subspace_evals,subspace_wins,subspace_invalid,subspace_seconds);
++  if(camera_tr)std::printf("CAMERA_TR summary reuses=%ld model_matvecs=%ld full_predictions=%ld radius=%.17g\n",tr->reuses,tr->model_evals,full_model_calls,tr->radius);
+   if(full_model_rho)std::printf("FULL_MODEL summary calls=%ld nonpositive=%ld seconds=%.9g\n",full_model_calls,full_model_nonpositive,full_model_seconds);
+   if(point_trust_mode)std::printf("POINT_TRUST summary mode=%d updates=%ld invalid=%ld kernels=%ld seconds=%.9g\n",
+     point_trust_mode,point_trust_updates,point_trust_invalid,point_trust_calls,point_trust_seconds);
+@@ -11922,6 +12000,7 @@
+     std::fprintf(stderr,"[learn] wrote %s (%ld attempts)\n",
+                  getenv("OCA_LEARN_LOG"),learn_att_id); }
+   if(final_lambda_out) *final_lambda_out = lam_cam;
++  if(tr_fast_model)std::printf("TR_RECURRENCE_SUMMARY candidates=%ld\n",tr_fast_calls);
+   return log;
+ }
+ 

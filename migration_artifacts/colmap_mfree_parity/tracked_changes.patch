@@ -1,0 +1,736 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7c5864a4..981576f1 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -76,6 +76,10 @@ option(ALL_SOURCE_TARGET "Whether to create a target for all source files (for V
+ # Experimental
+ option(CASPAR_ENABLED "Whether to enable CASPAR-accelerated bundle adjustment" OFF)
+ option(CASPAR_USE_DOUBLE "Use double precision in Caspar solver" OFF)
++option(MFREE_ENABLED
++       "Whether to enable matrix-free multi-shift GPU bundle adjustment" OFF)
++set(MFREE_SOLVER_DIR "" CACHE PATH
++    "Path to the mfree solver source dir providing oca_core (oca_core.h + CMakeLists.txt)")
+ 
+ # Hash map backend used by the performance-critical scene/SfM containers (see
+ # src/colmap/util/hash_containers.h). One of: STD, BOOST, or empty for auto.
+@@ -92,6 +96,24 @@ if(CASPAR_ENABLED)
+     endif()
+ endif()
+ 
++if(MFREE_ENABLED)
++    if(NOT MFREE_SOLVER_DIR)
++        message(FATAL_ERROR
++            "MFREE_ENABLED=ON requires -DMFREE_SOLVER_DIR=<path to mfree_r10/solver>")
++    endif()
++    if(NOT EXISTS "${MFREE_SOLVER_DIR}/oca_core.h")
++        message(FATAL_ERROR
++            "MFREE_SOLVER_DIR='${MFREE_SOLVER_DIR}' does not contain oca_core.h")
++    endif()
++    message(STATUS "Enabling MFREE support")
++    message(STATUS "MFREE solver dir: ${MFREE_SOLVER_DIR}")
++    enable_language(CUDA)
++    add_compile_definitions(MFREE_ENABLED)
++    # Builds the oca_core target. Pinned by whatever revision MFREE_SOLVER_DIR
++    # points at, the same way Caspar is vendored at a fixed revision.
++    add_subdirectory("${MFREE_SOLVER_DIR}" "${CMAKE_BINARY_DIR}/_mfree")
++endif()
++
+ # Disables default features, as we specify each required feature manually below.
+ list(APPEND VCPKG_MANIFEST_FEATURES "core")
+ 
+@@ -486,6 +508,9 @@ endif()
+ if(CASPAR_ENABLED)
+     list(APPEND COLMAP_EXPORT_LIBS caspar_lib_core)
+ endif()
++if(MFREE_ENABLED)
++    list(APPEND COLMAP_EXPORT_LIBS oca_core)
++endif()
+ 
+ # Add unified interface library target to export.
+ add_library(colmap INTERFACE)
+diff --git a/src/colmap/controllers/incremental_pipeline.cc b/src/colmap/controllers/incremental_pipeline.cc
+index b20bd9a7..0f1be38a 100644
+--- a/src/colmap/controllers/incremental_pipeline.cc
++++ b/src/colmap/controllers/incremental_pipeline.cc
+@@ -31,12 +31,15 @@
+ 
+ #include "colmap/estimators/alignment.h"
+ #include "colmap/estimators/bundle_adjustment_caspar.h"
++#include "colmap/estimators/bundle_adjustment_mfree.h"
+ #include "colmap/estimators/bundle_adjustment_ceres.h"
+ #include "colmap/scene/database.h"
+ #include "colmap/util/file.h"
+ #include "colmap/util/hash_containers.h"
+ #include "colmap/util/timer.h"
+ 
++#include <ceres/types.h>
++
+ namespace colmap {
+ namespace {
+ 
+@@ -219,6 +222,20 @@ BundleAdjustmentOptions IncrementalPipelineOptions::LocalBundleAdjustment()
+         CeresBundleAdjustmentOptions::LossFunctionType::SOFT_L1;
+     options.ceres->use_gpu = ba_use_gpu;
+     options.ceres->gpu_index = ba_gpu_index;
++    options.ceres->auto_select_solver_type = ba_auto_select_solver_type;
++    if (!ba_auto_select_solver_type) {
++      // Auto-selection would otherwise overwrite these from the image count.
++      THROW_CHECK(ceres::StringToLinearSolverType(
++          ba_linear_solver_type, &options.ceres->solver_options.linear_solver_type))
++          << "Invalid Mapper.ba_linear_solver_type: " << ba_linear_solver_type;
++      if (!ba_preconditioner_type.empty()) {
++        THROW_CHECK(ceres::StringToPreconditionerType(
++            ba_preconditioner_type,
++            &options.ceres->solver_options.preconditioner_type))
++            << "Invalid Mapper.ba_preconditioner_type: "
++            << ba_preconditioner_type;
++      }
++    }
+   }
+   if (options.caspar) {
+     // Only forward the iteration bound when the user explicitly set it
+@@ -268,6 +285,20 @@ BundleAdjustmentOptions IncrementalPipelineOptions::GlobalBundleAdjustment()
+         CeresBundleAdjustmentOptions::LossFunctionType::TRIVIAL;
+     options.ceres->use_gpu = ba_use_gpu;
+     options.ceres->gpu_index = ba_gpu_index;
++    options.ceres->auto_select_solver_type = ba_auto_select_solver_type;
++    if (!ba_auto_select_solver_type) {
++      // Auto-selection would otherwise overwrite these from the image count.
++      THROW_CHECK(ceres::StringToLinearSolverType(
++          ba_linear_solver_type, &options.ceres->solver_options.linear_solver_type))
++          << "Invalid Mapper.ba_linear_solver_type: " << ba_linear_solver_type;
++      if (!ba_preconditioner_type.empty()) {
++        THROW_CHECK(ceres::StringToPreconditionerType(
++            ba_preconditioner_type,
++            &options.ceres->solver_options.preconditioner_type))
++            << "Invalid Mapper.ba_preconditioner_type: "
++            << ba_preconditioner_type;
++      }
++    }
+   }
+   if (options.caspar) {
+     // See LocalBundleAdjustment(): only forward the iteration bound to the
+@@ -288,6 +319,9 @@ int IncrementalPipelineOptions::EffBaLocalMaxNumIterations() const {
+   if (ba_local_backend == BundleAdjustmentBackend::CASPAR) {
+     return CasparBundleAdjustmentOptions().solver_iter_max;
+   }
++  if (ba_local_backend == BundleAdjustmentBackend::MFREE) {
++    return MFreeBundleAdjustmentOptions().max_num_iterations;
++  }
+   return kDefaultCeresLocalMaxNumIterations;
+ }
+ 
+@@ -298,6 +332,9 @@ int IncrementalPipelineOptions::EffBaGlobalMaxNumIterations() const {
+   if (ba_global_backend == BundleAdjustmentBackend::CASPAR) {
+     return CasparBundleAdjustmentOptions().solver_iter_max;
+   }
++  if (ba_global_backend == BundleAdjustmentBackend::MFREE) {
++    return MFreeBundleAdjustmentOptions().max_num_iterations;
++  }
+   return kDefaultCeresGlobalMaxNumIterations;
+ }
+ 
+@@ -328,6 +365,10 @@ bool IncrementalPipelineOptions::Check() const {
+ #ifndef CASPAR_ENABLED
+   CHECK_OPTION(ba_local_backend != BundleAdjustmentBackend::CASPAR);
+   CHECK_OPTION(ba_global_backend != BundleAdjustmentBackend::CASPAR);
++#endif
++#ifndef MFREE_ENABLED
++  CHECK_OPTION(ba_local_backend != BundleAdjustmentBackend::MFREE);
++  CHECK_OPTION(ba_global_backend != BundleAdjustmentBackend::MFREE);
+ #endif
+   CHECK_OPTION(Mapper().Check());
+   CHECK_OPTION(Triangulation().Check());
+diff --git a/src/colmap/controllers/incremental_pipeline.h b/src/colmap/controllers/incremental_pipeline.h
+index 7cacc541..95c116dc 100644
+--- a/src/colmap/controllers/incremental_pipeline.h
++++ b/src/colmap/controllers/incremental_pipeline.h
+@@ -139,6 +139,19 @@ struct IncrementalPipelineOptions {
+ 
+   // Whether to use Ceres' CUDA sparse linear algebra library, if available.
+   bool ba_use_gpu = false;
++
++  // Pin the Ceres linear solver for both local and global BA. COLMAP normally
++  // auto-selects DENSE/SPARSE/ITERATIVE_SCHUR from the image count and
++  // overwrites whatever solver was requested; CGNR in particular is never
++  // auto-selected. Set ba_auto_select_solver_type=false to make
++  // ba_linear_solver_type take effect.
++  bool ba_auto_select_solver_type = true;
++  std::string ba_linear_solver_type = "SPARSE_SCHUR";
++  // Empty means "leave Ceres' own default", which is the only safe choice:
++  // preconditioners are solver-specific (SCHUR_JACOBI is valid for
++  // ITERATIVE_SCHUR but NOT for CGNR), so forcing one here makes some
++  // linear_solver_type values unusable.
++  std::string ba_preconditioner_type = "";
+   // GPU device index for bundle adjustment (-1 = auto-select).
+   std::string ba_gpu_index = "-1";
+ 
+diff --git a/src/colmap/controllers/option_manager.cc b/src/colmap/controllers/option_manager.cc
+index 6373973f..bcfc6b10 100644
+--- a/src/colmap/controllers/option_manager.cc
++++ b/src/colmap/controllers/option_manager.cc
+@@ -34,9 +34,8 @@
+ #include "colmap/controllers/image_reader.h"
+ #include "colmap/controllers/incremental_pipeline.h"
+ #include "colmap/controllers/pairing.h"
+-#ifdef CASPAR_ENABLED
+ #include "colmap/estimators/bundle_adjustment_caspar.h"
+-#endif
++#include "colmap/estimators/bundle_adjustment_mfree.h"
+ #include "colmap/estimators/bundle_adjustment_ceres.h"
+ #include "colmap/estimators/global_positioning.h"
+ #include "colmap/estimators/gravity_refinement.h"
+@@ -500,6 +499,32 @@ void OptionManager::AddImportedPairingOptions() {
+                    &imported_pairing->block_size);
+ }
+ 
++namespace {
++
++// Ceres' own enum<->string functions, adapted to the signatures
++// AddDefaultEnumOption expects.
++std::string_view CeresLinearSolverTypeToString(ceres::LinearSolverType type) {
++  return ceres::LinearSolverTypeToString(type);
++}
++ceres::LinearSolverType CeresLinearSolverTypeFromString(std::string_view name) {
++  ceres::LinearSolverType type;
++  THROW_CHECK(ceres::StringToLinearSolverType(std::string(name), &type))
++      << "Invalid linear solver type: " << name;
++  return type;
++}
++std::string_view CeresPreconditionerTypeToString(ceres::PreconditionerType t) {
++  return ceres::PreconditionerTypeToString(t);
++}
++ceres::PreconditionerType CeresPreconditionerTypeFromString(
++    std::string_view name) {
++  ceres::PreconditionerType type;
++  THROW_CHECK(ceres::StringToPreconditionerType(std::string(name), &type))
++      << "Invalid preconditioner type: " << name;
++  return type;
++}
++
++}  // namespace
++
+ void OptionManager::AddBundleAdjustmentOptions() {
+   if (added_ba_options_) {
+     return;
+@@ -565,6 +590,22 @@ void OptionManager::AddBundleAdjustmentOptions() {
+   AddDefaultOption(
+       "BundleAdjustmentCeres.max_num_images_direct_sparse_gpu_solver",
+       &bundle_adjustment->ceres->max_num_images_direct_sparse_gpu_solver);
++  // With auto-selection on (the default), COLMAP picks DENSE_SCHUR /
++  // SPARSE_SCHUR / ITERATIVE_SCHUR purely from the image count and overrides
++  // whatever linear_solver_type says. Turn it off to pin a specific solver --
++  // CGNR, for instance, which auto-selection never chooses.
++  AddDefaultOption("BundleAdjustmentCeres.auto_select_solver_type",
++                   &bundle_adjustment->ceres->auto_select_solver_type);
++  AddDefaultEnumOption("BundleAdjustmentCeres.linear_solver_type",
++                       &bundle_adjustment->ceres->solver_options
++                            .linear_solver_type,
++                       CeresLinearSolverTypeToString,
++                       CeresLinearSolverTypeFromString);
++  AddDefaultEnumOption("BundleAdjustmentCeres.preconditioner_type",
++                       &bundle_adjustment->ceres->solver_options
++                            .preconditioner_type,
++                       CeresPreconditionerTypeToString,
++                       CeresPreconditionerTypeFromString);
+ 
+ #ifdef CASPAR_ENABLED
+   // Caspar-specific options
+@@ -595,6 +636,43 @@ void OptionManager::AddBundleAdjustmentOptions() {
+   AddDefaultOption("BundleAdjustmentCaspar.gpu_index",
+                    &bundle_adjustment->caspar->gpu_index);
+ #endif  // CASPAR_ENABLED
++
++#ifdef MFREE_ENABLED
++  // Matrix-free-specific options
++  AddDefaultOption("BundleAdjustmentMFree.max_num_iterations",
++                   &bundle_adjustment->mfree->max_num_iterations);
++  AddDefaultOption("BundleAdjustmentMFree.point_damping",
++                   &bundle_adjustment->mfree->point_damping);
++  AddDefaultOption("BundleAdjustmentMFree.initial_lambda",
++                   &bundle_adjustment->mfree->initial_lambda);
++  AddDefaultOption("BundleAdjustmentMFree.use_fp32_fragments",
++                   &bundle_adjustment->mfree->use_fp32_fragments);
++  AddDefaultOption("BundleAdjustmentMFree.max_inner_retries",
++                   &bundle_adjustment->mfree->max_inner_retries);
++  AddDefaultOption("BundleAdjustmentMFree.refine_intrinsics",
++                   &bundle_adjustment->mfree->refine_intrinsics);
++  AddDefaultOption("BundleAdjustmentMFree.func_tolerance",
++                   &bundle_adjustment->mfree->func_tolerance);
++  AddDefaultOption("BundleAdjustmentMFree.max_consecutive_failures",
++                   &bundle_adjustment->mfree->max_consecutive_failures);
++  AddDefaultOption("BundleAdjustmentMFree.gpu_index",
++                   &bundle_adjustment->mfree->gpu_index);
++  AddDefaultOption("BundleAdjustmentMFree.print_progress",
++                   &bundle_adjustment->mfree->print_progress);
++  // Native robust kernel: 0 = L2 (default), 1 Huber, 2 Cauchy, 3 Student's t.
++  // robust_scale_px is delta/c in pixels; for the t kernel it is sigma0 and
++  // 0 means "estimate the scale from the data".
++  AddDefaultOption("BundleAdjustmentMFree.robust_kernel",
++                   &bundle_adjustment->mfree->robust_kernel);
++  AddDefaultOption("BundleAdjustmentMFree.robust_scale_px",
++                   &bundle_adjustment->mfree->robust_scale_px);
++  AddDefaultOption("BundleAdjustmentMFree.robust_nu",
++                   &bundle_adjustment->mfree->robust_nu);
++  AddDefaultOption("BundleAdjustmentMFree.fast_opening",
++                   &bundle_adjustment->mfree->fast_opening);
++  AddDefaultOption("BundleAdjustmentMFree.fast_opening_depth",
++                   &bundle_adjustment->mfree->fast_opening_depth);
++#endif  // MFREE_ENABLED
+ }
+ 
+ void OptionManager::AddMapperOptions() {
+@@ -657,6 +735,12 @@ void OptionManager::AddMapperOptions() {
+   AddDefaultOption("Mapper.ba_local_max_refinement_change",
+                    &mapper->ba_local_max_refinement_change);
+   AddDefaultOption("Mapper.ba_use_gpu", &mapper->ba_use_gpu);
++  AddDefaultOption("Mapper.ba_auto_select_solver_type",
++                   &mapper->ba_auto_select_solver_type);
++  AddDefaultOption("Mapper.ba_linear_solver_type",
++                   &mapper->ba_linear_solver_type);
++  AddDefaultOption("Mapper.ba_preconditioner_type",
++                   &mapper->ba_preconditioner_type);
+   AddDefaultOption("Mapper.ba_gpu_index", &mapper->ba_gpu_index);
+   AddDefaultEnumOption("Mapper.ba_local_backend",
+                        &mapper->ba_local_backend,
+diff --git a/src/colmap/estimators/CMakeLists.txt b/src/colmap/estimators/CMakeLists.txt
+index f0103927..ed02be1a 100644
+--- a/src/colmap/estimators/CMakeLists.txt
++++ b/src/colmap/estimators/CMakeLists.txt
+@@ -57,6 +57,14 @@ if(CASPAR_ENABLED)
+     )
+ endif()
+ 
++# Always compiled: the .cc provides no-op stubs when MFREE_ENABLED is off, so
++# the enum value and factory dispatch exist in every build and produce a clear
++# error instead of a link failure.
++list(APPEND ESTIMATORS_SRCS
++    bundle_adjustment_mfree.h
++    bundle_adjustment_mfree.cc
++)
++
+ COLMAP_ADD_LIBRARY(
+     NAME colmap_estimators
+     SRCS ${ESTIMATORS_SRCS}
+@@ -80,6 +88,10 @@ if(CASPAR_ENABLED)
+     target_link_libraries(colmap_estimators PUBLIC caspar_lib_core)
+ endif()
+ 
++if(MFREE_ENABLED)
++    target_link_libraries(colmap_estimators PUBLIC oca_core)
++endif()
++
+ if(CUDA_ENABLED)
+     target_link_libraries(colmap_estimators PUBLIC colmap_util_cuda)
+ endif()
+@@ -106,6 +118,13 @@ if(CASPAR_ENABLED)
+         LINK_LIBS colmap_estimators
+     )
+ endif()
++if(MFREE_ENABLED)
++    COLMAP_ADD_TEST(
++        NAME bundle_adjustment_mfree_test
++        SRCS bundle_adjustment_mfree_test.cc
++        LINK_LIBS colmap_estimators
++    )
++endif()
+ COLMAP_ADD_TEST(
+     NAME coordinate_frame_test
+     SRCS coordinate_frame_test.cc
+diff --git a/src/colmap/estimators/bundle_adjustment.cc b/src/colmap/estimators/bundle_adjustment.cc
+index c8ac84b2..e27e79f0 100644
+--- a/src/colmap/estimators/bundle_adjustment.cc
++++ b/src/colmap/estimators/bundle_adjustment.cc
+@@ -31,6 +31,7 @@
+ 
+ #include "colmap/estimators/bundle_adjustment_caspar.h"
+ #include "colmap/estimators/bundle_adjustment_ceres.h"
++#include "colmap/estimators/bundle_adjustment_mfree.h"
+ #include "colmap/util/hash_containers.h"
+ 
+ namespace colmap {
+@@ -277,7 +278,8 @@ const BundleAdjustmentConfig& BundleAdjuster::Config() const { return config_; }
+ 
+ BundleAdjustmentBackendOptions::BundleAdjustmentBackendOptions()
+     : ceres(std::make_shared<CeresBundleAdjustmentOptions>()),
+-      caspar(std::make_shared<CasparBundleAdjustmentOptions>()) {}
++      caspar(std::make_shared<CasparBundleAdjustmentOptions>()),
++      mfree(std::make_shared<MFreeBundleAdjustmentOptions>()) {}
+ 
+ BundleAdjustmentBackendOptions::BundleAdjustmentBackendOptions(
+     const BundleAdjustmentBackendOptions& other) {
+@@ -287,6 +289,9 @@ BundleAdjustmentBackendOptions::BundleAdjustmentBackendOptions(
+   if (other.caspar) {
+     caspar = std::make_shared<CasparBundleAdjustmentOptions>(*other.caspar);
+   }
++  if (other.mfree) {
++    mfree = std::make_shared<MFreeBundleAdjustmentOptions>(*other.mfree);
++  }
+ }
+ 
+ BundleAdjustmentBackendOptions& BundleAdjustmentBackendOptions::operator=(
+@@ -304,6 +309,11 @@ BundleAdjustmentBackendOptions& BundleAdjustmentBackendOptions::operator=(
+   } else {
+     caspar.reset();
+   }
++  if (other.mfree) {
++    mfree = std::make_shared<MFreeBundleAdjustmentOptions>(*other.mfree);
++  } else {
++    mfree.reset();
++  }
+   return *this;
+ }
+ 
+@@ -327,6 +337,8 @@ std::unique_ptr<BundleAdjuster> CreateDefaultBundleAdjuster(
+              "CASPAR_ENABLED; rebuild with -DCASPAR_ENABLED=ON to use it";
+       return nullptr;
+ #endif
++    case BundleAdjustmentBackend::MFREE:
++      return CreateDefaultMFreeBundleAdjuster(options, config, reconstruction);
+   }
+   LOG(FATAL_THROW) << "Unknown bundle adjustment backend: "
+                    << static_cast<int>(options.backend);
+@@ -392,6 +404,9 @@ std::unique_ptr<BundleAdjuster> CreatePosePriorBundleAdjuster(
+              "CASPAR_ENABLED; rebuild with -DCASPAR_ENABLED=ON to use it";
+ #endif
+       return nullptr;
++    case BundleAdjustmentBackend::MFREE:
++      LOG(FATAL_THROW) << "MFREE BA backend does not support pose priors";
++      return nullptr;
+   }
+   LOG(FATAL_THROW) << "Unknown bundle adjustment backend: "
+                    << static_cast<int>(options.backend);
+diff --git a/src/colmap/estimators/bundle_adjustment.h b/src/colmap/estimators/bundle_adjustment.h
+index 063da830..e5cd13d4 100644
+--- a/src/colmap/estimators/bundle_adjustment.h
++++ b/src/colmap/estimators/bundle_adjustment.h
+@@ -57,7 +57,8 @@ MAKE_ENUM_CLASS_OVERLOAD_STREAM(BundleAdjustmentTerminationType,
+                                 USER_FAILURE);
+ 
+ // Backend for bundle adjustment solver.
+-MAKE_ENUM_CLASS_OVERLOAD_STREAM(BundleAdjustmentBackend, 0, CERES, CASPAR);
++MAKE_ENUM_CLASS_OVERLOAD_STREAM(
++    BundleAdjustmentBackend, 0, CERES, CASPAR, MFREE);
+ 
+ // Summary of bundle adjustment results, independent of solver backend.
+ struct BundleAdjustmentSummary {
+@@ -150,6 +151,7 @@ class BundleAdjustmentConfig {
+ };
+ 
+ struct CasparBundleAdjustmentOptions;
++struct MFreeBundleAdjustmentOptions;
+ 
+ struct BundleAdjustmentBackendOptions {
+   // Ceres-specific options (only used when backend == CERES).
+@@ -159,6 +161,10 @@ struct BundleAdjustmentBackendOptions {
+   // Type defined in bundle_adjustment_caspar.h.
+   std::shared_ptr<CasparBundleAdjustmentOptions> caspar;
+ 
++  // Matrix-free-specific options (only used when backend == MFREE).
++  // Type defined in bundle_adjustment_mfree.h.
++  std::shared_ptr<MFreeBundleAdjustmentOptions> mfree;
++
+   BundleAdjustmentBackendOptions();
+   BundleAdjustmentBackendOptions(const BundleAdjustmentBackendOptions& other);
+   BundleAdjustmentBackendOptions& operator=(
+diff --git a/src/colmap/sfm/global_mapper.cc b/src/colmap/sfm/global_mapper.cc
+index 5360160b..5ce78ea0 100644
+--- a/src/colmap/sfm/global_mapper.cc
++++ b/src/colmap/sfm/global_mapper.cc
+@@ -356,7 +356,10 @@ bool GlobalMapper::IterativeBundleAdjustment(
+       // translation together) with no mechanism to hold rotation
+       // constant while translation is free -- constant_rig_from_world_
+       // rotation is silently ignored when backend == CASPAR.
+-      if (opts_position_only.backend == BundleAdjustmentBackend::CASPAR) {
++      // The MFREE backend retracts the pose as Exp(dw)*R together and has no
++      // way to hold the rotation constant either, so it falls back the same way.
++      if (opts_position_only.backend == BundleAdjustmentBackend::CASPAR ||
++          opts_position_only.backend == BundleAdjustmentBackend::MFREE) {
+         opts_position_only.backend = BundleAdjustmentBackend::CERES;
+       }
+       if (!RunBundleAdjustment(opts_position_only, *reconstruction_)) {
+diff --git a/src/colmap/sfm/incremental_mapper.cc b/src/colmap/sfm/incremental_mapper.cc
+index ac66488a..6815a0af 100644
+--- a/src/colmap/sfm/incremental_mapper.cc
++++ b/src/colmap/sfm/incremental_mapper.cc
+@@ -29,6 +29,9 @@
+ 
+ #include "colmap/sfm/incremental_mapper.h"
+ 
++#include <cstdlib>
++#include <filesystem>
++
+ #include "colmap/estimators/bundle_adjustment.h"
+ #include "colmap/estimators/bundle_adjustment_ceres.h"
+ #include "colmap/estimators/generalized_pose.h"
+@@ -1120,6 +1123,37 @@ bool IncrementalMapper::AdjustGlobalBundle(
+   THROW_CHECK_NOTNULL(reconstruction_);
+   THROW_CHECK_NOTNULL(obs_manager_);
+ 
++  // COLMAP_GBA_DUMP_DIR: write the reconstruction BEFORE and AFTER every global
++  // bundle adjustment, numbered so the two halves pair up, letting any single
++  // GBA problem be replayed offline under a different backend and diffed both
++  // against its input and against the state this run actually produced.
++  // COLMAP_GBA_DUMP_EVERY=K subsamples (default 1); both halves of a pair are
++  // always written together, so a pair is never half-sampled. A missing _after
++  // means bundle adjustment did not run for that call.
++  const char* gba_dump_dir = std::getenv("COLMAP_GBA_DUMP_DIR");
++  static int gba_counter = 0;
++  int gba_dump_id = 0;
++  bool gba_do_dump = false;
++  if (gba_dump_dir != nullptr) {
++    ++gba_counter;
++    int every = 1;
++    if (const char* e = std::getenv("COLMAP_GBA_DUMP_EVERY"))
++      every = std::max(1, atoi(e));
++    gba_do_dump = ((gba_counter - 1) % every == 0);
++    gba_dump_id = gba_counter;
++  }
++  const auto gba_dump_state = [&](const char* phase) {
++    if (!gba_do_dump) return;
++    const std::string out =
++        std::string(gba_dump_dir) + "/gba_" +
++        std::string(gba_dump_id < 100 ? (gba_dump_id < 10 ? "00" : "0") : "") +
++        std::to_string(gba_dump_id) + "_" + phase;
++    std::filesystem::create_directories(out);
++    reconstruction_->Write(out);
++    LOG(INFO) << "GBA dump #" << gba_dump_id << " (" << phase << ") -> " << out;
++  };
++  gba_dump_state("before");
++
+   BundleAdjustmentOptions custom_ba_options = ba_options;
+   // Use stricter convergence criteria for first registered images.
+   constexpr size_t kMinNumRegFramesForFastBA = 10;
+@@ -1219,6 +1253,7 @@ bool IncrementalMapper::AdjustGlobalBundle(
+   // Optimize the redundant 3D points with all other parameters fixed.
+   if (!is_small_reconstruction && options.ba_global_ignore_redundant_points3D) {
+     if (!bundle_adjuster->Solve()->IsSolutionUsable()) {
++      gba_dump_state("after");
+       return false;
+     }
+ 
+@@ -1242,7 +1277,9 @@ bool IncrementalMapper::AdjustGlobalBundle(
+         CreateDefaultBundleAdjuster(ba_options, ba_config, *reconstruction_);
+   }
+ 
+-  return bundle_adjuster->Solve()->IsSolutionUsable();
++  const bool gba_success = bundle_adjuster->Solve()->IsSolutionUsable();
++  gba_dump_state("after");
++  return gba_success;
+ }
+ 
+ void IncrementalMapper::IterativeLocalRefinement(
+diff --git a/src/colmap/tools/CMakeLists.txt b/src/colmap/tools/CMakeLists.txt
+index e36f5a09..594e86e2 100644
+--- a/src/colmap/tools/CMakeLists.txt
++++ b/src/colmap/tools/CMakeLists.txt
+@@ -31,3 +31,101 @@
+ set(FOLDER_NAME "tools")
+ 
+ # COLMAP_ADD_EXECUTABLE(example example.cc)
++
++COLMAP_ADD_EXECUTABLE(
++    NAME consensus_ba_benchmark
++    SRCS consensus_ba_benchmark.cc
++    LINK_LIBS
++        Ceres::ceres
++        Threads::Threads
++)
++
++COLMAP_ADD_EXECUTABLE(
++    NAME colmap_ba_compare
++    SRCS colmap_ba_compare.cc
++    LINK_LIBS
++        colmap_estimators
++        colmap_scene
++        colmap_sensor
++        colmap_util
++)
++
++COLMAP_ADD_EXECUTABLE(
++    NAME filter_reconstruction
++    SRCS filter_reconstruction.cc
++    LINK_LIBS
++        colmap_scene
++        colmap_sensor
++        colmap_util
++)
++
++COLMAP_ADD_EXECUTABLE(
++    NAME undistort_reconstruction
++    SRCS undistort_reconstruction.cc
++    LINK_LIBS
++        colmap_image
++        colmap_scene
++        colmap_sensor
++        colmap_util
++)
++
++COLMAP_ADD_EXECUTABLE(
++    NAME filter_cheirality
++    SRCS filter_cheirality.cc
++    LINK_LIBS
++        colmap_scene
++        colmap_sensor
++        colmap_util
++)
++
++# End-to-end smoke check for the MFREE bundle adjustment backend. Exists
++# because the gtest suite (bundle_adjustment_mfree_test.cc) needs GTest, which
++# is not always present; this runs the same paths through the public factory.
++if(MFREE_ENABLED)
++    # CPU/OpenMP port of the multi-shift solver, tested against the GPU one.
++    COLMAP_ADD_EXECUTABLE(
++        NAME mfree_cpu_test
++        SRCS mfree_cpu_test.cc
++        LINK_LIBS
++            oca_core
++    )
++    find_package(OpenMP QUIET)
++    if(OpenMP_CXX_FOUND)
++        # COLMAP_ADD_EXECUTABLE uses the plain target_link_libraries signature,
++        # so this must too (mixing plain and keyword forms is a CMake error).
++        target_link_libraries(mfree_cpu_test OpenMP::OpenMP_CXX)
++    endif()
++
++    COLMAP_ADD_EXECUTABLE(
++        NAME mfree_backend_check
++        SRCS mfree_backend_check.cc
++        LINK_LIBS
++            colmap_estimators
++            colmap_scene
++            colmap_sensor
++            colmap_util
++    )
++endif()
++
++# Generates a small synthetic model WITH observation noise, so BA backends can
++# be compared on a problem that has a real optimum rather than an exactly
++# recoverable one. No GPU needed, so it is not gated on MFREE_ENABLED.
++COLMAP_ADD_EXECUTABLE(
++    NAME synthesize_ba_model
++    SRCS synthesize_ba_model.cc
++    LINK_LIBS
++        colmap_scene
++        colmap_sensor
++        colmap_util
++)
++
++# Applies rig-aware noise to an existing model, so BA backends can be compared
++# on real data with a genuine descent to perform.
++COLMAP_ADD_EXECUTABLE(
++    NAME perturb_model
++    SRCS perturb_model.cc
++    LINK_LIBS
++        colmap_scene
++        colmap_sensor
++        colmap_util
++)
+diff --git a/src/colmap/ui/bundle_adjustment_widget.cc b/src/colmap/ui/bundle_adjustment_widget.cc
+index 57fc35e8..3432fd10 100644
+--- a/src/colmap/ui/bundle_adjustment_widget.cc
++++ b/src/colmap/ui/bundle_adjustment_widget.cc
+@@ -32,6 +32,7 @@
+ #include "colmap/controllers/bundle_adjustment.h"
+ #include "colmap/estimators/bundle_adjustment.h"
+ #include "colmap/estimators/bundle_adjustment_caspar.h"
++#include "colmap/estimators/bundle_adjustment_mfree.h"
+ #include "colmap/estimators/bundle_adjustment_ceres.h"
+ #include "colmap/ui/main_window.h"
+ #include "colmap/util/controller_thread.h"
+@@ -85,12 +86,15 @@ BundleAdjustmentWidget::BundleAdjustmentWidget(MainWindow* main_window,
+   AddOptionBool(&options->bundle_adjustment->refine_points3D,
+                 "refine_points3D");
+ 
+-#ifdef CASPAR_ENABLED
++#if defined(CASPAR_ENABLED) || defined(MFREE_ENABLED)
+   AddSection("Bundle Adjustment Backend");
+   auto* backend_combo = new QComboBox(this);
+-  backend_combo->addItem("CERES");  // index 0 == BundleAdjustmentBackend::CERES
+-  backend_combo->addItem(
+-      "CASPAR");  // index 1 == BundleAdjustmentBackend::CASPAR
++  // Item index must equal the BundleAdjustmentBackend value, so every backend
++  // is listed even when this build cannot run it; selecting an unavailable one
++  // fails with the explicit "rebuild with -D..._ENABLED=ON" message.
++  backend_combo->addItem("CERES");   // 0 == BundleAdjustmentBackend::CERES
++  backend_combo->addItem("CASPAR");  // 1 == BundleAdjustmentBackend::CASPAR
++  backend_combo->addItem("MFREE");   // 2 == BundleAdjustmentBackend::MFREE
+   backend_combo->setCurrentIndex(
+       static_cast<int>(options->bundle_adjustment->backend));
+   connect(backend_combo,
+@@ -105,23 +109,38 @@ BundleAdjustmentWidget::BundleAdjustmentWidget(MainWindow* main_window,
+   AddOptionText(&options->bundle_adjustment->caspar->gpu_index,
+                 "gpu_index (-1 = auto)");
+ 
+-  const bool caspar_active =
+-      options->bundle_adjustment->backend == BundleAdjustmentBackend::CASPAR;
+-  if (!caspar_active) {
+-    HideOption(&options->bundle_adjustment->caspar->gpu_index);
+-  }
+-
++  AddSection("MFREE Options");
++  AddOptionInt(&options->bundle_adjustment->mfree->max_num_iterations,
++               "mfree max_num_iterations", 1, 10000);
++  AddOptionDouble(&options->bundle_adjustment->mfree->point_damping,
++                  "mfree point_damping", 1e-9, 1e3, 1e-4, 9);
++  AddOptionBool(&options->bundle_adjustment->mfree->use_fp32_fragments,
++                "mfree use_fp32_fragments");
++  AddOptionInt(&options->bundle_adjustment->mfree->gpu_index,
++               "mfree gpu_index (-1 = auto)", -1, 64);
++
++  auto show_backend_options = [this, options](int idx) {
++    const auto backend = static_cast<BundleAdjustmentBackend>(idx);
++    auto set = [&](bool on, auto* opt) {
++      if (on) {
++        ShowOption(opt);
++      } else {
++        HideOption(opt);
++      }
++    };
++    const bool is_caspar = backend == BundleAdjustmentBackend::CASPAR;
++    const bool is_mfree = backend == BundleAdjustmentBackend::MFREE;
++    set(is_caspar, &options->bundle_adjustment->caspar->gpu_index);
++    set(is_mfree, &options->bundle_adjustment->mfree->max_num_iterations);
++    set(is_mfree, &options->bundle_adjustment->mfree->point_damping);
++    set(is_mfree, &options->bundle_adjustment->mfree->use_fp32_fragments);
++    set(is_mfree, &options->bundle_adjustment->mfree->gpu_index);
++  };
++  show_backend_options(
++      static_cast<int>(options->bundle_adjustment->backend));
+   connect(backend_combo,
+           QOverload<int>::of(&QComboBox::currentIndexChanged),
+-          [this, options](int idx) {
+-            const bool is_caspar = static_cast<BundleAdjustmentBackend>(idx) ==
+-                                   BundleAdjustmentBackend::CASPAR;
+-            if (is_caspar) {
+-              ShowOption(&options->bundle_adjustment->caspar->gpu_index);
+-            } else {
+-              HideOption(&options->bundle_adjustment->caspar->gpu_index);
+-            }
+-          });
++          show_backend_options);
+ #endif
+ 
+   QPushButton* run_button = new QPushButton(tr("Run"), this);
+diff --git a/src/pycolmap/estimators/bundle_adjustment.cc b/src/pycolmap/estimators/bundle_adjustment.cc
+index 9e004d00..610004c4 100644
+--- a/src/pycolmap/estimators/bundle_adjustment.cc
++++ b/src/pycolmap/estimators/bundle_adjustment.cc
+@@ -1,6 +1,7 @@
+ #include "colmap/estimators/bundle_adjustment.h"
+ 
+ #include "colmap/estimators/bundle_adjustment_caspar.h"
++#include "colmap/estimators/bundle_adjustment_mfree.h"
+ #include "colmap/estimators/bundle_adjustment_ceres.h"
+ 
+ #include "pycolmap/helpers.h"
+@@ -113,7 +114,8 @@ void BindBundleAdjuster(py::module& m) {
+   auto PyBundleAdjustmentBackend =
+       py::enum_<BundleAdjustmentBackend>(m, "BundleAdjustmentBackend")
+           .value("CERES", BundleAdjustmentBackend::CERES)
+-          .value("CASPAR", BundleAdjustmentBackend::CASPAR);
++          .value("CASPAR", BundleAdjustmentBackend::CASPAR)
++          .value("MFREE", BundleAdjustmentBackend::MFREE);
+   AddStringToEnumConstructor(PyBundleAdjustmentBackend);
+ 
+   using BACfg = BundleAdjustmentConfig;
